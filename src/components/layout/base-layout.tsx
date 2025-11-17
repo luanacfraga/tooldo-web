@@ -1,6 +1,6 @@
 'use client'
 
-import { useUIStore } from '@/lib/stores'
+import { useUIStore } from '@/lib/stores/ui-store'
 import { ReactNode, useEffect, useMemo } from 'react'
 import { HeaderMenu } from './header-menu'
 

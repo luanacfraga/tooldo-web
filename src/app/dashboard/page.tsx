@@ -2,7 +2,7 @@
 
 import { BaseLayout } from '@/components/layout/base-layout'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
-import { useAuthStore } from '@/lib/stores'
+import { useAuthStore } from '@/lib/stores/auth-store'
 
 export default function DashboardPage() {
   const { user } = useAuthStore()

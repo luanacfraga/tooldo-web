@@ -1,7 +1,8 @@
 'use client'
 
 import { useIsMobile } from '@/lib/hooks/use-media-query'
-import { useAuthStore, useUIStore } from '@/lib/stores'
+import { useAuthStore } from '@/lib/stores/auth-store'
+import { useUIStore } from '@/lib/stores/ui-store'
 import { Bell, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

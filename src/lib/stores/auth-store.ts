@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import Cookies from 'js-cookie'
-import { config } from '@/config'
+import { config } from '@/config/index'
 
 interface User {
   id: string

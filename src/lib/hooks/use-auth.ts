@@ -1,5 +1,5 @@
 import { AuthService } from '@/lib/api/services/auth.service'
-import { useAuthStore } from '@/lib/stores'
+import { useAuthStore } from '@/lib/stores/auth-store'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 

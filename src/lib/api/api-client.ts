@@ -1,4 +1,5 @@
-import { config, env } from '@/config'
+import { env } from '@/config/env'
+import { config } from '@/config/index'
 import Cookies from 'js-cookie'
 
 export class ApiError extends Error {

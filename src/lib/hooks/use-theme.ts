@@ -1,4 +1,4 @@
-import { useThemeStore } from '@/lib/stores'
+import { useThemeStore } from '@/lib/stores/theme-store'
 import { useEffect } from 'react'
 
 export function useTheme() {

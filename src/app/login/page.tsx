@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ApiError } from '@/lib/api'
+import { ApiError } from '@/lib/api/api-client'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { loginSchema, type LoginFormData } from '@/lib/validators/auth'
 import { zodResolver } from '@hookform/resolvers/zod'

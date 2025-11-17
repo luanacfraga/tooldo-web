@@ -1,7 +1,7 @@
 'use client'
 
 import { useIsMobile } from '@/lib/hooks/use-media-query'
-import { useUIStore } from '@/lib/stores'
+import { useUIStore } from '@/lib/stores/ui-store'
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
