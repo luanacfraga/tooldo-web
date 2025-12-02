@@ -15,15 +15,50 @@ export function useAuth() {
       setError(null)
 
       const response = await AuthService.signIn(email, password)
-      setAuth(response.user, response.access_token)
 
-      await new Promise((resolve) => setTimeout(resolve, 0))
-
+      // Debug: log the API response
       if (typeof window !== 'undefined') {
-        window.location.href = '/dashboard'
-      } else {
-        router.replace('/dashboard')
+        console.log('API Response:', response)
+        console.log('User role from API:', response.user.role)
       }
+
+      // Map API response to store format
+      const userForStore = {
+        id: response.user.id,
+        email: response.user.email,
+        name: `${response.user.firstName} ${response.user.lastName}`,
+        role: response.user.role,
+      }
+
+      // Debug: log the user for store
+      if (typeof window !== 'undefined') {
+        console.log('User for store:', userForStore)
+      }
+
+      setAuth(userForStore, response.access_token)
+
+      // Wait a bit to ensure state is persisted before redirecting
+      // This is important for Zustand persist to save to localStorage
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      // Redirect based on user role
+      // Admins go to company selection, others go to dashboard
+      const redirectPath = userForStore.role === 'admin' ? '/select-company' : '/dashboard'
+
+      // Debug: log the redirect path
+      if (typeof window !== 'undefined') {
+        console.log(
+          'Login successful. User role:',
+          userForStore.role,
+          'Type:',
+          typeof userForStore.role,
+          'Redirecting to:',
+          redirectPath
+        )
+      }
+
+      // Use router.replace instead of window.location to maintain state
+      router.replace(redirectPath)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login'
       setError(message)

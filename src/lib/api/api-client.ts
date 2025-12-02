@@ -102,6 +102,13 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = hasJSON ? await response.json() : null
+
+      // Don't auto-logout on 401, let components handle it
+      // This prevents unwanted logouts during normal operations
+      if (response.status === 401) {
+        console.warn('Unauthorized request - token may be invalid or expired')
+      }
+
       throw new ApiError(response.status, response.statusText, errorData)
     }
 

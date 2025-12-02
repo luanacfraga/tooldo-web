@@ -1,7 +1,7 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import Cookies from 'js-cookie'
 import { config } from '@/config/index'
+import Cookies from 'js-cookie'
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface User {
   id: string
@@ -63,7 +63,14 @@ export const useAuthStore = create<AuthState>()(
         // Try to get token from cookie on init
         const token = Cookies.get(config.cookies.tokenName)
         if (token) {
-          set({ token, isAuthenticated: true })
+          // Only set token and isAuthenticated if user exists in state
+          // This prevents clearing the user on reload
+          set((state) => {
+            if (state.user) {
+              return { token, isAuthenticated: true }
+            }
+            return state
+          })
         }
       },
     }),

@@ -10,7 +10,8 @@ export interface LoginResponse {
   user: {
     id: string
     email: string
-    name: string
+    firstName: string
+    lastName: string
     role: 'master' | 'admin' | 'manager' | 'executor' | 'consultant'
   }
 }
@@ -22,11 +23,21 @@ export interface RegisterRequest {
   password: string
   phone: string
   document: string
-  documentType: 'CNPJ'
-  company: {
+  documentType: 'CPF' | 'CNPJ'
+  company?: {
     name: string
     description: string
   }
+}
+
+export interface RegisterMasterRequest {
+  firstName: string
+  lastName: string
+  email: string
+  password: string
+  phone: string
+  document: string
+  documentType: 'CPF' | 'CNPJ'
 }
 
 export interface RegisterResponse {
@@ -51,6 +62,14 @@ export class AuthService {
   static async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await api.post<RegisterResponse>(
       `${this.BASE_URL}/register`,
+      data
+    )
+    return response.data
+  }
+
+  static async registerMaster(data: RegisterMasterRequest): Promise<RegisterResponse> {
+    const response = await api.post<RegisterResponse>(
+      `${this.BASE_URL}/register-master`,
       data
     )
     return response.data
