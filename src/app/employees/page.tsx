@@ -2,7 +2,7 @@
 
 import { BaseLayout } from '@/components/layout/base-layout'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
-import { DataTable, DataTableCell, DataTableRow } from '@/components/shared/data/data-table'
+import { DataTable, DataTableCell, DataTableRow, StatusBadge } from '@/components/shared/data'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
@@ -25,28 +25,6 @@ import {
 import { UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-
-const getStatusLabel = (status: string) => {
-  const labels: Record<string, string> = {
-    INVITED: 'Convidado',
-    ACTIVE: 'Ativo',
-    REJECTED: 'Rejeitado',
-    SUSPENDED: 'Suspenso',
-    REMOVED: 'Removido',
-  }
-  return labels[status] || status
-}
-
-const getStatusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    INVITED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-    ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-    REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-    SUSPENDED: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
-    REMOVED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
-  }
-  return colors[status] || 'bg-gray-100 text-gray-800'
-}
 
 const getRoleLabel = (role: string) => {
   const labels: Record<string, string> = {
@@ -142,13 +120,7 @@ export default function EmployeesPage() {
                 </DataTableCell>
                 <DataTableCell>{getRoleLabel(employee.role)}</DataTableCell>
                 <DataTableCell>
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                      employee.status
-                    )}`}
-                  >
-                    {getStatusLabel(employee.status)}
-                  </span>
+                  <StatusBadge status={employee.status} />
                 </DataTableCell>
                 <DataTableCell align="right">
                   <div className="flex flex-wrap justify-end gap-2">

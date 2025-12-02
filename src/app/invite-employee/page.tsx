@@ -3,6 +3,8 @@
 import { RequireCompany } from '@/components/features/auth/guards/require-company'
 import { BaseLayout } from '@/components/layout/base-layout'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
+import { FormSection } from '@/components/shared/forms/form-section'
+import { InputWithIcon } from '@/components/shared/forms/input-with-icon'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
 import { Button } from '@/components/ui/button'
@@ -196,227 +198,200 @@ export default function InviteEmployeePage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Personal Information Card */}
-              <Card className="animate-fade-in">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-secondary-lightest p-2">
-                      <User className="h-5 w-5 text-secondary-base" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Dados Pessoais</CardTitle>
-                      <CardDescription>Informações básicas do funcionário</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Nome <span className="text-danger-base">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input placeholder="João" className="h-11 pl-10" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Sobrenome <span className="text-danger-base">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input placeholder="Silva" className="h-11 pl-10" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
+              <FormSection
+                title="Dados Pessoais"
+                description="Informações básicas do funcionário"
+                icon={User}
+                iconColor="text-secondary-base"
+                bgColor="bg-secondary-lightest"
+                className="animate-fade-in"
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="firstName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email <span className="text-danger-base">*</span>
+                          Nome <span className="text-danger-base">*</span>
                         </FormLabel>
                         <FormControl>
+                          <InputWithIcon icon={User} placeholder="João" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Sobrenome <span className="text-danger-base">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <InputWithIcon icon={User} placeholder="Silva" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Email <span className="text-danger-base">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <InputWithIcon
+                          icon={Mail}
+                          type="email"
+                          placeholder="funcionario@empresa.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>O convite será enviado para este email</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefone</FormLabel>
+                        <FormControl>
+                          <InputWithIcon
+                            icon={Phone}
+                            placeholder="(11) 98765-4321"
+                            value={maskPhone(field.value || '')}
+                            onChange={(e) => {
+                              const unmasked = unmaskPhone(e.target.value)
+                              field.onChange(unmasked)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="document"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CPF</FormLabel>
+                        <FormControl>
+                          <InputWithIcon
+                            icon={FileText}
+                            placeholder="000.000.000-00"
+                            value={maskCPF(field.value || '')}
+                            onChange={(e) => {
+                              const unmasked = unmaskCPF(e.target.value)
+                              field.onChange(unmasked)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormSection>
+
+              {/* Professional Information Card */}
+              <FormSection
+                title="Informações Profissionais"
+                description="Cargo e função do funcionário na empresa"
+                icon={Briefcase}
+                iconColor="text-warning-base"
+                bgColor="bg-warning-lightest"
+                className="animate-fade-in"
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Cargo no Sistema <span className="text-danger-base">*</span>
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 w-full">
+                              <SelectValue placeholder="Selecione o cargo">
+                                {field.value === 'manager' && 'Gestor'}
+                                {field.value === 'executor' && 'Executor'}
+                                {field.value === 'consultant' && 'Consultor'}
+                                {!field.value && 'Selecione o cargo'}
+                              </SelectValue>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manager">Gestor</SelectItem>
+                            <SelectItem value="executor">Executor</SelectItem>
+                            <SelectItem value="consultant">Consultor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>Define as permissões do funcionário</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Posição/Função</FormLabel>
+                        <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                              type="email"
-                              placeholder="funcionario@empresa.com"
+                              placeholder="Ex: Pintor, Engenheiro, etc."
                               className="h-11 pl-10"
                               {...field}
                             />
                           </div>
                         </FormControl>
-                        <FormDescription>O convite será enviado para este email</FormDescription>
+                        <FormDescription>Função específica na empresa</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input
-                                placeholder="(11) 98765-4321"
-                                className="h-11 pl-10"
-                                value={maskPhone(field.value || '')}
-                                onChange={(e) => {
-                                  const unmasked = unmaskPhone(e.target.value)
-                                  field.onChange(unmasked)
-                                }}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="document"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CPF</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <FileText className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input
-                                placeholder="000.000.000-00"
-                                className="h-11 pl-10"
-                                value={maskCPF(field.value || '')}
-                                onChange={(e) => {
-                                  const unmasked = unmaskCPF(e.target.value)
-                                  field.onChange(unmasked)
-                                }}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Professional Information Card */}
-              <Card className="animate-fade-in">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-warning-lightest p-2">
-                      <Briefcase className="h-5 w-5 text-warning-base" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Informações Profissionais</CardTitle>
-                      <CardDescription>Cargo e função do funcionário na empresa</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Cargo no Sistema <span className="text-danger-base">*</span>
-                          </FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-11 w-full">
-                                <SelectValue placeholder="Selecione o cargo">
-                                  {field.value === 'manager' && 'Gestor'}
-                                  {field.value === 'executor' && 'Executor'}
-                                  {field.value === 'consultant' && 'Consultor'}
-                                  {!field.value && 'Selecione o cargo'}
-                                </SelectValue>
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="manager">Gestor</SelectItem>
-                              <SelectItem value="executor">Executor</SelectItem>
-                              <SelectItem value="consultant">Consultor</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>Define as permissões do funcionário</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="position"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Posição/Função</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input
-                                placeholder="Ex: Pintor, Engenheiro, etc."
-                                className="h-11 pl-10"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormDescription>Função específica na empresa</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Informações adicionais sobre o funcionário (opcional)"
-                            className="min-h-[100px] resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>Notas internas sobre o funcionário</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Informações adicionais sobre o funcionário (opcional)"
+                          className="min-h-[100px] resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>Notas internas sobre o funcionário</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </FormSection>
 
               {/* Submit Actions */}
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

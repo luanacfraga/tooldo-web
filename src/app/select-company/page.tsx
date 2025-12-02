@@ -3,6 +3,8 @@
 import { AdminOnly } from '@/components/features/auth/guards/admin-only'
 import { HeaderMenu } from '@/components/layout/header-menu'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
+import { PageContainer } from '@/components/shared/layout/page-container'
+import { PageHeader } from '@/components/shared/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card'
 import {
@@ -53,15 +55,12 @@ export default function SelectCompanyPage() {
       <div className="flex min-h-screen flex-col bg-background">
         <HeaderMenu />
         <div className="flex flex-1 items-center justify-center pt-16 sm:pt-20">
-          <div className="w-full max-w-4xl px-6">
-            <div className="mb-16 text-center">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                Olá, {user?.name?.split(' ')[0] || 'Admin'}
-              </h1>
-              <p className="mt-2 text-muted-foreground">
-                Selecione ou crie uma empresa para gerenciar
-              </p>
-            </div>
+          <PageContainer maxWidth="4xl" className="py-8">
+            <PageHeader
+              title={`Olá, ${user?.name?.split(' ')[0] || 'Admin'}`}
+              description="Selecione ou crie uma empresa para gerenciar"
+              className="mb-12 text-center sm:mb-16"
+            />
 
             {error && (
               <div className="mb-6 rounded-lg border border-destructive/50 bg-destructive/10 p-4">
@@ -75,21 +74,23 @@ export default function SelectCompanyPage() {
             )}
 
             {!error && (
-              <div className="grid gap-8 md:grid-cols-2">
-                <Card className="border border-border bg-card transition-colors hover:border-primary/50">
-                  <CardContent className="flex flex-col p-8">
-                    <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted/50">
+              <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
+                <Card className="border border-border bg-card transition-all hover:border-primary/50 hover:shadow-md">
+                  <CardContent className="flex flex-col p-6 sm:p-8">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted/50 sm:mb-6">
                       <Plus className="h-5 w-5 text-foreground" />
                     </div>
-                    <CardTitle className="mb-2 text-xl font-semibold">Nova Empresa</CardTitle>
-                    <CardDescription className="mb-6 text-sm">
+                    <CardTitle className="mb-2 text-lg font-semibold sm:text-xl">
+                      Nova Empresa
+                    </CardTitle>
+                    <CardDescription className="mb-4 text-sm sm:mb-6">
                       Crie uma nova empresa para começar a gerenciar sua equipe
                     </CardDescription>
                     <Button
                       onClick={() => router.push('/companies/new?redirect=/select-company')}
                       variant="outline"
                       size="lg"
-                      className="w-full"
+                      className="mt-auto w-full"
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Cadastrar
@@ -98,17 +99,19 @@ export default function SelectCompanyPage() {
                 </Card>
 
                 <Card className="border border-border bg-card">
-                  <CardContent className="p-8">
-                    <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted/50">
+                  <CardContent className="p-6 sm:p-8">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-muted/50 sm:mb-6">
                       <Building2 className="h-5 w-5 text-foreground" />
                     </div>
-                    <CardTitle className="mb-2 text-xl font-semibold">Selecionar Empresa</CardTitle>
-                    <CardDescription className="mb-6 text-sm">
+                    <CardTitle className="mb-2 text-lg font-semibold sm:text-xl">
+                      Selecionar Empresa
+                    </CardTitle>
+                    <CardDescription className="mb-4 text-sm sm:mb-6">
                       Escolha uma empresa existente
                     </CardDescription>
 
                     {companies.length === 0 ? (
-                      <div className="py-8 text-center">
+                      <div className="py-6 text-center sm:py-8">
                         <p className="text-sm text-muted-foreground">Nenhuma empresa cadastrada</p>
                       </div>
                     ) : (
@@ -118,9 +121,7 @@ export default function SelectCompanyPage() {
                           onValueChange={handleCompanySelect}
                         >
                           <SelectTrigger className="h-11 w-full">
-                            <SelectValue placeholder="Selecione uma empresa">
-                              {selectedCompany?.name || 'Selecione uma empresa'}
-                            </SelectValue>
+                            <SelectValue placeholder="Selecione uma empresa" />
                           </SelectTrigger>
                           <SelectContent>
                             {companies.map((company) => (
@@ -156,7 +157,7 @@ export default function SelectCompanyPage() {
                 </Card>
               </div>
             )}
-          </div>
+          </PageContainer>
         </div>
       </div>
     </AdminOnly>
