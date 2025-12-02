@@ -37,7 +37,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useCompanyStore } from '@/lib/stores/company-store'
-import { AdminOnly } from '@/components/auth/admin-only'
+import { AdminOnly } from '@/components/features/auth/guards'
 
 export default function NewCompanyPage() {
   const router = useRouter()
