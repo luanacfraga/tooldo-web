@@ -1,77 +1,124 @@
 'use client'
 
-import { CompanySelector } from '@/components/company/company-selector'
+import { CompanySelector } from '@/components/features/company/selectors'
 import { useAuth } from '@/lib/hooks/use-auth'
-import { useAuthStore } from '@/lib/stores/auth-store'
-import { Home, Settings, UserPlus, Users, UsersRound } from 'lucide-react'
+import { usePermissions } from '@/lib/hooks/use-permissions'
+import {
+  BarChart3,
+  Building2,
+  CheckSquare,
+  Home,
+  LayoutDashboard,
+  Settings,
+  Users,
+  UsersRound,
+} from 'lucide-react'
 import { useMemo } from 'react'
 import { Sidebar, type MenuItem } from './sidebar'
 
 export function DashboardSidebar() {
-  const { logout, user } = useAuth()
-  const userFromStore = useAuthStore((state) => state.user)
-  const currentUser = user || userFromStore
-
-  // Debug: log user info
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log('DashboardSidebar - User:', currentUser)
-    console.log('DashboardSidebar - User role:', currentUser?.role)
-  }
+  const { logout } = useAuth()
+  const { isAdmin, isManager, isExecutor, isConsultant, isMaster, can } = usePermissions()
 
   const menuItems: MenuItem[] = useMemo(() => {
-    const items: MenuItem[] = [
-      {
-        name: 'Dashboard',
-        href: '/dashboard',
-        icon: Home,
-      },
-    ]
+    const items: MenuItem[] = []
 
-    // Menu items para Admin
-    const userRole = currentUser?.role
-    if (userRole === 'admin') {
+    if (isAdmin) {
       items.push(
         {
-          name: 'Convidar Funcionário',
-          href: '/invite-employee',
-          icon: UserPlus,
+          name: 'Empresa',
+          href: '/companies',
+          icon: Building2,
         },
         {
-          name: 'Funcionários',
+          name: 'Usuários',
           href: '/employees',
           icon: UsersRound,
         },
         {
-          name: 'Equipes',
-          href: '/teams',
-          icon: Users,
+          name: 'Tarefas',
+          href: '/tasks',
+          icon: CheckSquare,
+        },
+        {
+          name: 'Board',
+          href: '/board',
+          icon: LayoutDashboard,
+        },
+        {
+          name: 'Dashboards',
+          href: '/dashboards',
+          icon: BarChart3,
         }
       )
     }
 
-    // Menu items para Manager
-    if (userRole === 'manager') {
+    if (isManager) {
       items.push(
         {
-          name: 'Convidar Funcionário',
-          href: '/invite-employee',
-          icon: UserPlus,
-        },
-        {
-          name: 'Funcionários',
-          href: '/employees',
-          icon: UsersRound,
-        },
-        {
-          name: 'Equipes',
-          href: '/teams',
+          name: 'Minhas equipes',
+          href: '/teams/my-teams',
           icon: Users,
+        },
+        {
+          name: 'Board geral',
+          href: '/board/general',
+          icon: LayoutDashboard,
+        },
+        {
+          name: 'Dashboard equipe',
+          href: '/dashboard/team',
+          icon: BarChart3,
+        },
+        {
+          name: 'Dashboard pessoal',
+          href: '/dashboard/personal',
+          icon: Home,
         }
       )
     }
 
-    // Menu items para Master
-    if (currentUser?.role === 'master') {
+    if (isExecutor) {
+      items.push(
+        {
+          name: 'Minhas tarefas',
+          href: '/tasks/my-tasks',
+          icon: CheckSquare,
+        },
+        {
+          name: 'Board equipe',
+          href: '/board/team',
+          icon: LayoutDashboard,
+        },
+        {
+          name: 'Dashboard pessoal',
+          href: '/dashboard/personal',
+          icon: Home,
+        }
+      )
+    }
+
+    if (isConsultant) {
+      items.push(
+        {
+          name: 'Dashboard empresa',
+          href: '/dashboard/company',
+          icon: BarChart3,
+        },
+        {
+          name: 'Dashboard equipe',
+          href: '/dashboard/team',
+          icon: BarChart3,
+        },
+        {
+          name: 'Dashboard usuário',
+          href: '/dashboard/user',
+          icon: Home,
+        }
+      )
+    }
+
+    if (isMaster) {
       items.push({
         name: 'Planos',
         href: '/plans',
@@ -86,10 +133,9 @@ export function DashboardSidebar() {
     })
 
     return items
-  }, [currentUser?.role])
+  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster])
 
-  // Show company selector ONLY for admin (not for manager)
-  const showCompanySelector = currentUser?.role === 'admin'
+  const showCompanySelector = isAdmin
 
   return (
     <Sidebar

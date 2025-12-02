@@ -1,7 +1,8 @@
 'use client'
 
 import { useIsMobile } from '@/lib/hooks/use-media-query'
-import { useAuthStore } from '@/lib/stores/auth-store'
+import { usePermissions } from '@/lib/hooks/use-permissions'
+import { formatRole } from '@/lib/formatters'
 import { useUIStore } from '@/lib/stores/ui-store'
 import { Bell, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -11,7 +12,7 @@ interface HeaderMenuProps {
 }
 
 export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
-  const { user } = useAuthStore()
+  const { user, role } = usePermissions()
   const { isMobileMenuOpen, toggleMobileMenu } = useUIStore()
   const isMobile = useIsMobile()
   const [scrolled, setScrolled] = useState(false)
@@ -28,15 +29,9 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
     }
   }, [])
 
-  const getRoleLabel = (role: string) => {
-    const roleMap: Record<string, string> = {
-      master: 'Master',
-      admin: 'Administrador',
-      manager: 'Manager',
-      executor: 'Executor',
-      consultant: 'Consultor',
-    }
-    return roleMap[role] || 'Usuário'
+  const getRoleLabel = (role: string | undefined) => {
+    if (!role) return 'Usuário'
+    return formatRole(role as any)
   }
 
   return (
@@ -85,7 +80,7 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
                   {user?.name}
                 </span>
                 <span className="text-xs leading-tight text-muted-foreground">
-                  {user?.role && getRoleLabel(user.role)}
+                  {role && getRoleLabel(role)}
                 </span>
               </div>
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary shadow-sm transition-transform duration-200 hover:scale-105 sm:h-9 sm:w-9">
