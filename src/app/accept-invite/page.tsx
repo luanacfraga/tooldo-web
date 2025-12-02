@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
 import { ApiError } from '@/lib/api/api-client'
 import { employeesApi } from '@/lib/api/endpoints/employees'
-import { maskCPF, maskPhone, unmaskCPF, unmaskPhone } from '@/lib/utils/masks'
+import { maskCPF, unmaskCPF } from '@/lib/utils/masks'
 import { acceptInviteSchema, type AcceptInviteFormData } from '@/lib/validators/employee'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
@@ -21,7 +21,6 @@ export default function AcceptInvitePage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [phoneValue, setPhoneValue] = useState('')
   const [cpfValue, setCpfValue] = useState('')
 
   const token = searchParams.get('token') || ''
@@ -37,7 +36,6 @@ export default function AcceptInvitePage() {
       token: token,
       password: '',
       confirmPassword: '',
-      phone: '',
       document: '',
     },
   })
@@ -56,7 +54,6 @@ export default function AcceptInvitePage() {
       await employeesApi.acceptInvite({
         token: data.token,
         password: data.password,
-        phone: data.phone ? unmaskPhone(data.phone) : undefined,
         document: data.document ? unmaskCPF(data.document) : undefined,
       })
 
@@ -152,29 +149,6 @@ export default function AcceptInvitePage() {
             className="space-y-6"
           >
             {error && <ErrorAlert message={error} />}
-
-            <FormFieldWrapper
-              label="Telefone"
-              htmlFor="phone"
-              error={errors.phone?.message}
-            >
-              <Input
-                id="phone"
-                type="text"
-                placeholder="(11) 98765-4321"
-                value={phoneValue}
-                onChange={(e) => {
-                  const masked = maskPhone(e.target.value)
-                  setPhoneValue(masked)
-                  setValue('phone', unmaskPhone(masked), { shouldValidate: true })
-                }}
-                className={`h-12 text-base transition-all ${
-                  errors.phone
-                    ? 'border-destructive focus-visible:ring-destructive'
-                    : 'border-input focus-visible:border-primary focus-visible:ring-primary/20'
-                }`}
-              />
-            </FormFieldWrapper>
 
             <FormFieldWrapper label="CPF" htmlFor="document" error={errors.document?.message}>
               <Input

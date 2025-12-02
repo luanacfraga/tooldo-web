@@ -75,6 +75,9 @@ export default function InviteEmployeePage() {
     },
   })
 
+  const [phoneValue, setPhoneValue] = useState('')
+  const [cpfValue, setCpfValue] = useState('')
+
   // Update companyId when selectedCompany changes
   useEffect(() => {
     if (selectedCompany) {
@@ -272,12 +275,24 @@ export default function InviteEmployeePage() {
                         <FormControl>
                           <InputWithIcon
                             icon={Phone}
+                            type="tel"
                             placeholder="(11) 98765-4321"
-                            value={maskPhone(field.value || '')}
+                            value={phoneValue}
                             onChange={(e) => {
                               const unmasked = unmaskPhone(e.target.value)
-                              field.onChange(unmasked)
+                              const masked = maskPhone(unmasked)
+                              setPhoneValue(masked)
+                              form.setValue('phone', unmasked, { shouldValidate: false })
                             }}
+                            onBlur={() => {
+                              field.onBlur()
+                              form.trigger('phone')
+                            }}
+                            className={`h-12 text-base transition-all ${
+                              form.formState.errors.phone
+                                ? 'border-destructive focus-visible:ring-destructive'
+                                : 'border-input focus-visible:border-primary focus-visible:ring-primary/20'
+                            }`}
                           />
                         </FormControl>
                         <FormMessage />
@@ -290,18 +305,34 @@ export default function InviteEmployeePage() {
                     name="document"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>CPF</FormLabel>
+                        <FormLabel>
+                          CPF <span className="text-danger-base">*</span>
+                        </FormLabel>
                         <FormControl>
                           <InputWithIcon
                             icon={FileText}
                             placeholder="000.000.000-00"
-                            value={maskCPF(field.value || '')}
+                            value={cpfValue}
                             onChange={(e) => {
                               const unmasked = unmaskCPF(e.target.value)
-                              field.onChange(unmasked)
+                              const masked = maskCPF(unmasked)
+                              setCpfValue(masked)
+                              form.setValue('document', unmasked, { shouldValidate: false })
                             }}
+                            onBlur={() => {
+                              field.onBlur()
+                              form.trigger('document')
+                            }}
+                            className={`h-12 text-base transition-all ${
+                              form.formState.errors.document
+                                ? 'border-destructive focus-visible:ring-destructive'
+                                : 'border-input focus-visible:border-primary focus-visible:ring-primary/20'
+                            }`}
                           />
                         </FormControl>
+                        <FormDescription>
+                          O funcionário precisará informar este CPF ao criar sua senha
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

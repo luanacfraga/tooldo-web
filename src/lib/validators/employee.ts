@@ -13,12 +13,16 @@ export const inviteEmployeeSchema = z.object({
     .min(2, 'Sobrenome deve ter no mínimo 2 caracteres'),
   phone: z
     .string()
-    .regex(/^\d{10,11}$/, 'Telefone inválido (apenas números)')
+    .refine((val) => !val || /^\d{10,11}$/.test(val), {
+      message: 'Telefone inválido (apenas números)',
+    })
     .optional(),
   document: z
     .string()
-    .regex(/^\d{11,14}$/, 'Documento inválido (CPF: 11 dígitos, CNPJ: 14 dígitos)')
-    .optional(),
+    .min(1, 'CPF é obrigatório')
+    .refine((val) => /^\d{11}$/.test(val), {
+      message: 'CPF inválido (deve conter 11 dígitos)',
+    }),
   role: z.enum(['manager', 'executor', 'consultant'], {
     errorMap: () => ({ message: 'Cargo deve ser manager, executor ou consultant' }),
   }),
@@ -34,13 +38,11 @@ export const acceptInviteSchema = z
       .min(1, 'Senha é obrigatória')
       .min(6, 'Senha deve ter no mínimo 6 caracteres'),
     confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
-    phone: z
-      .string()
-      .regex(/^\d{10,11}$/, 'Telefone inválido (apenas números)')
-      .optional(),
     document: z
       .string()
-      .regex(/^\d{11,14}$/, 'Documento inválido (CPF: 11 dígitos, CNPJ: 14 dígitos)')
+      .refine((val) => !val || /^\d{11}$/.test(val), {
+        message: 'CPF inválido (deve conter 11 dígitos)',
+      })
       .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {

@@ -5,7 +5,6 @@ import type { Employee, InviteEmployeeRequest } from '@/lib/types/api'
 interface AcceptInviteRequest {
   token: string
   password: string
-  phone?: string
   document?: string
 }
 
