@@ -1,3 +1,4 @@
+import { PaginatedResponse, PaginationParams } from '@/lib/api/types'
 import type { Employee, InviteEmployeeRequest } from '@/lib/types/api'
 import { apiClient } from '../api-client'
 
@@ -7,6 +8,10 @@ interface AcceptInviteRequest {
   document?: string
 }
 
+interface ListEmployeesParams extends PaginationParams {
+  status?: string
+}
+
 export const employeesApi = {
   invite: (data: InviteEmployeeRequest) =>
     apiClient.post<Employee>('/api/v1/employees/invite', data),
@@ -14,8 +19,8 @@ export const employeesApi = {
   acceptInvite: (data: AcceptInviteRequest) =>
     apiClient.post<Employee>('/api/v1/employees/accept-invite-by-token', data),
 
-  listByCompany: (companyId: string, params?: { status?: string }) =>
-    apiClient.get<Employee[]>(`/api/v1/employees/company/${companyId}`, {
+  listByCompany: (companyId: string, params?: ListEmployeesParams) =>
+    apiClient.get<PaginatedResponse<Employee>>(`/api/v1/employees/company/${companyId}`, {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
 
