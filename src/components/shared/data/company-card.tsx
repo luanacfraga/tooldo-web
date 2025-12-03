@@ -29,7 +29,15 @@ export function CompanyCard({
     if (onEdit) {
       onEdit()
     } else {
-      router.push(`/companies/${id}/edit`)
+      router.push(`/companies/${id}/settings`)
+    }
+  }
+
+  const handleSelect = () => {
+    if (onSelect) {
+      onSelect()
+    } else {
+      router.push(`/companies/${id}/dashboard`)
     }
   }
 
@@ -40,7 +48,7 @@ export function CompanyCard({
         isSelected && 'ring-2 ring-primary',
         className
       )}
-      onClick={onSelect}
+      onClick={handleSelect}
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-2">

@@ -47,6 +47,7 @@ export function CompanySelector({
     const company = companies.find((c) => c.id === companyId)
     if (company) {
       selectCompany(company)
+      router.push(`/companies/${companyId}/dashboard`)
     }
   }
 

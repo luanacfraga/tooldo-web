@@ -2,7 +2,8 @@
 
 import { CompanySelector } from '@/components/features/company/selectors/company-selector'
 import { useAuth } from '@/lib/hooks/use-auth'
-import { usePermissions } from '@/lib/hooks/use-permissions'
+import { useUserContext } from '@/lib/contexts/user-context'
+import { useParams } from 'next/navigation'
 import {
   BarChart3,
   Building2,
@@ -18,102 +19,96 @@ import { Sidebar, type MenuItem } from './sidebar'
 
 export function DashboardSidebar() {
   const { logout } = useAuth()
-  const { isAdmin, isManager, isExecutor, isConsultant, isMaster, can } = usePermissions()
+  const { currentRole, currentCompanyId } = useUserContext()
+  const params = useParams()
+  const companyId = (params.companyId as string) || currentCompanyId
+
+  const isAdmin = currentRole === 'admin'
+  const isManager = currentRole === 'manager'
+  const isExecutor = currentRole === 'executor'
+  const isConsultant = currentRole === 'consultant'
+  const isMaster = currentRole === 'master'
 
   const menuItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = []
+    const basePath = companyId ? `/companies/${companyId}` : ''
 
-    if (isAdmin) {
+    if (isAdmin && companyId) {
       items.push(
         {
-          name: 'Empresa',
-          href: '/companies',
-          icon: Building2,
+          name: 'Dashboard',
+          href: `${basePath}/dashboard`,
+          icon: BarChart3,
         },
         {
           name: 'Usuários',
-          href: '/employees',
+          href: `${basePath}/members`,
           icon: UsersRound,
         },
         {
           name: 'Tarefas',
-          href: '/tasks',
+          href: `${basePath}/tasks`,
           icon: CheckSquare,
         },
         {
           name: 'Board',
-          href: '/board',
+          href: `${basePath}/board`,
           icon: LayoutDashboard,
-        },
-        {
-          name: 'Dashboards',
-          href: '/dashboards',
-          icon: BarChart3,
         }
       )
     }
 
-    if (isManager) {
+    if (isManager && companyId) {
       items.push(
         {
+          name: 'Dashboard',
+          href: `${basePath}/dashboard`,
+          icon: BarChart3,
+        },
+        {
           name: 'Minhas equipes',
-          href: '/teams/my-teams',
+          href: `${basePath}/teams`,
           icon: Users,
         },
         {
           name: 'Board geral',
-          href: '/board/general',
+          href: `${basePath}/board/general`,
           icon: LayoutDashboard,
         },
         {
-          name: 'Dashboard equipe',
-          href: '/dashboard/team',
-          icon: BarChart3,
-        },
-        {
-          name: 'Dashboard pessoal',
-          href: '/dashboard/personal',
-          icon: Home,
+          name: 'Tarefas',
+          href: `${basePath}/tasks`,
+          icon: CheckSquare,
         }
       )
     }
 
-    if (isExecutor) {
+    if (isExecutor && companyId) {
       items.push(
         {
+          name: 'Dashboard',
+          href: `${basePath}/dashboard`,
+          icon: BarChart3,
+        },
+        {
           name: 'Minhas tarefas',
-          href: '/tasks/my-tasks',
+          href: `${basePath}/tasks/my-tasks`,
           icon: CheckSquare,
         },
         {
           name: 'Board equipe',
-          href: '/board/team',
+          href: `${basePath}/board/team`,
           icon: LayoutDashboard,
-        },
-        {
-          name: 'Dashboard pessoal',
-          href: '/dashboard/personal',
-          icon: Home,
         }
       )
     }
 
-    if (isConsultant) {
+    if (isConsultant && companyId) {
       items.push(
         {
-          name: 'Dashboard empresa',
-          href: '/dashboard/company',
+          name: 'Dashboard',
+          href: `${basePath}/dashboard`,
           icon: BarChart3,
-        },
-        {
-          name: 'Dashboard equipe',
-          href: '/dashboard/team',
-          icon: BarChart3,
-        },
-        {
-          name: 'Dashboard usuário',
-          href: '/dashboard/user',
-          icon: Home,
         }
       )
     }
@@ -126,14 +121,22 @@ export function DashboardSidebar() {
       })
     }
 
+    if (!isMaster) {
+      items.push({
+        name: 'Empresas',
+        href: '/companies',
+        icon: Building2,
+      })
+    }
+
     items.push({
       name: 'Configurações',
-      href: '/settings',
+      href: companyId ? `${basePath}/settings` : '/settings',
       icon: Settings,
     })
 
     return items
-  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster])
+  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster, companyId])
 
   return (
     <Sidebar
@@ -141,7 +144,7 @@ export function DashboardSidebar() {
       onLogout={logout}
       showLogout={true}
       topComponent={
-        isAdmin ? (
+        (isAdmin || isManager) && companyId ? (
           <CompanySelector variant="default" showLabel={true} />
         ) : undefined
       }
