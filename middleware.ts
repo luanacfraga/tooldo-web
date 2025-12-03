@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
   if (isPublicRoute && token) {
-    return NextResponse.redirect(new URL('/select-company', request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   if (isProtectedRoute && !token) {

@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useUserContext } from '@/lib/contexts/user-context'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
+import { useUserContext } from '@/lib/contexts/user-context'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -15,7 +15,7 @@ export default function DashboardPage() {
         router.replace(`/companies/${currentCompanyId}/dashboard`)
       } else if (user.companies.length > 0) {
         router.replace(`/companies/${user.companies[0].id}/dashboard`)
-      } else {
+      } else if (user.globalRole === 'admin') {
         router.replace('/select-company')
       }
     }

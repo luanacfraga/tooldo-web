@@ -30,7 +30,7 @@ export function useAuth() {
       if (userForStore.role === 'admin') {
         router.replace('/select-company')
       } else {
-        router.replace('/select-company')
+        router.replace('/dashboard')
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login'
