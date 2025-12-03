@@ -36,8 +36,8 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
 
   return (
     <header
-      className={`fixed top-0 z-[70] w-full border-b border-border/50 bg-card/95 backdrop-blur-sm transition-all duration-300 ${
-        scrolled ? 'border-border shadow-md' : 'shadow-sm'
+      className={`fixed top-0 z-[70] w-full border-b border-border/40 bg-card/95 backdrop-blur-md transition-all duration-200 ${
+        scrolled ? 'border-border/60 shadow-md' : 'shadow-sm'
       }`}
     >
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
