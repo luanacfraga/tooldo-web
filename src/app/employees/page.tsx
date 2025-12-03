@@ -1,8 +1,30 @@
 'use client'
 
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type SortingState,
+} from '@tanstack/react-table'
+import {
+  ArrowUpDown,
+  Building2,
+  Filter,
+  MoreHorizontal,
+  Trash2,
+  UserCheck,
+  UserPlus,
+  UserX,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useCallback, useMemo, useState } from 'react'
+
 import { AdminOnly } from '@/components/features/auth/guards/admin-only'
 import { BaseLayout } from '@/components/layout/base-layout'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
+import { Pagination } from '@/components/shared/data/pagination'
 import { StatusBadge } from '@/components/shared/data/status-badge'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { ErrorState } from '@/components/shared/feedback/error-state'
@@ -31,32 +53,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useActivateEmployee } from '@/lib/services/queries/use-employees'
-import { useEmployeesByCompany } from '@/lib/services/queries/use-employees'
-import { useRemoveEmployee } from '@/lib/services/queries/use-employees'
-import { useSuspendEmployee } from '@/lib/services/queries/use-employees'
+
+import { config } from '@/config'
+import {
+  useActivateEmployee,
+  useEmployeesByCompany,
+  useRemoveEmployee,
+  useSuspendEmployee,
+} from '@/lib/services/queries/use-employees'
 import { useCompanyStore } from '@/lib/stores/company-store'
+
 import type { Employee } from '@/lib/types/api'
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from '@tanstack/react-table'
-import {
-  ArrowUpDown,
-  Building2,
-  Filter,
-  MoreHorizontal,
-  Trash2,
-  UserCheck,
-  UserPlus,
-  UserX,
-} from 'lucide-react'
-import Link from 'next/link'
-import { useMemo, useState } from 'react'
 
 const getRoleLabel = (role: string) => {
   const labels: Record<string, string> = {
@@ -71,41 +78,82 @@ export default function EmployeesPage() {
   const { selectedCompany } = useCompanyStore()
   const [sorting, setSorting] = useState<SortingState>([])
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState<number>(config.table.defaultPageSize)
+  const [sortBy, setSortBy] = useState<string>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   const {
-    data: employees = [],
+    data: employeesResponse,
     isLoading: loadingEmployees,
     error,
     refetch,
   } = useEmployeesByCompany(selectedCompany?.id || '', {
     status: statusFilter !== 'all' ? statusFilter : undefined,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
   })
+
+  const employees = useMemo(() => employeesResponse?.data || [], [employeesResponse?.data])
+  const meta = useMemo(
+    () =>
+      employeesResponse?.meta || {
+        page: 1,
+        limit: config.table.defaultPageSize,
+        total: 0,
+        totalPages: 0,
+      },
+    [employeesResponse?.meta]
+  )
+
   const { mutateAsync: suspend, isPending: isSuspending } = useSuspendEmployee()
   const { mutateAsync: activate, isPending: isActivating } = useActivateEmployee()
   const { mutateAsync: remove, isPending: isRemoving } = useRemoveEmployee()
 
-  const handleSuspend = async (id: string) => {
-    try {
-      await suspend(id)
-    } catch (error) {
-    }
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
   }
 
-  const handleActivate = async (id: string) => {
-    try {
-      await activate(id)
-    } catch (error) {
-    }
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit)
+    setPage(1)
   }
 
-  const handleRemove = async (id: string) => {
-    if (confirm('Tem certeza que deseja remover este funcionário?')) {
+  const handleStatusFilterChange = (newStatus: string) => {
+    setStatusFilter(newStatus)
+    setPage(1)
+  }
+
+  const handleSuspend = useCallback(
+    async (id: string) => {
       try {
-        await remove(id)
-      } catch (error) {
+        await suspend(id)
+      } catch (error) {}
+    },
+    [suspend]
+  )
+
+  const handleActivate = useCallback(
+    async (id: string) => {
+      try {
+        await activate(id)
+      } catch (error) {}
+    },
+    [activate]
+  )
+
+  const handleRemove = useCallback(
+    async (id: string) => {
+      if (confirm('Tem certeza que deseja remover este funcionário?')) {
+        try {
+          await remove(id)
+        } catch (error) {}
       }
-    }
-  }
+    },
+    [remove]
+  )
 
   const columns = useMemo<ColumnDef<Employee>[]>(
     () => [
@@ -116,7 +164,12 @@ export default function EmployeesPage() {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() => {
+                const newOrder = column.getIsSorted() === 'asc' ? 'desc' : 'asc'
+                setSortBy('firstName')
+                setSortOrder(newOrder)
+                setPage(1)
+              }}
               className="h-8 px-2 lg:px-3"
             >
               Nome
@@ -143,7 +196,12 @@ export default function EmployeesPage() {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() => {
+                const newOrder = column.getIsSorted() === 'asc' ? 'desc' : 'asc'
+                setSortBy('email')
+                setSortOrder(newOrder)
+                setPage(1)
+              }}
               className="h-8 px-2 lg:px-3"
             >
               Email
@@ -165,7 +223,12 @@ export default function EmployeesPage() {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() => {
+                const newOrder = column.getIsSorted() === 'asc' ? 'desc' : 'asc'
+                setSortBy('role')
+                setSortOrder(newOrder)
+                setPage(1)
+              }}
               className="h-8 px-2 lg:px-3"
             >
               Cargo
@@ -184,7 +247,12 @@ export default function EmployeesPage() {
           return (
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+              onClick={() => {
+                const newOrder = column.getIsSorted() === 'asc' ? 'desc' : 'asc'
+                setSortBy('status')
+                setSortOrder(newOrder)
+                setPage(1)
+              }}
               className="h-8 px-2 lg:px-3"
             >
               Status
@@ -248,7 +316,7 @@ export default function EmployeesPage() {
         },
       },
     ],
-    [isSuspending, isActivating, isRemoving]
+    [isSuspending, isActivating, isRemoving, handleSuspend, handleActivate, handleRemove]
   )
 
   const table = useReactTable({
@@ -263,13 +331,12 @@ export default function EmployeesPage() {
   })
 
   const stats = useMemo(() => {
-    const total = employees.length
     const active = employees.filter((e) => e.status === 'ACTIVE').length
     const invited = employees.filter((e) => e.status === 'INVITED').length
     const suspended = employees.filter((e) => e.status === 'SUSPENDED').length
 
-    return { total, active, invited, suspended }
-  }, [employees])
+    return { total: meta.total, active, invited, suspended }
+  }, [employees, meta.total])
 
   return (
     <AdminOnly>
@@ -290,7 +357,6 @@ export default function EmployeesPage() {
 
           {selectedCompany && (
             <div className="mb-4 space-y-3 sm:mb-6 sm:space-y-0">
-              {/* Mobile: Layout vertical organizado */}
               <div className="flex flex-col gap-3 sm:hidden">
                 <div className="flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -321,7 +387,7 @@ export default function EmployeesPage() {
                     </div>
                   )}
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                   <SelectTrigger className="h-9 w-full">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Filtrar por status" />
@@ -337,7 +403,6 @@ export default function EmployeesPage() {
                 </Select>
               </div>
 
-              {/* Desktop: Layout horizontal compacto */}
               <div className="hidden items-center justify-between sm:flex">
                 <div className="flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -368,7 +433,7 @@ export default function EmployeesPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                     <SelectTrigger className="h-9 w-[160px]">
                       <SelectValue placeholder="Todos os status" />
                     </SelectTrigger>
@@ -400,7 +465,7 @@ export default function EmployeesPage() {
             </div>
           )}
 
-          {!error && !loadingEmployees && employees.length === 0 && (
+          {!error && !loadingEmployees && employees.length === 0 && meta.total === 0 && (
             <EmptyState
               icon={UserPlus}
               title="Nenhum funcionário encontrado"
@@ -413,51 +478,69 @@ export default function EmployeesPage() {
           )}
 
           {!error && employees.length > 0 && (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+            <>
+              <div className="overflow-hidden rounded-lg border">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead key={header.id} className="whitespace-nowrap">
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </TableHead>
+                          ))}
+                        </TableRow>
                       ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loadingEmployees ? (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                          <span>Carregando funcionários...</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableHeader>
+                    <TableBody>
+                      {loadingEmployees ? (
+                        <TableRow>
+                          <TableCell colSpan={columns.length} className="h-24 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <span>Carregando funcionários...</span>
+                            </div>
                           </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center">
-                        Nenhum resultado encontrado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                        </TableRow>
+                      ) : table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id} className="whitespace-nowrap">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={columns.length} className="h-24 text-center">
+                            Nenhum resultado encontrado.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {meta.totalPages > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    page={meta.page}
+                    limit={meta.limit}
+                    total={meta.total}
+                    totalPages={meta.totalPages}
+                    onPageChange={handlePageChange}
+                    onLimitChange={handleLimitChange}
+                    pageSizeOptions={[...config.table.pageSizeOptions]}
+                  />
+                </div>
+              )}
+            </>
           )}
         </PageContainer>
       </BaseLayout>
