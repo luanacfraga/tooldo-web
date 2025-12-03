@@ -65,6 +65,13 @@ export const useAuthStore = create<AuthState>()(
             }
             return state
           })
+        } else {
+          set((state) => {
+            if (state.isAuthenticated) {
+              return { token: null, isAuthenticated: false }
+            }
+            return state
+          })
         }
       },
     }),
@@ -73,7 +80,21 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
+        isAuthenticated: state.user !== null,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const token = Cookies.get(config.cookies.tokenName)
+          if (token && state.user) {
+            state.token = token
+            state.isAuthenticated = true
+          } else if (!token) {
+            state.token = null
+            state.isAuthenticated = false
+            state.user = null
+          }
+        }
+      },
     }
   )
 )

@@ -34,9 +34,13 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { user: authUser, isAuthenticated: authIsAuthenticated } = useAuthStore()
+  const { user: authUser, isAuthenticated: authIsAuthenticated, initAuth } = useAuthStore()
   const { selectedCompany, setCompanies, selectCompany } = useCompanyStore()
   const { data: companies = [], refetch } = useCompanies()
+
+  useEffect(() => {
+    initAuth()
+  }, [initAuth])
 
   const [currentCompanyId, setCurrentCompanyIdState] = useState<string | null>(
     selectedCompany?.id || null
