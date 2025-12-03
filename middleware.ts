@@ -2,17 +2,17 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const publicRoutes = ['/login', '/register', '/register-master', '/accept-invite']
-const protectedRoutes = ['/companies', '/plans', '/select-company']
+const protectedRoutes = ['/companies', '/plans', '/select-company', '/dashboard']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = request.cookies.get('access_token')
+  const token = request.cookies.get('weedu_token')
 
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route)))
+  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 
   if (isPublicRoute && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.next()
   }
 
   if (isProtectedRoute && !token) {
