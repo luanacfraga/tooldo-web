@@ -165,7 +165,7 @@ export function RegisterForm({ onStepChange }: RegisterFormProps) {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <>
       <RegisterHeader currentStep={currentStep} totalSteps={STEPS.length} />
 
       <div className="mb-6 lg:hidden">
@@ -201,6 +201,6 @@ export function RegisterForm({ onStepChange }: RegisterFormProps) {
           <AuthLink question="Já tem uma conta?" linkText="Faça login" href="/login" />
         </form>
       </div>
-    </div>
+    </>
   )
 }
