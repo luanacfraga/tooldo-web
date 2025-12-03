@@ -1,15 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { employeesApi } from '@/lib/api/endpoints/employees'
 import type { InviteEmployeeRequest } from '@/lib/types/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const EMPLOYEES_KEY = ['employees'] as const
 
-export function useEmployeesByCompany(companyId: string) {
+export function useEmployeesByCompany(companyId: string, params?: { status?: string }) {
   return useQuery({
-    queryKey: [...EMPLOYEES_KEY, 'company', companyId],
+    queryKey: [...EMPLOYEES_KEY, 'company', companyId, params?.status],
     queryFn: async () => {
-      const response = await employeesApi.listByCompany(companyId)
-      return response.data || []
+      const response = await employeesApi.listByCompany(companyId, params)
+      return response || []
     },
     enabled: !!companyId,
   })
@@ -22,7 +22,7 @@ export function useInviteEmployee() {
     mutationFn: (data: InviteEmployeeRequest) => employeesApi.invite(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: [...EMPLOYEES_KEY, 'company', variables.companyId]
+        queryKey: [...EMPLOYEES_KEY, 'company', variables.companyId],
       })
     },
   })

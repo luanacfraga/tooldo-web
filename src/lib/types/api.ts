@@ -26,11 +26,12 @@ export interface Employee {
   companyId: string
   role: EmployeeRole
   status: EmployeeStatus
-  position?: string
-  notes?: string
-  invitedAt?: string
-  acceptedAt?: string
-  user: {
+  position?: string | null
+  notes?: string | null
+  invitedAt?: string | null
+  acceptedAt?: string | null
+  invitedBy?: string | null
+  user?: {
     id: string
     firstName: string
     lastName: string
