@@ -24,7 +24,9 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
       if (company) {
         setCurrentCompanyId(companyId)
       } else if (user?.companies.length === 0) {
-        router.push('/select-company')
+        if (user?.globalRole === 'admin') {
+          router.push('/select-company')
+        }
       } else if (user?.companies.length > 0) {
         router.push(`/companies/${user.companies[0].id}/dashboard`)
       }
@@ -43,10 +45,14 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
             icon={Building2}
             title="Nenhuma empresa encontrada"
             description="Você precisa estar associado a uma empresa para acessar esta área."
-            action={{
-              label: 'Voltar',
-              onClick: () => router.push('/select-company'),
-            }}
+            action={
+              user.globalRole === 'admin'
+                ? {
+                    label: 'Selecionar Empresa',
+                    onClick: () => router.push('/select-company'),
+                  }
+                : undefined
+            }
           />
         </PageContainer>
       )
@@ -58,16 +64,26 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
   const company = user.companies.find((c) => c.id === companyId)
 
   if (!company) {
+    const isAdmin = user.globalRole === 'admin'
     return (
       <PageContainer maxWidth="4xl">
         <EmptyState
           icon={Building2}
           title="Empresa não encontrada"
           description="Você não tem acesso a esta empresa ou ela não existe."
-          action={{
-            label: 'Selecionar Empresa',
-            onClick: () => router.push('/select-company'),
-          }}
+          action={
+            isAdmin
+              ? {
+                  label: 'Selecionar Empresa',
+                  onClick: () => router.push('/select-company'),
+                }
+              : user.companies.length > 0
+                ? {
+                    label: 'Ir para minha empresa',
+                    onClick: () => router.push(`/companies/${user.companies[0].id}/dashboard`),
+                  }
+                : undefined
+          }
         />
       </PageContainer>
     )
