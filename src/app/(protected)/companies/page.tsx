@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 export default function CompaniesPage() {
   const router = useRouter()
   const { data: companies = [], isLoading, error, refetch } = useCompanies()
-  const { selectedCompany } = useCompanyStore()
+  const { selectedCompany, selectCompany } = useCompanyStore()
 
   if (isLoading) {
     return (
@@ -72,6 +72,8 @@ export default function CompaniesPage() {
                   isSelected={selectedCompany?.id === company.id}
                   onSelect={() => {
                     if (selectedCompany?.id !== company.id) {
+                      selectCompany(company)
+                      router.push(`/companies/${company.id}/dashboard`)
                     }
                   }}
                 />

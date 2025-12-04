@@ -19,7 +19,7 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
 
-  const shouldShowMobileMenu = isMobile && pathname !== '/select-company' && pathname !== '/companies/new'
+  const shouldShowMobileMenu = isMobile && pathname !== '/companies/new'
 
   useEffect(() => {
     const handleScroll = () => {

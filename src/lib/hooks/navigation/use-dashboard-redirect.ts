@@ -21,7 +21,7 @@ export function useDashboardRedirect() {
     }
 
     if (user.globalRole === 'admin') {
-      router.replace('/select-company')
+      router.replace('/companies')
     }
   }, [user, currentCompanyId, router])
 }

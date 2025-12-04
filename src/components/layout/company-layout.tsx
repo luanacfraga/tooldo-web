@@ -61,8 +61,8 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
             action={
               user.globalRole === 'admin'
                 ? {
-                    label: 'Selecionar Empresa',
-                    onClick: () => router.push('/select-company'),
+                    label: 'Gerenciar Empresas',
+                    onClick: () => router.push('/companies'),
                   }
                 : undefined
             }
@@ -87,8 +87,8 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
           action={
             isAdmin
               ? {
-                  label: 'Selecionar Empresa',
-                  onClick: () => router.push('/select-company'),
+                  label: 'Gerenciar Empresas',
+                  onClick: () => router.push('/companies'),
                 }
               : user.companies.length > 0
                 ? {

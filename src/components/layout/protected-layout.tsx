@@ -42,13 +42,6 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
     return <LoadingScreen message="Verificando autenticação..." />
   }
 
-  const isSelectCompanyPage = pathname === '/select-company'
-  const isCompaniesNewPage = pathname === '/companies/new'
-
-  if (isSelectCompanyPage || isCompaniesNewPage) {
-    return <>{children}</>
-  }
-
   return (
     <BaseLayout sidebar={<DashboardSidebar />}>
       {children}

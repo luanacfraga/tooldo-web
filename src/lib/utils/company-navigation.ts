@@ -43,7 +43,7 @@ export function calculateCompanyNavigation(
       shouldUpdateCompanyId: false,
       shouldRedirectToSelectCompany: userGlobalRole === 'admin',
       shouldRedirectToFirstCompany: false,
-      redirectPath: userGlobalRole === 'admin' ? '/select-company' : undefined,
+      redirectPath: userGlobalRole === 'admin' ? '/companies' : undefined,
     }
   }
 

@@ -19,7 +19,7 @@ export function RequireCompany({ children }: RequireCompanyProps) {
 
   useEffect(() => {
     if (!isChecking && user?.role === 'admin' && !selectedCompany) {
-      router.push('/select-company')
+      router.push('/companies')
     }
   }, [isChecking, user, selectedCompany, router])
 
@@ -28,7 +28,7 @@ export function RequireCompany({ children }: RequireCompanyProps) {
   }
 
   if (user.role === 'admin' && !selectedCompany) {
-    return <CompanySelectionPrompt onNavigate={() => router.push('/select-company')} />
+    return <CompanySelectionPrompt onNavigate={() => router.push('/companies')} />
   }
 
   return <>{children}</>

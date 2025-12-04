@@ -28,7 +28,7 @@ export function useAuth() {
       await new Promise((resolve) => setTimeout(resolve, 100))
 
       if (userForStore.role === 'admin') {
-        router.replace('/select-company')
+        router.replace('/companies')
       } else {
         router.replace('/dashboard')
       }
