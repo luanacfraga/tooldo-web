@@ -27,11 +27,33 @@ export const registerSchema = z
     phone: z
       .string()
       .min(1, 'Telefone é obrigatório')
-      .regex(/^\d{10,11}$/, 'Telefone inválido (apenas números)'),
-  document: z
-    .string()
-    .min(1, 'CNPJ é obrigatório')
-    .regex(/^\d{14}$/, 'CNPJ deve conter 14 dígitos'),
+      .refine(
+        (val) => {
+          const digits = val.replace(/\D/g, '')
+          return digits.length === 11 || digits.length === 10
+        },
+        { message: 'Digite o telefone completo (10 ou 11 dígitos)' }
+      )
+      .refine(
+        (val) => {
+          const digits = val.replace(/\D/g, '')
+          // Valida se é um número de telefone brasileiro válido
+          if (digits.length === 11) {
+            // Celular: DDD (2 dígitos) + 9 + 8 dígitos
+            return /^[1-9]{2}9[0-9]{8}$/.test(digits)
+          }
+          if (digits.length === 10) {
+            // Fixo: DDD (2 dígitos) + 8 dígitos
+            return /^[1-9]{2}[2-5][0-9]{7}$/.test(digits)
+          }
+          return false
+        },
+        { message: 'Número de telefone inválido' }
+      ),
+    document: z
+      .string()
+      .min(1, 'CNPJ é obrigatório')
+      .regex(/^\d{14}$/, 'CNPJ deve conter 14 dígitos'),
     companyName: z
       .string()
       .min(1, 'Nome da empresa é obrigatório')

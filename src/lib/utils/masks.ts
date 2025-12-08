@@ -1,19 +1,35 @@
 export function maskPhone(value: string): string {
   const numbers = value.replace(/\D/g, '')
-  
+
   if (numbers.length <= 2) {
     return numbers ? `(${numbers}` : numbers
   }
-  
+
+  // Verifica se é celular (começa com 9 após o DDD)
+  const isMobile = numbers.length > 2 && numbers[2] === '9'
+
+  // Formato celular: (xx) 9 xxxx-xxxx (com espaço após o 9)
+  if (isMobile) {
+    if (numbers.length <= 3) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
+    }
+    if (numbers.length <= 7) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3)}`
+    }
+    if (numbers.length <= 11) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3, 7)}-${numbers.slice(7)}`
+    }
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`
+  }
+
+  // Formato fixo: (xx) xxxx-xxxx
   if (numbers.length <= 6) {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
   }
-  
   if (numbers.length <= 10) {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`
   }
-  
-  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6, 10)}`
 }
 
 export function maskCNPJ(value: string): string {
