@@ -4,6 +4,7 @@ import {
   type CreateTeamRequest,
   type UpdateTeamRequest,
   type AddTeamMemberRequest,
+  type Team,
 } from '@/lib/api/endpoints/teams'
 import type { PaginationParams } from '@/lib/api/types'
 
@@ -22,7 +23,6 @@ export function useTeamsByCompany(companyId: string, params?: PaginationParams) 
     ],
     queryFn: async () => {
       const teams = await teamsApi.getByCompany(companyId, params)
-      // A API retorna um array, então transformamos em formato paginado para compatibilidade
       return {
         data: teams || [],
         meta: {
@@ -55,6 +55,9 @@ export function useCreateTeam() {
         queryKey: [...TEAMS_KEY, 'company', variables.companyId],
       })
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY })
+      queryClient.invalidateQueries({
+        queryKey: ['employees', 'company', variables.companyId, 'managers'],
+      })
     },
   })
 }
@@ -65,9 +68,25 @@ export function useUpdateTeam() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTeamRequest }) =>
       teamsApi.update(id, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (updatedTeam, variables) => {
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY })
       queryClient.invalidateQueries({ queryKey: [...TEAMS_KEY, variables.id] })
+      if (updatedTeam?.companyId) {
+        queryClient.invalidateQueries({
+          queryKey: [...TEAMS_KEY, 'company', updatedTeam.companyId],
+        })
+        if (variables.data.managerId) {
+          queryClient.invalidateQueries({
+            queryKey: ['employees', 'company', updatedTeam.companyId, 'managers'],
+          })
+        }
+      } else {
+        if (variables.data.managerId) {
+          queryClient.invalidateQueries({
+            queryKey: ['employees', 'company'],
+          })
+        }
+      }
     },
   })
 }
@@ -98,10 +117,23 @@ export function useAddTeamMember() {
     mutationFn: ({ teamId, data }: { teamId: string; data: AddTeamMemberRequest }) =>
       teamsApi.addMember(teamId, data),
     onSuccess: (_, variables) => {
+      const team = queryClient.getQueryData<Team>([...TEAMS_KEY, variables.teamId])
+      const companyId = team?.companyId
+
       queryClient.invalidateQueries({
         queryKey: [...TEAMS_KEY, variables.teamId, 'members'],
       })
       queryClient.invalidateQueries({ queryKey: [...TEAMS_KEY, variables.teamId] })
+      queryClient.invalidateQueries({ queryKey: TEAMS_KEY })
+      if (companyId) {
+        queryClient.invalidateQueries({
+          queryKey: ['employees', 'company', companyId, 'executors'],
+        })
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ['employees', 'company'],
+        })
+      }
     },
   })
 }
@@ -113,10 +145,23 @@ export function useRemoveTeamMember() {
     mutationFn: ({ teamId, memberId }: { teamId: string; memberId: string }) =>
       teamsApi.removeMember(teamId, memberId),
     onSuccess: (_, variables) => {
+      const team = queryClient.getQueryData<Team>([...TEAMS_KEY, variables.teamId])
+      const companyId = team?.companyId
+
       queryClient.invalidateQueries({
         queryKey: [...TEAMS_KEY, variables.teamId, 'members'],
       })
       queryClient.invalidateQueries({ queryKey: [...TEAMS_KEY, variables.teamId] })
+      queryClient.invalidateQueries({ queryKey: TEAMS_KEY })
+      if (companyId) {
+        queryClient.invalidateQueries({
+          queryKey: ['employees', 'company', companyId, 'executors'],
+        })
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: ['employees', 'company'],
+        })
+      }
     },
   })
 }

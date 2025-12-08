@@ -38,6 +38,16 @@ export function useInviteEmployee() {
       queryClient.invalidateQueries({
         queryKey: [...EMPLOYEES_KEY, 'company', variables.companyId],
       })
+      if (variables.role === 'manager') {
+        queryClient.invalidateQueries({
+          queryKey: [...EMPLOYEES_KEY, 'company', variables.companyId, 'managers'],
+        })
+      }
+      if (variables.role === 'executor') {
+        queryClient.invalidateQueries({
+          queryKey: [...EMPLOYEES_KEY, 'company', variables.companyId, 'executors'],
+        })
+      }
     },
   })
 }
@@ -49,6 +59,9 @@ export function useSuspendEmployee() {
     mutationFn: (id: string) => employeesApi.suspend(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
     },
   })
 }
@@ -60,6 +73,9 @@ export function useActivateEmployee() {
     mutationFn: (id: string) => employeesApi.activate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
     },
   })
 }
@@ -71,6 +87,10 @@ export function useRemoveEmployee() {
     mutationFn: (id: string) => employeesApi.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
     },
   })
 }
@@ -82,6 +102,9 @@ export function useResendInvite() {
     mutationFn: (id: string) => employeesApi.resendInvite(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
     },
   })
 }
@@ -94,23 +117,20 @@ export function useManagersByCompany(companyId: string) {
         status: 'ACTIVE',
       })
       const employees = response?.data || []
-      // Filtrar apenas managers ativos
       return employees.filter((employee) => employee.role === 'manager')
     },
     enabled: !!companyId,
   })
 }
 
-export function useExecutorsByCompany(companyId: string) {
+export function useExecutorsByCompany(companyId: string, excludeTeamId?: string) {
   return useQuery({
-    queryKey: [...EMPLOYEES_KEY, 'company', companyId, 'executors'],
+    queryKey: [...EMPLOYEES_KEY, 'company', companyId, 'executors', excludeTeamId],
     queryFn: async () => {
-      const response = await employeesApi.listByCompany(companyId, {
-        status: 'ACTIVE',
+      const executors = await employeesApi.listExecutorsByCompany(companyId, {
+        excludeTeamId,
       })
-      const employees = response?.data || []
-      // Filtrar apenas executores ativos
-      return employees.filter((employee) => employee.role === 'executor')
+      return executors || []
     },
     enabled: !!companyId,
   })
