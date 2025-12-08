@@ -3,6 +3,7 @@
 import { CompanySelector } from '@/components/features/company/selectors/company-selector'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useUserContext } from '@/lib/contexts/user-context'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import { useParams } from 'next/navigation'
 import {
   BarChart3,
@@ -20,6 +21,7 @@ import { Sidebar, type MenuItem } from './sidebar'
 export function DashboardSidebar() {
   const { logout } = useAuth()
   const { currentRole, currentCompanyId } = useUserContext()
+  const { canInviteEmployee } = usePermissions()
   const params = useParams()
   const companyId = (params.companyId as string) || currentCompanyId
 
@@ -85,6 +87,21 @@ export function DashboardSidebar() {
           href: `${basePath}/teams`,
           icon: Users,
         },
+        ...(canInviteEmployee
+          ? [
+              {
+                name: 'Usuários',
+                href: `${basePath}/members`,
+                icon: UsersRound,
+                subItems: [
+                  {
+                    name: 'Convidar Funcionário',
+                    href: `${basePath}/invite`,
+                  },
+                ],
+              },
+            ]
+          : []),
         {
           name: 'Board geral',
           href: `${basePath}/board/general`,

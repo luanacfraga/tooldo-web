@@ -60,6 +60,7 @@ import {
   useSuspendEmployee,
 } from '@/lib/services/queries/use-employees'
 import { useUserContext } from '@/lib/contexts/user-context'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import type { Employee } from '@/lib/types/api'
 
 const getRoleLabel = (role: string) => {
@@ -76,6 +77,7 @@ export default function CompanyMembersPage() {
   const router = useRouter()
   const companyId = params.companyId as string
   const { user } = useUserContext()
+  const { canInviteEmployee } = usePermissions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
@@ -149,10 +151,10 @@ export default function CompanyMembersPage() {
     async (id: string) => {
       try {
         await resendInvite(id)
-        refetch()
+        // React Query vai atualizar automaticamente via invalidação
       } catch (error) {}
     },
-    [resendInvite, refetch]
+    [resendInvite]
   )
 
   const handleRemove = useCallback(
@@ -366,12 +368,14 @@ export default function CompanyMembersPage() {
         title="Funcionários"
         description={`Gerencie os funcionários${company ? ` de ${company.name}` : ''}`}
         action={
-          <Link href={`/companies/${companyId}/invite`}>
-            <Button className="gap-1.5 font-medium sm:gap-2">
-              <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span>Convidar Funcionário</span>
-            </Button>
-          </Link>
+          canInviteEmployee && (
+            <Link href={`/companies/${companyId}/invite`}>
+              <Button className="gap-1.5 font-medium sm:gap-2">
+                <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>Convidar Funcionário</span>
+              </Button>
+            </Link>
+          )
         }
       />
 
@@ -444,10 +448,14 @@ export default function CompanyMembersPage() {
           icon={UserPlus}
           title="Nenhum funcionário encontrado"
           description="Você ainda não possui funcionários cadastrados. Comece convidando um funcionário."
-          action={{
-            label: 'Convidar Funcionário',
-            onClick: () => router.push(`/companies/${companyId}/invite`),
-          }}
+          action={
+            canInviteEmployee
+              ? {
+                  label: 'Convidar Funcionário',
+                  onClick: () => router.push(`/companies/${companyId}/invite`),
+                }
+              : undefined
+          }
         />
       )}
 

@@ -82,6 +82,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
 
   manager: [
+    Permission.INVITE_EMPLOYEE,
     Permission.VIEW_MY_TEAMS,
     Permission.VIEW_BOARD_GENERAL,
     Permission.VIEW_BOARD_TEAM,

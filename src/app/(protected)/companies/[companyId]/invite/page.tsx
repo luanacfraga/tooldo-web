@@ -41,9 +41,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { ApiError } from '@/lib/api/api-client'
 import { employeesApi } from '@/lib/api/endpoints/employees'
 import { useUserContext } from '@/lib/contexts/user-context'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import { maskCPF, maskPhone, unmaskCPF, unmaskPhone } from '@/lib/utils/masks'
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from '@/lib/validators/employee'
 
@@ -52,12 +54,27 @@ export default function CompanyInvitePage() {
   const router = useRouter()
   const companyId = params.companyId as string
   const { user } = useUserContext()
+  const { canInviteEmployee, isManager } = usePermissions()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [phoneValue, setPhoneValue] = useState('')
   const [cpfValue, setCpfValue] = useState('')
 
   const company = user?.companies.find((c) => c.id === companyId)
+
+  useEffect(() => {
+    if (user && !canInviteEmployee) {
+      router.push(`/companies/${companyId}/members`)
+    }
+  }, [user, canInviteEmployee, router, companyId])
+
+  if (!user || !canInviteEmployee) {
+    return (
+      <PageContainer maxWidth="4xl">
+        <LoadingScreen message="Verificando permissões..." />
+      </PageContainer>
+    )
+  }
 
   const form = useForm<InviteEmployeeFormData>({
     resolver: zodResolver(inviteEmployeeSchema),
@@ -356,9 +373,9 @@ export default function CompanyInvitePage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="manager">Gestor</SelectItem>
+                        {!isManager && <SelectItem value="manager">Gestor</SelectItem>}
                         <SelectItem value="executor">Executor</SelectItem>
-                        <SelectItem value="consultant">Consultor</SelectItem>
+                        {!isManager && <SelectItem value="consultant">Consultor</SelectItem>}
                       </SelectContent>
                     </Select>
                     <FormDescription>Define as permissões do funcionário</FormDescription>
