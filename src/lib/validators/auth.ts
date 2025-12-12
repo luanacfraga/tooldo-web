@@ -37,16 +37,9 @@ export const registerSchema = z
       .refine(
         (val) => {
           const digits = val.replace(/\D/g, '')
-          // Valida se é um número de telefone brasileiro válido
-          if (digits.length === 11) {
-            // Celular: DDD (2 dígitos) + 9 + 8 dígitos
-            return /^[1-9]{2}9[0-9]{8}$/.test(digits)
-          }
-          if (digits.length === 10) {
-            // Fixo: DDD (2 dígitos) + 8 dígitos
-            return /^[1-9]{2}[2-5][0-9]{7}$/.test(digits)
-          }
-          return false
+          const isMobilePhone = digits.length === 11 && /^[1-9]{2}9[0-9]{8}$/.test(digits)
+          const isLandline = digits.length === 10 && /^[1-9]{2}[2-5][0-9]{7}$/.test(digits)
+          return isMobilePhone || isLandline
         },
         { message: 'Número de telefone inválido' }
       ),
@@ -68,5 +61,24 @@ export const registerSchema = z
     path: ['confirmPassword'],
   })
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().min(1, 'Email é obrigatório').email('Email inválido'),
+})
+
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, 'Senha é obrigatória')
+      .min(6, 'Senha deve ter no mínimo 6 caracteres'),
+    confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'As senhas não coincidem',
+    path: ['confirmPassword'],
+  })
+
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>

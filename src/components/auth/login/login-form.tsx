@@ -1,16 +1,20 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { FormFieldWrapper } from '@/components/ui/form-field-wrapper'
-import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/ui/password-input'
-import { ApiError } from '@/lib/api/api-client'
-import { useAuth } from '@/lib/hooks/use-auth'
-import { loginSchema, type LoginFormData } from '@/lib/validators/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+
+import { Button } from '@/components/ui/button'
+import { FormFieldWrapper } from '@/components/ui/form-field-wrapper'
+import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
+
+import { useAuth } from '@/lib/hooks/use-auth'
+import { getApiErrorMessage } from '@/lib/utils/error-handling'
+import { getInputClassName } from '@/lib/utils/form-styles'
+import { loginSchema, type LoginFormData } from '@/lib/validators/auth'
+
 import { ErrorAlert } from './error-alert'
 
 export function LoginForm() {
@@ -34,18 +38,12 @@ export function LoginForm() {
       setError(null)
       await login(data.email, data.password)
     } catch (err) {
-      if (err instanceof ApiError) {
-        const errorMessage =
-          (err.data as { message?: string })?.message || 'Email ou senha inválidos'
-        setError(errorMessage)
-      } else {
-        setError('Erro ao fazer login. Tente novamente.')
-      }
+      setError(getApiErrorMessage(err, 'Email ou senha inválidos'))
     }
   }
 
   return (
-    <div className="animate-fade-in relative rounded-3xl border border-border/60 bg-card/95 p-6 shadow-2xl backdrop-blur-xl transition-all sm:p-8 lg:rounded-2xl lg:bg-card lg:shadow-lg">
+    <div className="relative animate-fade-in rounded-3xl border border-border/60 bg-card/95 p-6 shadow-2xl backdrop-blur-xl transition-all sm:p-8 lg:rounded-2xl lg:bg-card lg:shadow-lg">
       <form
         method="POST"
         onSubmit={(e) => {
@@ -62,11 +60,7 @@ export function LoginForm() {
             type="email"
             placeholder="seu@email.com"
             {...register('email')}
-            className={`h-12 text-base transition-all ${
-              errors.email
-                ? 'border-destructive focus-visible:ring-destructive'
-                : 'border-input focus-visible:border-primary focus-visible:ring-primary/20'
-            }`}
+            className={getInputClassName(!!errors.email)}
           />
         </FormFieldWrapper>
 
@@ -76,7 +70,7 @@ export function LoginForm() {
           error={errors.password?.message}
           labelAction={
             <Link
-              href="/auth/forgot-password"
+              href="/forgot-password"
               className="text-xs font-semibold text-primary transition-all hover:text-primary/80 active:scale-95"
             >
               Esqueceu?
@@ -87,11 +81,7 @@ export function LoginForm() {
             id="password"
             placeholder="••••••••"
             {...register('password')}
-            className={`h-12 text-base transition-all ${
-              errors.password
-                ? 'border-destructive focus-visible:ring-destructive'
-                : 'border-input focus-visible:border-primary focus-visible:ring-primary/20'
-            }`}
+            className={getInputClassName(!!errors.password)}
           />
         </FormFieldWrapper>
 

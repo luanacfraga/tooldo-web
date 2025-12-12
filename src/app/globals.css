@@ -16,8 +16,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary - Purple/Violet (from weedu-app: #8855f6) */
-    --primary: 258 90% 66%;
+    /* Primary - Plum/Purple (ToolDo brand: #6B46C1) */
+    --primary: 258 65% 50%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary - Teal (from weedu-app: #2dd4bf) */
@@ -70,9 +70,9 @@
     --popover: 0 0% 13%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary - Light Purple */
-    --primary: 258 85% 70%;
-    --primary-foreground: 0 0% 10%;
+    /* Primary - Light Plum/Purple */
+    --primary: 258 70% 60%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary - Light Teal */
     --secondary: 173 75% 55%;

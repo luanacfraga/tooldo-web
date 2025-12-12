@@ -1,0 +1,20 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tool -->
+  <text x="0" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" fill="#6B46C1" letter-spacing="-0.02em">
+    Tool
+  </text>
+  
+  <!-- Stylized D with checkmark - Square that connects to 'o' -->
+  <g transform="translate(95, 8)">
+    <!-- Square outline (D shape) - no right border to connect with 'o' -->
+    <path d="M 0 0 L 0 44 L 44 44 L 44 0 Z" stroke="#6B46C1" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Checkmark inside the square -->
+    <path d="M 12 22 L 20 30 L 32 14" stroke="#6B46C1" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- o -->
+  <text x="145" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" fill="#6B46C1" letter-spacing="-0.02em">
+    o
+  </text>
+</svg>
+

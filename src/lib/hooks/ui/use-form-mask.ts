@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { UseFormSetValue, UseFormWatch } from 'react-hook-form'
 
 type MaskFunction = (value: string) => string
 type UnmaskFunction = (value: string) => string
 
-interface UseFormMaskOptions<T extends Record<string, any>> {
+interface UseFormMaskOptions<T extends Record<string, string>> {
   fieldName: keyof T
   mask: MaskFunction
   unmask: UnmaskFunction
@@ -12,20 +12,14 @@ interface UseFormMaskOptions<T extends Record<string, any>> {
   setValue: UseFormSetValue<T>
 }
 
-/**
- * Hook para gerenciar máscaras de campos de formulário
- * Responsabilidade única: Aplicar e sincronizar máscaras
- *
- * Aplica SRP: Separa lógica de máscaras do componente
- */
-export function useFormMask<T extends Record<string, any>>({
+export function useFormMask<T extends Record<string, string>>({
   fieldName,
   mask,
   unmask,
   watch,
   setValue,
 }: UseFormMaskOptions<T>) {
-  const fieldValue = watch(fieldName as any)
+  const fieldValue = watch(fieldName)
   const [maskedValue, setMaskedValue] = useState('')
 
   useEffect(() => {
@@ -41,7 +35,7 @@ export function useFormMask<T extends Record<string, any>>({
     const masked = mask(value)
     const unmasked = unmask(masked)
     setMaskedValue(masked)
-    setValue(fieldName as any, unmasked as any)
+    setValue(fieldName, unmasked as T[keyof T])
   }
 
   return {

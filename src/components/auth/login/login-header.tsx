@@ -1,3 +1,5 @@
+import { Logo } from '@/components/shared/logo'
+
 interface LoginHeaderProps {
   variant?: 'mobile' | 'desktop'
 }
@@ -5,12 +7,10 @@ interface LoginHeaderProps {
 export function LoginHeader({ variant = 'mobile' }: LoginHeaderProps) {
   if (variant === 'mobile') {
     return (
-      <div className="animate-fade-in mb-8 text-center lg:hidden">
+      <div className="mb-8 animate-fade-in text-center lg:hidden">
         <div className="mb-6 flex flex-col items-center gap-4">
           <div className="text-center">
-            <h1 className="bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-3xl font-bold text-transparent">
-              Weedu
-            </h1>
+            <Logo size="lg" className="justify-center" />
             <p className="mt-1 text-xs text-muted-foreground">Gestão inteligente</p>
           </div>
         </div>
@@ -31,4 +31,3 @@ export function LoginHeader({ variant = 'mobile' }: LoginHeaderProps) {
     </div>
   )
 }
-

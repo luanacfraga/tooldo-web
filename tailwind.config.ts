@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -16,12 +19,12 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: '#4f46e5',
-          base: '#4f46e5',
-          dark: '#4338ca',
-          light: '#6366f1',
-          lighter: '#8896BA',
-          lightest: '#A9B3CD',
+          DEFAULT: '#6B46C1',
+          base: '#6B46C1',
+          dark: '#553C9A',
+          light: '#7C3AED',
+          lighter: '#8B5CF6',
+          lightest: '#A78BFA',
           foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {

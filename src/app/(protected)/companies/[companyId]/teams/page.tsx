@@ -1,26 +1,11 @@
 'use client'
 
-import { TeamForm } from '@/components/features/team/team-form'
-import { TeamMembersDialog } from '@/components/features/team/team-members-dialog'
-import { EmptyState } from '@/components/shared/feedback/empty-state'
-import { ErrorState } from '@/components/shared/feedback/error-state'
-import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
-import { PageContainer } from '@/components/shared/layout/page-container'
-import { PageHeader } from '@/components/shared/layout/page-header'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ApiError } from '@/lib/api/api-client'
-import type { Team } from '@/lib/api/endpoints/teams'
-import { useUserContext } from '@/lib/contexts/user-context'
-import { formatDate } from '@/lib/formatters'
-import { useManagersByCompany } from '@/lib/services/queries/use-employees'
-import { useCreateTeam, useTeamsByCompany, useUpdateTeam } from '@/lib/services/queries/use-teams'
-import { type TeamFormData } from '@/lib/validators/team'
 import {
   AlertCircle,
   ArrowLeft,
   Building2,
   CheckCircle2,
+  Crown,
   Edit,
   Plus,
   UserCog,
@@ -28,6 +13,26 @@ import {
 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+import { TeamForm } from '@/components/features/team/team-form'
+import { TeamMembersDialog } from '@/components/features/team/team-members-dialog'
+import { EmptyState } from '@/components/shared/feedback/empty-state'
+import { ErrorState } from '@/components/shared/feedback/error-state'
+import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
+import { PageContainer } from '@/components/shared/layout/page-container'
+import { PageHeader } from '@/components/shared/layout/page-header'
+
+import { useUserContext } from '@/lib/contexts/user-context'
+import { formatDate } from '@/lib/formatters'
+import { useManagersByCompany } from '@/lib/services/queries/use-employees'
+import { useCreateTeam, useTeamsByCompany, useUpdateTeam } from '@/lib/services/queries/use-teams'
+import { getApiErrorMessage } from '@/lib/utils/error-handling'
+
+import type { Team } from '@/lib/api/endpoints/teams'
+import { type TeamFormData } from '@/lib/validators/team'
 
 export default function TeamsPage() {
   const params = useParams()
@@ -70,12 +75,13 @@ export default function TeamsPage() {
   const hasSingleTeam = teams.length === 1
   const myTeam = isManager && hasSingleTeam ? teams[0] : null
 
-  const getErrorMessage = (err: unknown, defaultMessage: string): string => {
-    if (err instanceof ApiError) {
-      const errorData = err.data as { message?: string }
-      return errorData?.message || defaultMessage
-    }
-    return defaultMessage
+  const getTeamManager = (teamId: string): string => {
+    const team = allTeams.find((t) => t.id === teamId)
+    if (!team) return 'Equipe não encontrada'
+    const manager = managers.find((m) => m.userId === team.managerId)
+    return manager?.user
+      ? `${manager.user.firstName} ${manager.user.lastName}`
+      : 'Gestor não encontrado'
   }
 
   const availableManagers = useMemo(() => {
@@ -110,7 +116,7 @@ export default function TeamsPage() {
         setSuccess(false)
       }, 3000)
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao criar equipe. Tente novamente.'))
+      setError(getApiErrorMessage(err, 'Erro ao criar equipe. Tente novamente.'))
     }
   }
 
@@ -136,7 +142,7 @@ export default function TeamsPage() {
         setSuccess(false)
       }, 3000)
     } catch (err) {
-      setError(getErrorMessage(err, 'Erro ao atualizar equipe. Tente novamente.'))
+      setError(getApiErrorMessage(err, 'Erro ao atualizar equipe. Tente novamente.'))
     }
   }
 
@@ -319,7 +325,6 @@ export default function TeamsPage() {
           {!teamsError && teams.length > 0 && (
             <>
               {isManager && hasSingleTeam && myTeam ? (
-                // Layout destacado para gerente com uma única equipe
                 <Card className="border-2 border-primary/20 shadow-lg">
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
@@ -346,6 +351,23 @@ export default function TeamsPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {isAdmin && (
+                      <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded bg-warning/10 p-2">
+                            <Crown className="h-4 w-4 text-warning" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-muted-foreground">
+                              Gestor da Equipe
+                            </p>
+                            <p className="text-sm font-semibold text-foreground">
+                              {getTeamManager(myTeam.id)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {myTeam.iaContext && (
                       <div className="rounded-lg border border-border/40 bg-muted/30 p-4">
                         <div className="flex items-start gap-3">
@@ -393,7 +415,6 @@ export default function TeamsPage() {
                   </CardContent>
                 </Card>
               ) : (
-                // Layout em grid para múltiplas equipes
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {teams.map((team) => {
                     const isMyTeam = isManager && team.managerId === user?.id
@@ -421,6 +442,23 @@ export default function TeamsPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-3">
+                            {isAdmin && (
+                              <div className="rounded-lg border border-warning/30 bg-warning/5 p-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="rounded bg-warning/10 p-1">
+                                    <Crown className="h-3.5 w-3.5 text-warning" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                      Gestor da Equipe
+                                    </p>
+                                    <p className="truncate text-sm font-semibold text-foreground">
+                                      {getTeamManager(team.id)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                             {team.iaContext && (
                               <div className="text-sm text-muted-foreground">
                                 <span className="font-medium">Contexto IA:</span>{' '}

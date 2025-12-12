@@ -10,7 +10,7 @@ function getEnvVar(key: string, defaultValue?: string): string {
 
 export const env = {
   apiUrl: getEnvVar('NEXT_PUBLIC_API_URL', 'http://localhost:3000'),
-  appName: 'Weedu',
+  appName: 'ToolDo',
   appDescription: 'Plataforma de gestão para empresas, times e membros',
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',

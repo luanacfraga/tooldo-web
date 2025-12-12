@@ -1,11 +1,18 @@
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Building2, Settings } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import type { Company } from '@/lib/api/endpoints/companies'
 import { cn } from '@/lib/utils'
+import { Building2, Settings } from 'lucide-react'
 
 interface CompanySelectorViewProps {
-  companies: any[]
-  selectedCompany: any
+  companies: Company[]
+  selectedCompany: Company | null
   onCompanyChange: (companyId: string) => void
   onManage: () => void
   showLabel: boolean
@@ -27,22 +34,23 @@ export function CompanySelectorView({
   return (
     <div className={cn('space-y-2', className)}>
       {showLabel && variant === 'default' && (
-        <label className="text-xs font-medium text-muted-foreground truncate block">
+        <label className="block truncate text-xs font-medium text-muted-foreground">
           Empresa Atual
         </label>
       )}
-      <div className="flex gap-2 min-w-0">
+      <div className="flex min-w-0 gap-2">
         <Select value={selectedCompany?.id || ''} onValueChange={onCompanyChange}>
           <SelectTrigger
             className={cn(
-              'h-11 flex-1 min-w-0 border-border/50',
-              isCompact && 'h-9 text-sm min-w-[160px] max-w-[220px] border-border/50 bg-muted/30 hover:bg-muted/50'
+              'h-11 min-w-0 flex-1 border-border/50',
+              isCompact &&
+                'h-9 min-w-[160px] max-w-[220px] border-border/50 bg-muted/30 text-sm hover:bg-muted/50'
             )}
           >
-            <SelectValue placeholder={isCompact ? "Empresa" : "Selecione uma empresa"} />
+            <SelectValue placeholder={isCompact ? 'Empresa' : 'Selecione uma empresa'} />
           </SelectTrigger>
           <SelectContent
-            className="min-w-[220px] max-w-[90vw] z-[100]"
+            className="z-[100] min-w-[220px] max-w-[90vw]"
             align={isCompact ? 'end' : 'start'}
             sideOffset={4}
           >
@@ -52,17 +60,18 @@ export function CompanySelectorView({
                   const isSelected = selectedCompany?.id === company.id
                   return (
                     <SelectItem key={company.id} value={company.id}>
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Building2 className={cn(
-                          "h-4 w-4 flex-shrink-0",
-                          isSelected ? "text-primary" : "text-muted-foreground"
-                        )} />
-                        <span className={cn(
-                          "truncate",
-                          isSelected && "font-medium"
-                        )}>{company.name}</span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Building2
+                          className={cn(
+                            'h-4 w-4 flex-shrink-0',
+                            isSelected ? 'text-primary' : 'text-muted-foreground'
+                          )}
+                        />
+                        <span className={cn('truncate', isSelected && 'font-medium')}>
+                          {company.name}
+                        </span>
                         {isSelected && (
-                          <span className="ml-auto h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                          <span className="ml-auto h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
                         )}
                       </div>
                     </SelectItem>
