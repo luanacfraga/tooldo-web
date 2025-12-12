@@ -56,7 +56,7 @@ export default function TeamsPage() {
   const { mutateAsync: createTeam, isPending: isCreating } = useCreateTeam()
   const { mutateAsync: updateTeam, isPending: isUpdating } = useUpdateTeam()
 
-  const allTeams = teamsResponse?.data || []
+  const allTeams = useMemo(() => teamsResponse?.data || [], [teamsResponse?.data])
   const company = user?.companies.find((c) => c.id === companyId)
 
   // Filtrar equipes: gerente vê apenas sua equipe

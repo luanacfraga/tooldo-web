@@ -12,10 +12,10 @@ import { acceptInviteSchema, type AcceptInviteFormData } from '@/lib/validators/
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-export default function AcceptInvitePage() {
+function AcceptInviteForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
@@ -232,5 +232,26 @@ export default function AcceptInvitePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 py-12">
+          <div className="w-full max-w-md">
+            <div className="relative animate-fade-in rounded-3xl border border-border/60 bg-card/95 p-6 shadow-2xl backdrop-blur-xl transition-all sm:p-8 lg:rounded-2xl lg:bg-card lg:shadow-lg">
+              <div className="text-center">
+                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AcceptInviteForm />
+    </Suspense>
   )
 }

@@ -1,10 +1,18 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 
+import { useCompanies } from '@/lib/services/queries/use-companies'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useCompanyStore } from '@/lib/stores/company-store'
-import { useCompanies } from '@/lib/services/queries/use-companies'
 import { getCompaniesWithRoles, type CompanyWithRole } from '@/lib/utils/user-role'
 
 import type { UserRole } from '@/lib/permissions'
@@ -53,17 +61,20 @@ export function UserProvider({ children }: UserProviderProps) {
     if (selectedCompany?.id !== currentCompanyId) {
       setCurrentCompanyIdState(selectedCompany?.id || null)
     }
-  }, [selectedCompany])
+  }, [selectedCompany, currentCompanyId])
 
-  const setCurrentCompanyId = (companyId: string | null) => {
-    setCurrentCompanyIdState(companyId)
-    const company = companies.find((c) => c.id === companyId)
-    if (company) {
-      selectCompany(company)
-    } else {
-      selectCompany(null)
-    }
-  }
+  const setCurrentCompanyId = useCallback(
+    (companyId: string | null) => {
+      setCurrentCompanyIdState(companyId)
+      const company = companies.find((c) => c.id === companyId)
+      if (company) {
+        selectCompany(company)
+      } else {
+        selectCompany(null)
+      }
+    },
+    [companies, selectCompany]
+  )
 
   const companiesWithRoles = useMemo<CompanyWithRole[]>(() => {
     return getCompaniesWithRoles(companies, authUser)
@@ -96,7 +107,15 @@ export function UserProvider({ children }: UserProviderProps) {
         refetch()
       },
     }),
-    [authUser, authIsAuthenticated, currentCompanyId, currentRole, companiesWithRoles, refetch]
+    [
+      authUser,
+      authIsAuthenticated,
+      currentCompanyId,
+      currentRole,
+      companiesWithRoles,
+      refetch,
+      setCurrentCompanyId,
+    ]
   )
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
@@ -109,4 +128,3 @@ export function useUserContext() {
   }
   return context
 }
-

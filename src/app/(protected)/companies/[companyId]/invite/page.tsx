@@ -1,22 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  AlertCircle,
-  ArrowLeft,
-  Briefcase,
-  Building2,
-  CheckCircle2,
-  FileText,
-  Loader2,
-  Mail,
-  Phone,
-  Send,
-  User,
-} from 'lucide-react'
+import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { FormSection } from '@/components/shared/forms/form-section'
 import { InputWithIcon } from '@/components/shared/forms/input-with-icon'
 import { PageContainer } from '@/components/shared/layout/page-container'
@@ -41,13 +25,29 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { ApiError } from '@/lib/api/api-client'
 import { employeesApi } from '@/lib/api/endpoints/employees'
 import { useUserContext } from '@/lib/contexts/user-context'
 import { usePermissions } from '@/lib/hooks/use-permissions'
 import { maskCPF, maskPhone, unmaskCPF, unmaskPhone } from '@/lib/utils/masks'
 import { inviteEmployeeSchema, type InviteEmployeeFormData } from '@/lib/validators/employee'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  AlertCircle,
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Mail,
+  Phone,
+  Send,
+  User,
+} from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
 
 export default function CompanyInvitePage() {
   const params = useParams()
@@ -61,20 +61,6 @@ export default function CompanyInvitePage() {
   const [cpfValue, setCpfValue] = useState('')
 
   const company = user?.companies.find((c) => c.id === companyId)
-
-  useEffect(() => {
-    if (user && !canInviteEmployee) {
-      router.push(`/companies/${companyId}/members`)
-    }
-  }, [user, canInviteEmployee, router, companyId])
-
-  if (!user || !canInviteEmployee) {
-    return (
-      <PageContainer maxWidth="4xl">
-        <LoadingScreen message="Verificando permissões..." />
-      </PageContainer>
-    )
-  }
 
   const form = useForm<InviteEmployeeFormData>({
     resolver: zodResolver(inviteEmployeeSchema),
@@ -92,10 +78,24 @@ export default function CompanyInvitePage() {
   })
 
   useEffect(() => {
+    if (user && !canInviteEmployee) {
+      router.push(`/companies/${companyId}/members`)
+    }
+  }, [user, canInviteEmployee, router, companyId])
+
+  useEffect(() => {
     if (companyId) {
       form.setValue('companyId', companyId)
     }
   }, [companyId, form])
+
+  if (!user || !canInviteEmployee) {
+    return (
+      <PageContainer maxWidth="4xl">
+        <LoadingScreen message="Verificando permissões..." />
+      </PageContainer>
+    )
+  }
 
   const onSubmit = async (data: InviteEmployeeFormData) => {
     try {
@@ -139,8 +139,7 @@ export default function CompanyInvitePage() {
               </div>
               <CardTitle className="text-2xl">Convite enviado com sucesso!</CardTitle>
               <CardDescription className="pt-2">
-                O funcionário receberá um email com o link para aceitar o convite e criar sua
-                conta.
+                O funcionário receberá um email com o link para aceitar o convite e criar sua conta.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -462,4 +461,3 @@ export default function CompanyInvitePage() {
     </PageContainer>
   )
 }
-

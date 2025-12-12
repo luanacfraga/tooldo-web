@@ -1,27 +1,5 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from '@tanstack/react-table'
-import {
-  ArrowUpDown,
-  Building2,
-  Filter,
-  Mail,
-  MoreHorizontal,
-  Trash2,
-  UserCheck,
-  UserPlus,
-  UserX,
-} from 'lucide-react'
-import Link from 'next/link'
-import { useCallback, useMemo, useState } from 'react'
 import { Pagination } from '@/components/shared/data/pagination'
 import { StatusBadge } from '@/components/shared/data/status-badge'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
@@ -52,6 +30,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { config } from '@/config/config'
+import { useUserContext } from '@/lib/contexts/user-context'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import {
   useActivateEmployee,
   useEmployeesByCompany,
@@ -59,9 +39,29 @@ import {
   useResendInvite,
   useSuspendEmployee,
 } from '@/lib/services/queries/use-employees'
-import { useUserContext } from '@/lib/contexts/user-context'
-import { usePermissions } from '@/lib/hooks/use-permissions'
 import type { Employee } from '@/lib/types/api'
+import {
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type SortingState,
+} from '@tanstack/react-table'
+import {
+  ArrowUpDown,
+  Building2,
+  Filter,
+  Mail,
+  MoreHorizontal,
+  Trash2,
+  UserCheck,
+  UserPlus,
+  UserX,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useCallback, useMemo, useState } from 'react'
 
 const getRoleLabel = (role: string) => {
   const labels: Record<string, string> = {
@@ -338,7 +338,16 @@ export default function CompanyMembersPage() {
         },
       },
     ],
-    [isSuspending, isActivating, isRemoving, handleSuspend, handleActivate, handleRemove]
+    [
+      isSuspending,
+      isActivating,
+      isRemoving,
+      isResendingInvite,
+      handleSuspend,
+      handleActivate,
+      handleRemove,
+      handleResendInvite,
+    ]
   )
 
   const table = useReactTable({
@@ -387,7 +396,7 @@ export default function CompanyMembersPage() {
                 <Building2 className="h-4 w-4 text-primary" />
                 <span className="font-semibold text-foreground">{company.name}</span>
               </div>
-              
+
               <div className="flex items-center gap-1.5 border-l border-border/40 pl-3 text-sm sm:border-l-0 sm:pl-0">
                 <span className="font-semibold text-foreground">{stats.total}</span>
                 <span className="text-muted-foreground">
@@ -527,4 +536,3 @@ export default function CompanyMembersPage() {
     </PageContainer>
   )
 }
-

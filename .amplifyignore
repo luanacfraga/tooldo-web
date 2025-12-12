@@ -1,0 +1,16 @@
+# Arquivos e pastas a ignorar no deploy do Amplify
+node_modules
+.next/cache
+.git
+.gitignore
+.env.local
+.env.development
+.env.test
+*.log
+.DS_Store
+coverage
+.idea
+.vscode
+*.md
+!README.md
+!DEPLOY.md

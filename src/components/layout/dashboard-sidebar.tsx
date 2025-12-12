@@ -1,20 +1,19 @@
 'use client'
 
 import { CompanySelector } from '@/components/features/company/selectors/company-selector'
-import { useAuth } from '@/lib/hooks/use-auth'
 import { useUserContext } from '@/lib/contexts/user-context'
+import { useAuth } from '@/lib/hooks/use-auth'
 import { usePermissions } from '@/lib/hooks/use-permissions'
-import { useParams } from 'next/navigation'
 import {
   BarChart3,
   Building2,
   CheckSquare,
-  Home,
   LayoutDashboard,
   Settings,
   Users,
   UsersRound,
 } from 'lucide-react'
+import { useParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { Sidebar, type MenuItem } from './sidebar'
 
@@ -136,13 +135,11 @@ export function DashboardSidebar() {
     }
 
     if (isConsultant && companyId) {
-      items.push(
-        {
-          name: 'Dashboard',
-          href: `${basePath}/dashboard`,
-          icon: BarChart3,
-        }
-      )
+      items.push({
+        name: 'Dashboard',
+        href: `${basePath}/dashboard`,
+        icon: BarChart3,
+      })
     }
 
     if (isMaster) {
@@ -178,7 +175,7 @@ export function DashboardSidebar() {
     })
 
     return items
-  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster, companyId])
+  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster, companyId, canInviteEmployee])
 
   return (
     <Sidebar
@@ -186,9 +183,7 @@ export function DashboardSidebar() {
       onLogout={logout}
       showLogout={true}
       topComponent={
-        isAdmin && companyId ? (
-          <CompanySelector variant="default" showLabel={true} />
-        ) : undefined
+        isAdmin && companyId ? <CompanySelector variant="default" showLabel={true} /> : undefined
       }
     />
   )
