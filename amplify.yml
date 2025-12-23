@@ -3,20 +3,32 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Validating environment variables..."
+        - echo "=== Build Environment ==="
+        - echo "Node version:" && node --version
+        - echo "NPM version:" && npm --version
+        - echo ""
+        - echo "=== Environment Variables ==="
         - |
           if [ -z "$NEXT_PUBLIC_API_URL" ]; then
             echo "⚠️  WARNING: NEXT_PUBLIC_API_URL is not set"
             echo "⚠️  Using default: http://localhost:3000"
+            export NEXT_PUBLIC_API_URL="http://localhost:3000"
           else
-            echo "✅ NEXT_PUBLIC_API_URL is set"
+            echo "✅ NEXT_PUBLIC_API_URL is set: $NEXT_PUBLIC_API_URL"
           fi
-        - echo "Node version:" && node --version
-        - echo "NPM version:" && npm --version
+        - |
+          if [ -z "$NODE_ENV" ]; then
+            echo "⚠️  WARNING: NODE_ENV is not set, defaulting to production"
+            export NODE_ENV="production"
+          else
+            echo "✅ NODE_ENV is set: $NODE_ENV"
+          fi
+        - echo ""
+        - echo "=== Installing Dependencies ==="
         - npm ci
     build:
       commands:
-        - echo "Building Next.js application..."
+        - echo "=== Building Next.js Application ==="
         - npm run build
   artifacts:
     baseDirectory: .next

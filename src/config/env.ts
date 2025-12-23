@@ -19,6 +19,15 @@ export const env = {
 
 export function validateEnv() {
   try {
+    // Only validate if explicitly set (not using default)
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+      if (env.isProduction) {
+        console.warn(
+          '⚠️  NEXT_PUBLIC_API_URL is not set in production. Using default value.'
+        )
+      }
+      return
+    }
     getEnvVar('NEXT_PUBLIC_API_URL')
   } catch (error) {
     if (env.isProduction) {
