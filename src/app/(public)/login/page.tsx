@@ -10,7 +10,7 @@ export default function LoginPage() {
         </p>
       </div>
       <div className="mb-8 hidden text-center lg:block">
-        <h2 className="text-3xl font-bold text-foreground">Bem-vindo de volta</h2>
+        <h2 className="text-3xl font-bold text-foreground">Bem-vindo(a) de volta</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Entre com suas credenciais para continuar
         </p>

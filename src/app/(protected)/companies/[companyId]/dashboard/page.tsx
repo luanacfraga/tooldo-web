@@ -1,6 +1,5 @@
 'use client'
 
-import { useParams } from 'next/navigation'
 import { StatCard } from '@/components/shared/data/stat-card'
 import { ActivityItem } from '@/components/shared/feedback/activity-item'
 import { PageContainer } from '@/components/shared/layout/page-container'
@@ -8,6 +7,7 @@ import { PageHeader } from '@/components/shared/layout/page-header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUserContext } from '@/lib/contexts/user-context'
 import { BarChart3, Building2, CheckSquare, Users } from 'lucide-react'
+import { useParams } from 'next/navigation'
 
 export default function CompanyDashboardPage() {
   const params = useParams()
@@ -88,7 +88,7 @@ export default function CompanyDashboardPage() {
     <PageContainer maxWidth="7xl">
       <PageHeader
         title={`Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
-        description={`Bem-vindo ao painel de controle${company ? ` - ${company.name}` : ''}`}
+        description={`Bem-vindo(a) ao painel de controle${company ? ` - ${company.name}` : ''}`}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
@@ -147,4 +147,3 @@ export default function CompanyDashboardPage() {
     </PageContainer>
   )
 }
-
