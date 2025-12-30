@@ -1,0 +1,71 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { ActionPriority, ActionStatus } from '@/lib/types/action';
+
+type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams';
+
+interface ActionFiltersState {
+  // Filter values
+  status: ActionStatus | 'all';
+  priority: ActionPriority | 'all';
+  assignment: AssignmentFilter;
+  companyId: string | null;
+  teamId: string | null;
+  showBlockedOnly: boolean;
+  showLateOnly: boolean;
+  searchQuery: string;
+
+  // Table preferences
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  page: number;
+  pageSize: number;
+
+  // Actions
+  setFilter: <K extends keyof ActionFiltersState>(key: K, value: ActionFiltersState[K]) => void;
+  resetFilters: () => void;
+}
+
+const initialState = {
+  status: 'all' as const,
+  priority: 'all' as const,
+  assignment: 'all' as AssignmentFilter,
+  companyId: null,
+  teamId: null,
+  showBlockedOnly: false,
+  showLateOnly: false,
+  searchQuery: '',
+  sortBy: 'estimatedEndDate',
+  sortOrder: 'asc' as const,
+  page: 1,
+  pageSize: 20,
+};
+
+export const useActionFiltersStore = create<ActionFiltersState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+
+      setFilter: (key, value) => {
+        set((state) => ({
+          ...state,
+          [key]: value,
+          // Reset page when filters change
+          page: key !== 'page' && key !== 'pageSize' ? 1 : state.page,
+        }));
+      },
+
+      resetFilters: () => {
+        set(initialState);
+      },
+    }),
+    {
+      name: 'action-filters-storage',
+      partialize: (state) => ({
+        sortBy: state.sortBy,
+        sortOrder: state.sortOrder,
+        pageSize: state.pageSize,
+      }),
+    }
+  )
+);
