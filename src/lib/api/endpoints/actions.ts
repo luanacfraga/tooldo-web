@@ -71,7 +71,7 @@ export const actionsApi = {
   },
 
   /**
-   * Move action to new status
+   * Move action to new status and position
    */
   move: (id: string, data: MoveActionDto): Promise<Action> => {
     return apiClient.patch<Action>(`/api/v1/actions/${id}/move`, data);
