@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Plus, Trash2, Check, X } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Sheet,
@@ -20,7 +20,6 @@ import {
   useAddChecklistItem,
   useToggleChecklistItem,
 } from '@/lib/hooks/use-actions';
-import type { Action } from '@/lib/types/action';
 
 interface ActionDetailSheetProps {
   actionId: string | null;
@@ -44,7 +43,10 @@ export function ActionDetailSheet({
     try {
       await addChecklistItem.mutateAsync({
         actionId,
-        data: { description: newItemDescription },
+        data: {
+          description: newItemDescription,
+          order: action.checklistItems?.length ?? 0,
+        },
       });
       setNewItemDescription('');
       toast.success('Item adicionado ao checklist');
