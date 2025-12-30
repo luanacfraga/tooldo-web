@@ -1,13 +1,30 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCorners,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useActions } from '@/lib/hooks/use-actions';
+import { useActions, useMoveAction } from '@/lib/hooks/use-actions';
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useCompany } from '@/lib/hooks/use-company';
@@ -18,8 +35,9 @@ import { StatusBadge } from '../shared/status-badge';
 import { PriorityBadge } from '../shared/priority-badge';
 import { LateIndicator } from '../shared/late-indicator';
 import { BlockedBadge } from '../shared/blocked-badge';
+import { ActionDetailSheet } from '../action-detail-sheet';
 import { format } from 'date-fns';
-import Link from 'next/link';
+import { toast } from 'sonner';
 
 const columns = [
   {
@@ -43,6 +61,18 @@ export function ActionKanbanBoard() {
   const { user } = useAuth();
   const { selectedCompany } = useCompany();
   const filtersState = useActionFiltersStore();
+  const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeAction, setActiveAction] = useState<Action | null>(null);
+  const moveAction = useMoveAction();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   // Build API filters from store
   const apiFilters: ActionFilters = useMemo(() => {
@@ -128,42 +158,170 @@ export function ActionKanbanBoard() {
     return visibleActions.filter((action) => action.status === status);
   };
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-x-auto pb-4">
-      {columns.map((column) => {
-        const columnActions = getActionsByStatus(column.status);
-        
-        return (
-          <div key={column.id} className="flex flex-col gap-4 min-w-[300px]">
-            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                {column.title}
-              </h3>
-              <span className="text-xs font-medium bg-background px-2 py-1 rounded-md border shadow-sm">
-                {columnActions.length}
-              </span>
-            </div>
+  const handleActionClick = (actionId: string) => {
+    setSelectedActionId(actionId);
+    setSheetOpen(true);
+  };
 
-            <div className="flex flex-col gap-3">
-              {columnActions.map((action) => (
-                <ActionKanbanCard key={action.id} action={action} />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+  const handleDragStart = (event: DragStartEvent) => {
+    const action = visibleActions.find((a) => a.id === event.active.id);
+    if (action) {
+      setActiveAction(action);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveAction(null);
+
+    if (!over) return;
+
+    const actionId = active.id as string;
+    const newStatus = over.id as ActionStatus;
+
+    const action = visibleActions.find((a) => a.id === actionId);
+    if (!action || action.status === newStatus) return;
+
+    try {
+      await moveAction.mutateAsync({
+        id: actionId,
+        data: { toStatus: newStatus },
+      });
+      toast.success('Ação movida com sucesso');
+    } catch (error) {
+      toast.error('Erro ao mover ação');
+    }
+  };
+
+  return (
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full overflow-x-auto pb-4">
+        {columns.map((column) => {
+          const columnActions = getActionsByStatus(column.status);
+
+          return (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              actions={columnActions}
+              onActionClick={handleActionClick}
+            />
+          );
+        })}
+        </div>
+
+        <DragOverlay>
+          {activeAction && <ActionKanbanCard action={activeAction} isDragging />}
+        </DragOverlay>
+      </DndContext>
+
+      <ActionDetailSheet
+        actionId={selectedActionId}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
+    </>
+  );
+}
+
+interface KanbanColumnProps {
+  column: { id: ActionStatus; title: string; status: ActionStatus };
+  actions: Action[];
+  onActionClick: (actionId: string) => void;
+}
+
+function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
+  });
+
+  return (
+    <SortableContext
+      id={column.id}
+      items={actions.map((a) => a.id)}
+      strategy={verticalListSortingStrategy}
+    >
+      <div
+        ref={setNodeRef}
+        data-id={column.id}
+        className={`flex flex-col gap-4 min-w-[300px] ${isOver ? 'bg-muted/30' : ''}`}
+        style={{ minHeight: '200px' }}
+      >
+        <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+          <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            {column.title}
+          </h3>
+          <span className="text-xs font-medium bg-background px-2 py-1 rounded-md border shadow-sm">
+            {actions.length}
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-3 flex-1">
+          {actions.map((action) => (
+            <SortableActionCard
+              key={action.id}
+              action={action}
+              onClick={() => onActionClick(action.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </SortableContext>
+  );
+}
+
+interface SortableActionCardProps {
+  action: Action;
+  onClick: () => void;
+}
+
+function SortableActionCard({ action, onClick }: SortableActionCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: action.id, data: { action } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <ActionKanbanCard action={action} onClick={onClick} isDragging={isDragging} />
     </div>
   );
 }
 
-function ActionKanbanCard({ action }: { action: Action }) {
+function ActionKanbanCard({
+  action,
+  onClick,
+  isDragging = false
+}: {
+  action: Action;
+  onClick?: () => void;
+  isDragging?: boolean
+}) {
   const checklistProgress = action.checklistItems
     ? `${action.checklistItems.filter((i) => i.isCompleted).length}/${action.checklistItems.length}`
     : '0/0';
 
   return (
-    <Link href={`/actions/${action.id}/edit`} className="block">
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+    <Card
+      className={`hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''} ${isDragging ? 'opacity-50' : ''}`}
+      onClick={onClick}
+    >
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-2">
             <h4 className="font-medium text-sm line-clamp-2 leading-tight">
@@ -199,7 +357,6 @@ function ActionKanbanCard({ action }: { action: Action }) {
           </div>
         </CardContent>
       </Card>
-    </Link>
   );
 }
 

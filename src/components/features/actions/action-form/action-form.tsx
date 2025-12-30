@@ -34,6 +34,7 @@ import { ActionPriority, type Action } from '@/lib/types/action';
 interface ActionFormProps {
   action?: Action;
   mode: 'create' | 'edit';
+  onSuccess?: () => void;
 }
 
 const priorityLabels: Record<ActionPriority, string> = {
@@ -43,7 +44,7 @@ const priorityLabels: Record<ActionPriority, string> = {
   [ActionPriority.URGENT]: 'Urgente',
 };
 
-export function ActionForm({ action, mode }: ActionFormProps) {
+export function ActionForm({ action, mode, onSuccess }: ActionFormProps) {
   const router = useRouter();
   const { companies } = useCompany();
   const createAction = useCreateAction();
@@ -89,7 +90,11 @@ export function ActionForm({ action, mode }: ActionFormProps) {
           teamId: data.teamId || undefined,
         });
         toast.success('Ação criada com sucesso!');
-        router.push('/actions');
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push('/actions');
+        }
       } else if (action) {
         await updateAction.mutateAsync({
           id: action.id,
@@ -99,7 +104,11 @@ export function ActionForm({ action, mode }: ActionFormProps) {
           },
         });
         toast.success('Ação atualizada com sucesso!');
-        router.push(`/actions`);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(`/actions`);
+        }
       }
     } catch (error) {
       toast.error(mode === 'create' ? 'Erro ao criar ação' : 'Erro ao atualizar ação');

@@ -211,6 +211,8 @@ export function useAddChecklistItem(): UseMutationResult<
     onSuccess: (_, { actionId }) => {
       // Invalidate action detail to refetch with new checklist
       queryClient.invalidateQueries({ queryKey: actionKeys.detail(actionId) });
+      // Also invalidate lists since useAction fetches from list
+      queryClient.invalidateQueries({ queryKey: actionKeys.lists() });
     },
   });
 }
@@ -263,6 +265,8 @@ export function useToggleChecklistItem(): UseMutationResult<
     onSuccess: (_, { actionId }) => {
       // Refetch to get server state
       queryClient.invalidateQueries({ queryKey: actionKeys.detail(actionId) });
+      // Also invalidate lists since useAction fetches from list
+      queryClient.invalidateQueries({ queryKey: actionKeys.lists() });
     },
   });
 }
