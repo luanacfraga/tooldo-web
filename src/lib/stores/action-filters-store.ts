@@ -16,6 +16,7 @@ interface ActionFiltersState {
   searchQuery: string;
 
   // Table preferences
+  viewMode: 'list' | 'kanban';
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   page: number;
@@ -35,6 +36,7 @@ const initialState = {
   showBlockedOnly: false,
   showLateOnly: false,
   searchQuery: '',
+  viewMode: 'list' as const,
   sortBy: 'estimatedEndDate',
   sortOrder: 'asc' as const,
   page: 1,
@@ -62,6 +64,7 @@ export const useActionFiltersStore = create<ActionFiltersState>()(
     {
       name: 'action-filters-storage',
       partialize: (state) => ({
+        viewMode: state.viewMode,
         sortBy: state.sortBy,
         sortOrder: state.sortOrder,
         pageSize: state.pageSize,

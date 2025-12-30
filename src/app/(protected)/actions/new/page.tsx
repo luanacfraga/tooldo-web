@@ -2,28 +2,29 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ActionForm } from '@/components/features/actions/action-form/action-form';
+import { PageContainer } from '@/components/shared/layout/page-container';
+import { PageHeader } from '@/components/shared/layout/page-header';
 
 export default function NewActionPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Button variant="ghost" asChild className="mb-2">
-            <Link href="/actions">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para Ações
-            </Link>
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight">Nova Ação</h1>
-          <p className="text-muted-foreground">Crie uma nova ação para sua equipe</p>
-        </div>
+    <PageContainer>
+      <div className="mb-4">
+        <Button variant="ghost" size="sm" asChild className="-ml-2 text-muted-foreground hover:text-foreground">
+          <Link href="/actions">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Ações
+          </Link>
+        </Button>
       </div>
 
-      {/* Form */}
-      <div className="rounded-lg border bg-card p-6">
+      <PageHeader
+        title="Nova Ação"
+        description="Crie uma nova ação para sua equipe"
+      />
+
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
         <ActionForm mode="create" />
       </div>
-    </div>
+    </PageContainer>
   );
 }

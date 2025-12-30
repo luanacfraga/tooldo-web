@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, X } from 'lucide-react';
+import { LayoutGrid, LayoutList, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -95,6 +95,26 @@ export function ActionFilters() {
           onClick={() => filters.setFilter('showLateOnly', !filters.showLateOnly)}
         >
           Late Only
+        </Button>
+      </div>
+
+      {/* View Mode */}
+      <div className="flex items-center gap-1 border-l pl-4">
+        <Button
+          variant={filters.viewMode === 'list' ? 'default' : 'ghost'}
+          size="icon"
+          onClick={() => filters.setFilter('viewMode', 'list')}
+          title="List View"
+        >
+          <LayoutList className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={filters.viewMode === 'kanban' ? 'default' : 'ghost'}
+          size="icon"
+          onClick={() => filters.setFilter('viewMode', 'kanban')}
+          title="Kanban View"
+        >
+          <LayoutGrid className="h-4 w-4" />
         </Button>
       </div>
 

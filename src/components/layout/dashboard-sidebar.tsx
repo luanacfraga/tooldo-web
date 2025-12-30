@@ -66,11 +66,6 @@ export function DashboardSidebar() {
           name: 'Equipes',
           href: `${basePath}/teams`,
           icon: Users,
-        },
-        {
-          name: 'Board',
-          href: `${basePath}/board`,
-          icon: LayoutDashboard,
         }
       )
     }
@@ -106,12 +101,7 @@ export function DashboardSidebar() {
                 ],
               },
             ]
-          : []),
-        {
-          name: 'Board geral',
-          href: `${basePath}/board/general`,
-          icon: LayoutDashboard,
-        }
+          : [])
       )
     }
 
@@ -123,9 +113,9 @@ export function DashboardSidebar() {
           icon: BarChart3,
         },
         {
-          name: 'Board equipe',
-          href: `${basePath}/board/team`,
-          icon: LayoutDashboard,
+          name: 'Ações',
+          href: '/actions',
+          icon: ClipboardList,
         }
       )
     }
