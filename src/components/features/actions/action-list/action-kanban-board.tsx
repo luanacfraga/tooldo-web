@@ -73,7 +73,7 @@ const kanbanStyles = `
     border-style: dashed;
     transition: all 0.2s ease-in-out;
   }
-  
+
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
@@ -81,6 +81,7 @@ const kanbanStyles = `
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
+    height: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -89,11 +90,20 @@ const kanbanStyles = `
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .kanban-board-container {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kanban-column {
+    scroll-snap-align: start;
   }
 `
 
@@ -205,7 +215,7 @@ export function ActionKanbanBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid h-full grid-cols-1 gap-4 overflow-x-auto pb-2 md:grid-cols-3">
+        <div className="kanban-board-container custom-scrollbar flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-x-visible">
           {columns.map((column) => {
             const columnActions = getFilteredColumnActions(column.status)
 
@@ -252,7 +262,7 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
       <div
         ref={setNodeRef}
         data-id={column.id}
-        className={`flex w-full min-w-[280px] flex-col rounded-xl border shadow-sm transition-all duration-150 ${containerClass} ${isOver ? 'kanban-column-drag-over' : ''}`}
+        className={`kanban-column flex w-full min-w-[85vw] flex-col rounded-xl border shadow-sm transition-all duration-150 md:min-w-0 ${containerClass} ${isOver ? 'kanban-column-drag-over' : ''}`}
         style={{ minHeight: '400px', maxHeight: 'calc(100vh - 200px)' }}
       >
         {/* Column Header */}

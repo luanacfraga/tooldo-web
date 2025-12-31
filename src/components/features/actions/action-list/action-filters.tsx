@@ -12,7 +12,6 @@ import {
   Flag,
   LayoutGrid,
   LayoutList,
-  Plus,
   Search,
   UserCircle2,
   X,
@@ -81,15 +80,6 @@ export function ActionFilters() {
           </div>
 
           <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
-
-          <Button
-            size="sm"
-            onClick={() => router.push('/actions/new')}
-            className="h-9 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Nova Ação
-          </Button>
         </div>
       </div>
 
