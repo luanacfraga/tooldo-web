@@ -26,6 +26,10 @@ const baseActionSchema = z.object({
   companyId: z.string().min(1, 'Empresa é obrigatória'),
   teamId: z.string().optional(),
   responsibleId: z.string().min(1, 'Responsável é obrigatório'),
+  tasks: z.array(z.object({
+    description: z.string().min(1, 'Descrição da tarefa é obrigatória'),
+    isCompleted: z.boolean().default(false),
+  })).optional().default([]),
 });
 
 export const actionFormSchema = baseActionSchema.refine(

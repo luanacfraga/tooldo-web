@@ -9,16 +9,16 @@ interface StatusBadgeProps {
 
 const statusConfig = {
   [ActionStatus.TODO]: {
-    label: 'To Do',
-    className: 'bg-gray-100 text-gray-800 border-gray-300',
+    label: 'Pendente',
+    className: 'bg-muted/50 text-muted-foreground border-muted hover:bg-muted/80',
   },
   [ActionStatus.IN_PROGRESS]: {
-    label: 'In Progress',
-    className: 'bg-blue-100 text-blue-800 border-blue-300',
+    label: 'Em Andamento',
+    className: 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20',
   },
   [ActionStatus.DONE]: {
-    label: 'Done',
-    className: 'bg-green-100 text-green-800 border-green-300',
+    label: 'Concluído',
+    className: 'bg-success/10 text-success-700 border-success/20 hover:bg-success/20 dark:text-success',
   },
 };
 
@@ -26,7 +26,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status];
 
   return (
-    <Badge variant="outline" className={cn(config.className, className)}>
+    <Badge variant="outline" className={cn("whitespace-nowrap font-medium", config.className, className)}>
       {config.label}
     </Badge>
   );

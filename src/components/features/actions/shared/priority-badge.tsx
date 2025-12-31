@@ -9,20 +9,20 @@ interface PriorityBadgeProps {
 
 const priorityConfig = {
   [ActionPriority.LOW]: {
-    label: 'Low',
-    className: 'bg-gray-100 text-gray-700 border-gray-300',
+    label: 'Baixa',
+    className: 'bg-muted/50 text-muted-foreground border-muted hover:bg-muted/80',
   },
   [ActionPriority.MEDIUM]: {
-    label: 'Medium',
-    className: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    label: 'Média',
+    className: 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-900/50',
   },
   [ActionPriority.HIGH]: {
-    label: 'High',
-    className: 'bg-orange-100 text-orange-800 border-orange-300',
+    label: 'Alta',
+    className: 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-900/50',
   },
   [ActionPriority.URGENT]: {
-    label: 'Urgent',
-    className: 'bg-red-100 text-red-800 border-red-300',
+    label: 'Urgente',
+    className: 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20',
   },
 };
 
@@ -30,7 +30,7 @@ export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
   const config = priorityConfig[priority];
 
   return (
-    <Badge variant="outline" className={cn(config.className, className)}>
+    <Badge variant="outline" className={cn("whitespace-nowrap font-medium", config.className, className)}>
       {config.label}
     </Badge>
   );

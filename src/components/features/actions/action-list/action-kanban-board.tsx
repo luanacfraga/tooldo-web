@@ -12,12 +12,20 @@ import { CSS } from '@dnd-kit/utilities'
 import { format } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { ActionDetailSheet } from '../action-detail-sheet'
-import { BlockedBadge } from '../shared/blocked-badge'
-import { LateIndicator } from '../shared/late-indicator'
 import { PriorityBadge } from '../shared/priority-badge'
-import { StatusBadge } from '../shared/status-badge'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
+import { CalendarIcon, AlertCircleIcon } from 'lucide-react'
+
+// Helper to generate color from string
+const stringToColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+  return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
 
 const columns = [
   {
@@ -37,6 +45,58 @@ const columns = [
   },
 ]
 
+const columnStyles = {
+  [ActionStatus.TODO]: {
+    containerClass: "bg-muted/30 border-muted",
+    barClass: "bg-muted-foreground",
+    titleClass: "text-muted-foreground",
+    countClass: "bg-muted text-muted-foreground border border-muted-foreground/20",
+  },
+  [ActionStatus.IN_PROGRESS]: {
+    containerClass: "bg-primary/5 border-primary/10",
+    barClass: "bg-primary",
+    titleClass: "text-primary",
+    countClass: "bg-primary/10 text-primary border border-primary/20",
+  },
+  [ActionStatus.DONE]: {
+    containerClass: "bg-success/5 border-success/10",
+    barClass: "bg-success",
+    titleClass: "text-success-700 dark:text-success",
+    countClass: "bg-success/10 text-success-700 dark:text-success border border-success/20",
+  },
+}
+
+const kanbanStyles = `
+  .kanban-column-drag-over {
+    background-color: hsl(var(--muted));
+    opacity: 0.8;
+    border-style: dashed;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+`
+
 export function ActionKanbanBoard() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
@@ -48,11 +108,6 @@ export function ActionKanbanBoard() {
   const apiFilters: ActionFilters = useMemo(() => {
     const filters: ActionFilters = {}
 
-    // For Kanban, we usually want all statuses unless specifically filtered,
-    // but the column structure handles separation.
-    // If a specific status is selected in filters, we might only show that column or filter items within columns.
-    // Here we'll pass the status filter to the API, so if 'TODO' is selected, only TODO items return,
-    // and other columns will be empty.
     if (filtersState.status !== 'all') filters.status = filtersState.status
     if (filtersState.priority !== 'all') filters.priority = filtersState.priority
     if (filtersState.showBlockedOnly) filters.isBlocked = true
@@ -63,7 +118,7 @@ export function ActionKanbanBoard() {
       filters.responsibleId = user?.id
     }
 
-    // Company/Team filters - use selectedCompany as default if no filter is set
+    // Company/Team filters
     if (filtersState.companyId) {
       filters.companyId = filtersState.companyId
     } else if (selectedCompany?.id) {
@@ -75,7 +130,6 @@ export function ActionKanbanBoard() {
     return filters
   }, [filtersState, user, selectedCompany])
 
-  // Use the consolidated Kanban actions hook
   const {
     actions,
     isLoading,
@@ -87,12 +141,11 @@ export function ActionKanbanBoard() {
     activeAction,
   } = useKanbanActions(apiFilters)
 
-  // Apply client-side filters that aren't supported by the API yet
+  // Apply client-side filters
   const getFilteredColumnActions = useMemo(() => {
     return (status: ActionStatus) => {
       let result = getColumnActions(status)
 
-      // Backend doesn't support search/creatorId filter yet, so we apply client-side filtering.
       if (filtersState.assignment === 'created-by-me' && user?.id) {
         result = result.filter((a) => a.creatorId === user.id)
       }
@@ -145,13 +198,14 @@ export function ActionKanbanBoard() {
 
   return (
     <>
+      <style jsx global>{kanbanStyles}</style>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid h-full grid-cols-1 gap-3 overflow-x-auto pb-2 md:grid-cols-3">
+        <div className="grid h-full grid-cols-1 gap-4 overflow-x-auto pb-2 md:grid-cols-3">
           {columns.map((column) => {
             const columnActions = getFilteredColumnActions(column.status)
 
@@ -187,6 +241,8 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
     id: column.id,
   })
 
+  const { containerClass, barClass, titleClass, countClass } = columnStyles[column.status];
+
   return (
     <SortableContext
       id={column.id}
@@ -196,19 +252,22 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
       <div
         ref={setNodeRef}
         data-id={column.id}
-        className={`flex min-w-[280px] flex-col gap-2 ${isOver ? 'bg-muted/30' : ''}`}
-        style={{ minHeight: '200px' }}
+        className={`flex w-full min-w-[280px] flex-col rounded-xl border shadow-sm transition-all duration-150 ${containerClass} ${isOver ? 'kanban-column-drag-over' : ''}`}
+        style={{ minHeight: '400px', maxHeight: 'calc(100vh - 200px)' }}
       >
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-1.5">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {/* Column Header */}
+        <div className="flex items-center gap-2 px-3 py-3 mb-2">
+          <span className={`h-2 w-2 rounded-full ${barClass}`} />
+          <h3 className={`text-sm font-semibold ${titleClass}`}>
             {column.title}
           </h3>
-          <span className="rounded-md border bg-background px-1.5 py-0.5 text-xs font-medium shadow-sm">
-            {actions.length}
+          <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${countClass}`}>
+            {actions.length} {actions.length === 1 ? 'tarefa' : 'tarefas'}
           </span>
         </div>
 
-        <div className="flex flex-1 flex-col gap-2">
+        {/* Column Body */}
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-2 pb-2 custom-scrollbar">
           {actions.map((action) => (
             <SortableActionCard
               key={action.id}
@@ -216,6 +275,7 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
               onClick={() => onActionClick(action.id)}
             />
           ))}
+          {isOver && <div className="h-1 bg-primary/20 rounded mx-2 animate-pulse" />}
         </div>
       </div>
     </SortableContext>
@@ -237,6 +297,7 @@ function SortableActionCard({ action, onClick }: SortableActionCardProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : 'auto',
   }
 
   return (
@@ -275,49 +336,75 @@ function ActionKanbanCard({
   }
 
   return (
-    <Card className={`transition-shadow hover:shadow-md ${isDragging ? 'opacity-50' : ''}`}>
-      <CardContent className="space-y-2 p-2.5">
-        {/* Clickable area - top section with title and priority */}
+    <Card 
+      className={`
+        border border-border/60 shadow-sm transition-all duration-200 
+        hover:border-border hover:shadow-md
+        ${isDragging ? 'opacity-80 ring-2 ring-primary ring-offset-2' : 'bg-card'}
+      `}
+    >
+      <CardContent className="p-3 space-y-2.5">
+        {/* Clickable Header */}
         <div
-          className="flex items-start justify-between gap-1.5 cursor-pointer"
+          className="flex items-start justify-between gap-2 cursor-pointer"
           onClick={handleClick}
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
         >
-          <h4 className="line-clamp-2 text-xs font-medium leading-tight hover:text-primary">
+          <h4 className="line-clamp-2 text-sm font-medium leading-snug text-foreground hover:text-primary transition-colors">
             {action.title}
           </h4>
-          <PriorityBadge
-            priority={action.priority}
-            className="h-4 shrink-0 px-1 py-0 text-[9px]"
-          />
         </div>
 
-        {/* Draggable area - bottom section with metadata */}
-        <div {...dragListeners}>
-          <div className="flex flex-wrap gap-1">
-            <StatusBadge status={action.status} className="h-4 px-1 py-0 text-[9px]" />
-            <LateIndicator isLate={action.isLate} className="text-[9px]" />
-            <BlockedBadge
-              isBlocked={action.isBlocked}
-              reason={action.blockedReason}
-              className="h-4 px-1 py-0 text-[9px]"
+        {/* Draggable Content */}
+        <div {...dragListeners} className="space-y-2 cursor-grab active:cursor-grabbing">
+          {action.description && (
+            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+              {action.description}
+            </p>
+          )}
+
+          {/* Meta Information */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+               <CalendarIcon className="w-3.5 h-3.5" />
+               <span className="text-[11px] font-medium">
+                 {format(new Date(action.estimatedEndDate), 'dd/MM')}
+               </span>
+            </div>
+            
+            <PriorityBadge 
+              priority={action.priority} 
+              className="text-[10px] px-1.5 py-0.5 h-auto" 
             />
           </div>
 
-          <div className="flex items-center justify-between border-t pt-1.5 text-[10px] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <span title="Responsável">
-                {action.responsibleId ? `#${action.responsibleId.slice(0, 8)}` : '—'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span title="Data de Término">{format(new Date(action.estimatedEndDate), 'dd/MM')}</span>
-              <span title="Checklist" className="flex items-center gap-0.5">
-                ☑ {checklistProgress}
-              </span>
-            </div>
+          <div className="flex items-center justify-between border-t border-border/50 pt-2 mt-1">
+             <div className="flex items-center gap-1.5">
+               {/* Avatar circle */}
+               <div 
+                 className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-sm"
+                 style={{ background: stringToColor(action.responsibleId || 'U') }}
+               >
+                 {(action.responsibleId || 'U').charAt(0).toUpperCase()}
+               </div>
+               <span className="text-[10px] text-muted-foreground font-medium">
+                  {action.responsibleId ? `#${action.responsibleId.slice(0, 4)}` : '—'}
+               </span>
+             </div>
+
+             <div className="flex items-center gap-2">
+                {action.isLate && (
+                   <div className="flex items-center gap-1 text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">
+                     <AlertCircleIcon className="w-3 h-3" />
+                     <span className="text-[10px] font-medium">Atrasada</span>
+                   </div>
+                )}
+                <div className="flex items-center gap-1 text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-medium">☑ {checklistProgress}</span>
+                </div>
+             </div>
           </div>
         </div>
       </CardContent>
