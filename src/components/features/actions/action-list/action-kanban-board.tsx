@@ -6,25 +6,33 @@ import { useCompany } from '@/lib/hooks/use-company'
 import { useKanbanActions } from '@/lib/hooks/use-kanban-actions'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
-import { DndContext, DragOverlay, closestCenter, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, useDroppable, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { format } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, memo } from 'react'
 import { ActionDetailSheet } from '../action-detail-sheet'
 import { PriorityBadge } from '../shared/priority-badge'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
 import { CalendarIcon, AlertCircleIcon, Eye } from 'lucide-react'
 
-// Helper to generate color from string
+// Helper to generate color from string - memoized for performance
+const colorCache = new Map<string, string>();
 const stringToColor = (str: string) => {
+  if (colorCache.has(str)) {
+    return colorCache.get(str)!;
+  }
+
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   const c = (hash & 0x00ffffff).toString(16).toUpperCase();
-  return '#' + '00000'.substring(0, 6 - c.length) + c;
+  const color = '#' + '00000'.substring(0, 6 - c.length) + c;
+
+  colorCache.set(str, color);
+  return color;
 }
 
 const columns = [
@@ -136,6 +144,7 @@ export function ActionKanbanBoard() {
   const filtersState = useActionFiltersStore()
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [announcement, setAnnouncement] = useState('')
 
   // Build API filters from store
   const apiFilters: ActionFilters = useMemo(() => {
@@ -169,10 +178,34 @@ export function ActionKanbanBoard() {
     error,
     getColumnActions,
     sensors,
-    handleDragStart,
-    handleDragEnd,
+    handleDragStart: originalHandleDragStart,
+    handleDragEnd: originalHandleDragEnd,
     activeAction,
   } = useKanbanActions(apiFilters)
+
+  const handleDragStart = (event: any) => {
+    originalHandleDragStart(event)
+    const action = event.active?.data?.current?.action
+    if (action) {
+      setAnnouncement(`Movendo ação: ${action.title}`)
+    }
+  }
+
+  const handleDragEnd = (event: any) => {
+    originalHandleDragEnd(event)
+    const action = event.active?.data?.current?.action
+    const overColumn = event.over?.id
+    if (action && overColumn) {
+      const columnNames = {
+        [ActionStatus.TODO]: 'Pendentes',
+        [ActionStatus.IN_PROGRESS]: 'Em Andamento',
+        [ActionStatus.DONE]: 'Concluídas',
+      }
+      setAnnouncement(`Ação ${action.title} movida para ${columnNames[overColumn as ActionStatus]}`)
+    } else {
+      setAnnouncement('')
+    }
+  }
 
   // Apply client-side filters
   const getFilteredColumnActions = useMemo(() => {
@@ -224,21 +257,35 @@ export function ActionKanbanBoard() {
     )
   }
 
-  const handleActionClick = (actionId: string) => {
+  const handleActionClick = useCallback((actionId: string) => {
     setSelectedActionId(actionId)
     setSheetOpen(true)
-  }
+  }, [])
 
   return (
     <>
       <style jsx global>{kanbanStyles}</style>
+      {/* ARIA live region for screen reader announcements */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="kanban-board-container custom-scrollbar flex gap-4 overflow-x-auto px-4 pb-4 md:grid md:grid-cols-3 md:gap-6 md:overflow-x-visible md:px-0">
+        <div
+          className="kanban-board-container custom-scrollbar flex gap-4 overflow-x-auto px-4 pb-4 md:grid md:grid-cols-3 md:gap-6 md:overflow-x-visible md:px-0"
+          role="region"
+          aria-label="Quadro Kanban de ações"
+        >
           {columns.map((column) => {
             const columnActions = getFilteredColumnActions(column.status)
 
@@ -300,7 +347,11 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
         </div>
 
         {/* Column Body */}
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 custom-scrollbar">
+        <div
+          className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 custom-scrollbar"
+          role="list"
+          aria-label={`Ações ${column.title.toLowerCase()}`}
+        >
           {actions.map((action) => (
             <SortableActionCard
               key={action.id}
@@ -320,7 +371,7 @@ interface SortableActionCardProps {
   onClick: () => void
 }
 
-function SortableActionCard({ action, onClick }: SortableActionCardProps) {
+const SortableActionCard = memo(function SortableActionCard({ action, onClick }: SortableActionCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: action.id,
     data: { action },
@@ -334,7 +385,7 @@ function SortableActionCard({ action, onClick }: SortableActionCardProps) {
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style} {...attributes} role="listitem">
       <ActionKanbanCard
         action={action}
         onClick={onClick}
@@ -343,9 +394,9 @@ function SortableActionCard({ action, onClick }: SortableActionCardProps) {
       />
     </div>
   )
-}
+})
 
-function ActionKanbanCard({
+const ActionKanbanCard = memo(function ActionKanbanCard({
   action,
   onClick,
   isDragging = false,
@@ -354,14 +405,24 @@ function ActionKanbanCard({
   action: Action
   onClick?: () => void
   isDragging?: boolean
-  dragListeners?: any
+  dragListeners?: DraggableSyntheticListeners | undefined
 }) {
-  const checklistProgress = action.checklistItems
-    ? `${action.checklistItems.filter((i) => i.isCompleted).length}/${action.checklistItems.length}`
-    : '0/0'
+  const checklistProgress = useMemo(() => {
+    if (!action.checklistItems) return '0/0';
+    const completed = action.checklistItems.filter((i) => i.isCompleted).length;
+    return `${completed}/${action.checklistItems.length}`;
+  }, [action.checklistItems])
 
   const handleClick = (e: React.MouseEvent) => {
     if (!isDragging && onClick) {
+      e.preventDefault()
+      e.stopPropagation()
+      onClick()
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isDragging && onClick && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
       e.stopPropagation()
       onClick()
@@ -380,11 +441,15 @@ function ActionKanbanCard({
       <CardContent className="p-4 space-y-3">
         {/* Clickable Header */}
         <div
-          className="flex items-start justify-between gap-3 cursor-pointer group/header -mx-1 -mt-1 rounded-lg p-1 transition-colors hover:bg-muted/30"
+          className="flex items-start justify-between gap-3 cursor-pointer group/header -mx-1 -mt-1 rounded-lg p-1 transition-colors hover:bg-muted/30 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
           onClick={handleClick}
+          onKeyDown={handleKeyDown}
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
+          tabIndex={0}
+          role="button"
+          aria-label={`Visualizar detalhes: ${action.title}`}
         >
           <h4 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover/header:text-primary">
             {action.title}
@@ -393,6 +458,7 @@ function ActionKanbanCard({
             type="button"
             className="shrink-0 rounded-full p-1.5 transition-all hover:bg-background/80 hover:shadow-sm opacity-0 group-hover/header:opacity-100"
             onClick={handleClick}
+            aria-label="Visualizar detalhes da ação"
           >
             <Eye className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground" />
           </button>
@@ -451,4 +517,4 @@ function ActionKanbanCard({
       </CardContent>
     </Card>
   )
-}
+})

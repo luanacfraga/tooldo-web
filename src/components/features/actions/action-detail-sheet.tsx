@@ -83,7 +83,7 @@ export function ActionDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col p-0 w-full sm:max-w-lg z-[100]">
+      <SheetContent className="flex flex-col p-0 w-full sm:max-w-lg z-drawer">
         <div className="px-4 pt-4 pb-3 border-b">
           <SheetHeader>
             <SheetTitle className="text-base">Editar Ação</SheetTitle>

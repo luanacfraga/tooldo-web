@@ -147,6 +147,12 @@ const config: Config = {
   		animation: {
   			blob: 'blob 7s infinite',
   			'fade-in': 'fade-in 0.6s ease-out'
+  		},
+  		zIndex: {
+  			drawer: '100',
+  			modal: '200',
+  			tooltip: '300',
+  			notification: '400'
   		}
   	}
   },

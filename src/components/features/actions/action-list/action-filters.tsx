@@ -62,6 +62,8 @@ export function ActionFilters() {
                 filters.viewMode === 'list' && 'bg-background shadow-sm'
               )}
               title="Lista"
+              aria-label="Visualizar como lista"
+              aria-pressed={filters.viewMode === 'list'}
             >
               <LayoutList className="h-4 w-4" />
             </Button>
@@ -74,6 +76,8 @@ export function ActionFilters() {
                 filters.viewMode === 'kanban' && 'bg-background shadow-sm'
               )}
               title="Kanban"
+              aria-label="Visualizar como kanban"
+              aria-pressed={filters.viewMode === 'kanban'}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -240,9 +244,9 @@ export function ActionFilters() {
                 </Button>
                 <div className="my-1 h-px bg-muted" />
                 {[
-                  { label: 'Atribuídas a Mim', value: 'assigned-to-me' },
-                  { label: 'Criadas por Mim', value: 'created-by-me' },
-                  { label: 'Minhas Equipes', value: 'my-teams' },
+                  { label: 'Atribuídas a Mim', value: 'assigned-to-me' as const },
+                  { label: 'Criadas por Mim', value: 'created-by-me' as const },
+                  { label: 'Minhas Equipes', value: 'my-teams' as const },
                 ].map((option) => (
                   <Button
                     key={option.value}
@@ -252,7 +256,7 @@ export function ActionFilters() {
                       'w-full justify-start text-xs font-normal',
                       filters.assignment === option.value && 'bg-accent text-accent-foreground'
                     )}
-                    onClick={() => filters.setFilter('assignment', option.value as any)}
+                    onClick={() => filters.setFilter('assignment', option.value)}
                   >
                     {option.label}
                     {filters.assignment === option.value && (
