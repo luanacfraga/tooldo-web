@@ -71,39 +71,62 @@ const kanbanStyles = `
     background-color: hsl(var(--muted));
     opacity: 0.8;
     border-style: dashed;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
-    height: 8px;
+    height: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
+    margin: 4px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
+    background-color: hsl(var(--muted-foreground) / 0.15);
+    border-radius: 10px;
+    transition: background-color 0.2s ease;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.5);
+    background-color: hsl(var(--muted-foreground) / 0.3);
   }
 
   .kanban-board-container {
     scroll-snap-type: x mandatory;
+    scroll-padding: 0 1rem;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   .kanban-column {
-    scroll-snap-align: start;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  @media (min-width: 768px) {
+    .kanban-board-container {
+      scroll-snap-type: none;
+    }
+  }
+
+  .kanban-card-hover {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .kanban-card-hover:hover {
+    transform: translateY(-2px);
+  }
+
+  .kanban-card-dragging {
+    transition: none;
   }
 `
 
@@ -215,7 +238,7 @@ export function ActionKanbanBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="kanban-board-container custom-scrollbar flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-x-visible">
+        <div className="kanban-board-container custom-scrollbar flex gap-4 overflow-x-auto px-4 pb-4 md:grid md:grid-cols-3 md:gap-6 md:overflow-x-visible md:px-0">
           {columns.map((column) => {
             const columnActions = getFilteredColumnActions(column.status)
 
@@ -262,22 +285,22 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
       <div
         ref={setNodeRef}
         data-id={column.id}
-        className={`kanban-column flex w-full min-w-[85vw] flex-col rounded-xl border shadow-sm transition-all duration-150 md:min-w-0 ${containerClass} ${isOver ? 'kanban-column-drag-over' : ''}`}
-        style={{ minHeight: '400px', maxHeight: 'calc(100vh - 200px)' }}
+        className={`kanban-column flex w-[calc(100vw-3rem)] flex-shrink-0 flex-col rounded-2xl border shadow-sm backdrop-blur-sm transition-all duration-300 sm:w-[calc(50vw-2rem)] md:w-full md:flex-shrink ${containerClass} ${isOver ? 'kanban-column-drag-over' : ''}`}
+        style={{ minHeight: '500px', maxHeight: 'calc(100vh - 220px)' }}
       >
         {/* Column Header */}
-        <div className="flex items-center gap-2 px-3 py-3 mb-2">
-          <span className={`h-2 w-2 rounded-full ${barClass}`} />
-          <h3 className={`text-sm font-semibold ${titleClass}`}>
+        <div className="flex items-center gap-3 border-b border-border/40 px-4 py-4">
+          <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${barClass}`} />
+          <h3 className={`text-sm font-semibold tracking-tight ${titleClass}`}>
             {column.title}
           </h3>
-          <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${countClass}`}>
-            {actions.length} {actions.length === 1 ? 'tarefa' : 'tarefas'}
+          <span className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${countClass}`}>
+            {actions.length}
           </span>
         </div>
 
         {/* Column Body */}
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-2 pb-2 custom-scrollbar">
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3 custom-scrollbar">
           {actions.map((action) => (
             <SortableActionCard
               key={action.id}
@@ -346,82 +369,83 @@ function ActionKanbanCard({
   }
 
   return (
-    <Card 
+    <Card
       className={`
-        border border-border/60 shadow-sm transition-all duration-200 
-        hover:border-border hover:shadow-md
-        ${isDragging ? 'opacity-80 ring-2 ring-primary ring-offset-2' : 'bg-card'}
+        kanban-card-hover group/card relative overflow-hidden
+        border border-border/60 bg-card/95 shadow-sm backdrop-blur-sm
+        ${!isDragging && 'hover:border-border/80 hover:shadow-md hover:bg-card'}
+        ${isDragging ? 'kanban-card-dragging opacity-90 shadow-2xl ring-2 ring-primary/50 ring-offset-2 scale-105' : ''}
       `}
     >
-      <CardContent className="p-3 space-y-2.5">
+      <CardContent className="p-4 space-y-3">
         {/* Clickable Header */}
         <div
-          className="flex items-start justify-between gap-2 cursor-pointer group"
+          className="flex items-start justify-between gap-3 cursor-pointer group/header -mx-1 -mt-1 rounded-lg p-1 transition-colors hover:bg-muted/30"
           onClick={handleClick}
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
         >
-          <h4 className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors flex-1">
+          <h4 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover/header:text-primary">
             {action.title}
           </h4>
           <button
             type="button"
-            className="shrink-0 rounded-full p-1.5 hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+            className="shrink-0 rounded-full p-1.5 transition-all hover:bg-background/80 hover:shadow-sm opacity-0 group-hover/header:opacity-100"
             onClick={handleClick}
           >
-            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+            <Eye className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground" />
           </button>
         </div>
 
         {/* Draggable Content */}
-        <div {...dragListeners} className="space-y-2 select-none">
+        <div {...dragListeners} className="space-y-3 select-none cursor-grab active:cursor-grabbing">
           {action.description && (
-            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+            <p className="text-xs text-muted-foreground/90 line-clamp-2 leading-relaxed">
               {action.description}
             </p>
           )}
 
           {/* Meta Information */}
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-               <CalendarIcon className="w-3.5 h-3.5" />
-               <span className="text-[11px] font-medium">
-                 {format(new Date(action.estimatedEndDate), 'dd/MM')}
-               </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <CalendarIcon className="h-4 w-4" />
+              <span className="text-xs font-medium">
+                {format(new Date(action.estimatedEndDate), 'dd/MM')}
+              </span>
             </div>
-            
-            <PriorityBadge 
-              priority={action.priority} 
-              className="text-[10px] px-1.5 py-0.5 h-auto" 
+
+            <PriorityBadge
+              priority={action.priority}
+              className="text-[11px] px-2 py-1 h-auto font-semibold shadow-sm"
             />
           </div>
 
-          <div className="flex items-center justify-between border-t border-border/50 pt-2 mt-1">
-             <div className="flex items-center gap-1.5">
-               {/* Avatar circle */}
-               <div 
-                 className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-sm"
-                 style={{ background: stringToColor(action.responsibleId || 'U') }}
-               >
-                 {(action.responsibleId || 'U').charAt(0).toUpperCase()}
-               </div>
-               <span className="text-[10px] text-muted-foreground font-medium">
-                  {action.responsibleId ? `#${action.responsibleId.slice(0, 4)}` : '—'}
-               </span>
-             </div>
+          <div className="flex items-center justify-between border-t border-border/40 pt-3">
+            <div className="flex items-center gap-2">
+              {/* Avatar circle */}
+              <div
+                className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-background"
+                style={{ background: stringToColor(action.responsibleId || 'U') }}
+              >
+                {(action.responsibleId || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">
+                {action.responsibleId ? `#${action.responsibleId.slice(0, 4)}` : '—'}
+              </span>
+            </div>
 
-             <div className="flex items-center gap-2">
-                {action.isLate && (
-                   <div className="flex items-center gap-1 text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full">
-                     <AlertCircleIcon className="w-3 h-3" />
-                     <span className="text-[10px] font-medium">Atrasada</span>
-                   </div>
-                )}
-                <div className="flex items-center gap-1 text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                  <span className="text-[10px] font-medium">☑ {checklistProgress}</span>
+            <div className="flex items-center gap-2">
+              {action.isLate && (
+                <div className="flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-1 text-destructive shadow-sm">
+                  <AlertCircleIcon className="h-3 w-3" />
+                  <span className="text-[11px] font-semibold">Atrasada</span>
                 </div>
-             </div>
+              )}
+              <div className="flex items-center gap-1 rounded-full bg-muted/80 px-2 py-1 text-muted-foreground shadow-sm">
+                <span className="text-[11px] font-semibold">☑ {checklistProgress}</span>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
