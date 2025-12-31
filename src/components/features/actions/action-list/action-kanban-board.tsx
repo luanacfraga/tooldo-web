@@ -237,6 +237,11 @@ export function ActionKanbanBoard() {
     filtersState.showLateOnly ||
     !!filtersState.searchQuery
 
+  const handleActionClick = useCallback((actionId: string) => {
+    setSelectedActionId(actionId)
+    setSheetOpen(true)
+  }, [])
+
   if (isLoading) return <ActionListSkeleton />
 
   if (error) {
@@ -256,11 +261,6 @@ export function ActionKanbanBoard() {
       />
     )
   }
-
-  const handleActionClick = useCallback((actionId: string) => {
-    setSelectedActionId(actionId)
-    setSheetOpen(true)
-  }, [])
 
   return (
     <>
