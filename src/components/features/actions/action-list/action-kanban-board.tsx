@@ -49,8 +49,8 @@ const columnStyles = {
   [ActionStatus.TODO]: {
     containerClass: "bg-warning/5 border-warning/10",
     barClass: "bg-warning",
-    titleClass: "text-warning-dark",
-    countClass: "bg-warning/10 text-warning-dark border border-warning/20",
+    titleClass: "text-warning",
+    countClass: "bg-warning/10 text-warning border border-warning/20",
   },
   [ActionStatus.IN_PROGRESS]: {
     containerClass: "bg-primary/5 border-primary/10",
@@ -61,8 +61,8 @@ const columnStyles = {
   [ActionStatus.DONE]: {
     containerClass: "bg-success/5 border-success/10",
     barClass: "bg-success",
-    titleClass: "text-success-dark",
-    countClass: "bg-success/10 text-success-dark border border-success/20",
+    titleClass: "text-success",
+    countClass: "bg-success/10 text-success border border-success/20",
   },
 }
 

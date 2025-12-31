@@ -16,21 +16,21 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
 
-    /* Primary - Purple/Violet (from tooldo-app: #8855f6) */
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary - Purple/Violet (#504371) */
+    --primary: 264 29% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Teal (from tooldo-app: #2dd4bf) */
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    /* Secondary - Teal (#0D9488) */
+    --secondary: 173 86% 32%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted */
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
 
-    /* Accent - Light Purple */
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    /* Accent - Light Purple (#978ab9) */
+    --accent: 264 22% 64%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive - Red (from tooldo-app: #ef4444) */
     --destructive: 0 84.2% 60.2%;
@@ -75,21 +75,21 @@
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary - Light Purple */
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    /* Primary - Light Purple (#7968a5) */
+    --primary: 264 25% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Light Teal */
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
+    /* Secondary - Light Teal (#14B8A6) */
+    --secondary: 173 80% 40%;
+    --secondary-foreground: 0 0% 100%;
 
     /* Muted */
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
 
-    /* Accent */
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent - Lighter Purple (#978ab9) */
+    --accent: 264 22% 64%;
+    --accent-foreground: 0 0% 100%;
 
     /* Destructive - Red */
     --destructive: 0 62.8% 30.6%;
