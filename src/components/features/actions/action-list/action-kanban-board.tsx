@@ -1,9 +1,12 @@
 'use client'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useKanbanActions } from '@/lib/hooks/use-kanban-actions'
+import { useUpdateAction } from '@/lib/hooks/use-actions'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
 import { DndContext, DragOverlay, closestCenter, useDroppable, type DraggableSyntheticListeners } from '@dnd-kit/core'
@@ -15,7 +18,10 @@ import { ActionDetailSheet } from '../action-detail-sheet'
 import { PriorityBadge } from '../shared/priority-badge'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
-import { CalendarIcon, AlertCircleIcon, Eye } from 'lucide-react'
+import { CalendarIcon, AlertCircleIcon, Eye, UserCheck } from 'lucide-react'
+import { employeesApi } from '@/lib/api/endpoints/employees'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 // Helper to generate color from string - memoized for performance
 const colorCache = new Map<string, string>();
@@ -396,6 +402,123 @@ const SortableActionCard = memo(function SortableActionCard({ action, onClick }:
   )
 })
 
+interface ResponsibleSelectorProps {
+  action: Action
+  canEdit: boolean
+}
+
+function ResponsibleSelector({ action, canEdit }: ResponsibleSelectorProps) {
+  const { selectedCompany } = useCompany()
+  const updateAction = useUpdateAction()
+  const [open, setOpen] = useState(false)
+
+  const { data: executors, isLoading } = useQuery({
+    queryKey: ['executors', selectedCompany?.id],
+    queryFn: () =>
+      selectedCompany?.id
+        ? employeesApi.listExecutorsByCompany(selectedCompany.id)
+        : Promise.resolve([]),
+    enabled: !!selectedCompany?.id && open,
+  })
+
+  const handleChangeResponsible = async (newResponsibleId: string) => {
+    try {
+      await updateAction.mutateAsync({
+        id: action.id,
+        data: { responsibleId: newResponsibleId }
+      })
+      toast.success('Responsável alterado com sucesso')
+      setOpen(false)
+    } catch (error) {
+      toast.error('Erro ao alterar responsável')
+    }
+  }
+
+  const currentResponsible = executors?.find(e => e.userId === action.responsibleId)
+
+  if (!canEdit) {
+    return (
+      <div className="flex items-center gap-2">
+        <div
+          className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-background"
+          style={{ background: stringToColor(action.responsibleId || 'U') }}
+        >
+          {(action.responsibleId || 'U').charAt(0).toUpperCase()}
+        </div>
+        <span className="text-xs text-muted-foreground font-medium">
+          {currentResponsible?.user ? `${currentResponsible.user.firstName} ${currentResponsible.user.lastName}` : `#${action.responsibleId.slice(0, 4)}`}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-muted/50"
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+          aria-label="Alterar responsável"
+        >
+          <div
+            className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-background"
+            style={{ background: stringToColor(action.responsibleId || 'U') }}
+          >
+            {(action.responsibleId || 'U').charAt(0).toUpperCase()}
+          </div>
+          <span className="text-xs text-muted-foreground font-medium">
+            {currentResponsible?.user ? `${currentResponsible.user.firstName} ${currentResponsible.user.lastName}` : `#${action.responsibleId.slice(0, 4)}`}
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[240px] p-0" align="start" side="top">
+        <div className="p-2">
+          <div className="mb-2 px-2 py-1.5">
+            <p className="text-xs font-semibold text-muted-foreground">Alterar Responsável</p>
+          </div>
+          <div className="max-h-[200px] space-y-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+                Carregando...
+              </div>
+            ) : executors && executors.length > 0 ? (
+              executors.map((executor) => (
+                <Button
+                  key={executor.id}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-xs font-normal"
+                  onClick={() => handleChangeResponsible(executor.userId)}
+                  disabled={updateAction.isPending}
+                >
+                  <div
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                    style={{ background: stringToColor(executor.userId) }}
+                  >
+                    {executor.user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <span className="flex-1 truncate text-left">
+                    {executor.user ? `${executor.user.firstName} ${executor.user.lastName}` : executor.userId}
+                  </span>
+                  {executor.userId === action.responsibleId && (
+                    <UserCheck className="h-3.5 w-3.5 text-primary" />
+                  )}
+                </Button>
+              ))
+            ) : (
+              <div className="px-2 py-4 text-center text-xs text-muted-foreground">
+                Nenhum executor disponível
+              </div>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 const ActionKanbanCard = memo(function ActionKanbanCard({
   action,
   onClick,
@@ -407,6 +530,9 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
   isDragging?: boolean
   dragListeners?: DraggableSyntheticListeners | undefined
 }) {
+  const { user } = useAuth()
+  const canEdit = user?.role === 'admin' || user?.role === 'manager'
+
   const checklistProgress = useMemo(() => {
     if (!action.checklistItems) return '0/0';
     const completed = action.checklistItems.filter((i) => i.isCompleted).length;
@@ -488,18 +614,7 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
           </div>
 
           <div className="flex items-center justify-between border-t border-border/40 pt-3">
-            <div className="flex items-center gap-2">
-              {/* Avatar circle */}
-              <div
-                className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md ring-2 ring-background"
-                style={{ background: stringToColor(action.responsibleId || 'U') }}
-              >
-                {(action.responsibleId || 'U').charAt(0).toUpperCase()}
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">
-                {action.responsibleId ? `#${action.responsibleId.slice(0, 4)}` : '—'}
-              </span>
-            </div>
+            <ResponsibleSelector action={action} canEdit={canEdit} />
 
             <div className="flex items-center gap-2">
               {action.isLate && (
