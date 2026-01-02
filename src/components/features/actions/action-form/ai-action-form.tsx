@@ -75,10 +75,6 @@ export function AIActionForm({ onSuggestion, onCancel }: AIActionFormProps) {
           companyId: data.companyId,
           estimatedStartDate: startDate.toISOString().split('T')[0],
           estimatedEndDate: endDate.toISOString().split('T')[0],
-          tasks: suggestion.checklistItems.map(item => ({
-            description: item,
-            isCompleted: false,
-          })),
         };
 
         onSuggestion(formData);

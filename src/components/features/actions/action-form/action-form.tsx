@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Loader2, Plus, Trash } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { actionFormSchema, actionPriorities, type ActionFormData } from '@/lib/validators/action';
-import { useCreateAction, useUpdateAction, useAddChecklistItem } from '@/lib/hooks/use-actions';
+import { useCreateAction, useUpdateAction } from '@/lib/hooks/use-actions';
 import { useCompany } from '@/lib/hooks/use-company';
 import { useTeamsByCompany } from '@/lib/services/queries/use-teams';
 import { useEmployeesByCompany } from '@/lib/services/queries/use-employees';
@@ -50,7 +50,6 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
   const { companies } = useCompany();
   const createAction = useCreateAction();
   const updateAction = useUpdateAction();
-  const addChecklistItem = useAddChecklistItem();
 
   const form = useForm<ActionFormData>({
     resolver: zodResolver(actionFormSchema),
@@ -63,16 +62,7 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
       companyId: action?.companyId || initialData?.companyId || '',
       teamId: action?.teamId || initialData?.teamId || undefined,
       responsibleId: action?.responsibleId || initialData?.responsibleId || '',
-      tasks: action?.checklistItems?.map((item) => ({
-        description: item.description,
-        isCompleted: item.isCompleted,
-      })) || initialData?.tasks || [],
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'tasks',
   });
 
   const selectedCompanyId = form.watch('companyId');
@@ -96,23 +86,10 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
   const onSubmit = async (data: ActionFormData) => {
     try {
       if (mode === 'create') {
-        const createdAction = await createAction.mutateAsync({
+        await createAction.mutateAsync({
           ...data,
           teamId: data.teamId || undefined,
         });
-
-        // Add tasks if any
-        if (data.tasks && data.tasks.length > 0) {
-          for (let i = 0; i < data.tasks.length; i++) {
-            await addChecklistItem.mutateAsync({
-              actionId: createdAction.id,
-              data: {
-                description: data.tasks[i].description,
-                order: i,
-              },
-            });
-          }
-        }
 
         toast.success('Ação criada com sucesso!');
         if (onSuccess) {
@@ -129,13 +106,6 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
           },
         });
 
-        // Note: Task management for edit mode is usually handled via the details sheet,
-        // but if we want to support adding new tasks here we would need to diff them.
-        // For now, we only support creating initial tasks in create mode.
-        // Or we can just add new ones. But `tasks` in form data are just descriptions.
-        // A full implementation would sync the list.
-        // Given the requirement is about "Create flow", I'll focus on create.
-        
         toast.success('Ação atualizada com sucesso!');
         if (onSuccess) {
           onSuccess();
@@ -149,7 +119,7 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
     }
   };
 
-  const isSubmitting = createAction.isPending || updateAction.isPending || addChecklistItem.isPending;
+  const isSubmitting = createAction.isPending || updateAction.isPending;
 
   return (
     <Form {...form}>
@@ -187,51 +157,6 @@ export function ActionForm({ action, initialData, mode, onSuccess }: ActionFormP
             </FormItem>
           )}
         />
-
-        {/* Tasks */}
-        <div className="space-y-2">
-          <FormLabel className="text-sm">Lista de Tarefas</FormLabel>
-          <div className="space-y-2">
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-center">
-                <FormField
-                  control={form.control}
-                  name={`tasks.${index}.description`}
-                  render={({ field }) => (
-                    <FormItem className="flex-1 space-y-0">
-                      <FormControl>
-                        <Input placeholder="Descrição da tarefa" {...field} className="h-9 text-sm" />
-                      </FormControl>
-                      <FormMessage className="text-xs" />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-destructive"
-                  onClick={() => remove(index)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => append({ description: '', isCompleted: false })}
-              className="text-xs"
-            >
-              <Plus className="mr-2 h-3.5 w-3.5" />
-              Adicionar Tarefa
-            </Button>
-          </div>
-          <FormMessage className="text-xs">
-            {form.formState.errors.tasks?.root?.message}
-          </FormMessage>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Priority */}
