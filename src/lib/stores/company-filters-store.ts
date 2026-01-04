@@ -4,7 +4,6 @@ import { persist } from 'zustand/middleware';
 interface CompanyFiltersState {
   // Filter values
   query: string;
-  status: string;
   page: number;
   pageSize: number;
 
@@ -15,7 +14,6 @@ interface CompanyFiltersState {
 
 const initialState = {
   query: '',
-  status: 'all',
   page: 1,
   pageSize: 20,
 };

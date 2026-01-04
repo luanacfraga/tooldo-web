@@ -21,7 +21,7 @@ import { CompanyCard } from './company-card'
 export default function CompaniesPage() {
   const router = useRouter()
   const { data: companies = [], isLoading, error, refetch } = useCompanies()
-  const { query, status, setFilter, resetFilters } = useCompanyFiltersStore()
+  const { query, setFilter, resetFilters } = useCompanyFiltersStore()
 
   // Filter companies based on current filters
   const filteredCompanies = useMemo(() => {
@@ -99,8 +99,7 @@ export default function CompaniesPage() {
 
   const filterValues = useMemo(() => ({
     query,
-    status,
-  }), [query, status])
+  }), [query])
 
   if (isLoading) {
     return (
@@ -153,7 +152,6 @@ export default function CompaniesPage() {
                 values={filterValues}
                 onChange={(newValues) => {
                   if (newValues.query !== undefined) setFilter('query', newValues.query)
-                  if (newValues.status !== undefined) setFilter('status', newValues.status)
                 }}
                 onClear={resetFilters}
               />
@@ -165,6 +163,7 @@ export default function CompaniesPage() {
               CardComponent={CompanyCard}
               isLoading={false}
               emptyMessage="Nenhuma empresa encontrada"
+              getRowId={(company) => company.id}
             />
           </>
         )}

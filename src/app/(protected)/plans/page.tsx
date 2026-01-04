@@ -151,6 +151,7 @@ export default function PlansPage() {
               CardComponent={PlanCard}
               isLoading={false}
               emptyMessage="Nenhum plano cadastrado"
+              getRowId={(plan) => plan.id}
             />
           )}
 

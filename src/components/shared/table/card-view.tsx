@@ -8,6 +8,7 @@ interface CardViewProps<T> {
   CardComponent: React.ComponentType<{ item: T }>;
   isLoading?: boolean;
   emptyMessage?: string;
+  getRowId?: (row: T, index: number) => string;
 }
 
 export function CardView<T>({
@@ -15,6 +16,7 @@ export function CardView<T>({
   CardComponent,
   isLoading,
   emptyMessage = 'Nenhum item encontrado',
+  getRowId,
 }: CardViewProps<T>) {
   if (isLoading) {
     return (
@@ -34,9 +36,10 @@ export function CardView<T>({
 
   return (
     <div className="space-y-3 custom-scrollbar">
-      {data.map((item, index) => (
-        <CardComponent key={index} item={item} />
-      ))}
+      {data.map((item, index) => {
+        const key = getRowId ? getRowId(item, index) : String(index);
+        return <CardComponent key={key} item={item} />;
+      })}
     </div>
   );
 }

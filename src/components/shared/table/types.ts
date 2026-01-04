@@ -19,6 +19,7 @@ export interface ResponsiveDataTableProps<T> {
   filters?: React.ReactNode
   manualPagination?: boolean
   manualSorting?: boolean
+  getRowId?: (row: T, index: number) => string
 }
 
 export type FilterType = 'search' | 'select' | 'toggle' | 'date-range'

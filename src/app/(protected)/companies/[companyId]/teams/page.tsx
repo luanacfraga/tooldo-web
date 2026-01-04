@@ -474,6 +474,7 @@ export default function TeamsPage() {
                   )}
                   isLoading={false}
                   emptyMessage="Nenhuma equipe encontrada"
+                  getRowId={(team) => team.id}
                 />
               )}
             </>

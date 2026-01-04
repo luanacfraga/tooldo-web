@@ -18,6 +18,7 @@ export function ResponsiveDataTable<T>({
   filters,
   manualPagination = false,
   manualSorting = false,
+  getRowId,
 }: ResponsiveDataTableProps<T>) {
   const { viewMode } = useResponsiveTable();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -25,6 +26,16 @@ export function ResponsiveDataTable<T>({
   const pageCount = pagination
     ? Math.ceil(pagination.total / pagination.pageSize)
     : undefined;
+
+  // For client-side pagination, slice the data
+  const paginatedData = React.useMemo(() => {
+    if (!pagination || manualPagination) {
+      return data;
+    }
+    const start = (pagination.page - 1) * pagination.pageSize;
+    const end = start + pagination.pageSize;
+    return data.slice(start, end);
+  }, [data, pagination, manualPagination]);
 
   return (
     <div className="space-y-4">
@@ -34,10 +45,11 @@ export function ResponsiveDataTable<T>({
       {/* Table or Cards based on viewport */}
       {viewMode === 'cards' ? (
         <CardView
-          data={data}
+          data={paginatedData}
           CardComponent={CardComponent}
           isLoading={isLoading}
           emptyMessage={emptyMessage}
+          getRowId={getRowId}
         />
       ) : (
         <TableView
@@ -55,18 +67,20 @@ export function ResponsiveDataTable<T>({
                 }
               : undefined
           }
-          onPaginationChange={(updater) => {
-            if (pagination) {
-              const currentState: PaginationState = {
-                pageIndex: pagination.page - 1,
-                pageSize: pagination.pageSize,
-              };
-              const newState =
-                typeof updater === 'function' ? updater(currentState) : updater;
-              pagination.onPageChange(newState.pageIndex + 1);
-              pagination.onPageSizeChange(newState.pageSize);
-            }
-          }}
+          onPaginationChange={
+            pagination
+              ? (updater) => {
+                  const currentState: PaginationState = {
+                    pageIndex: pagination.page - 1,
+                    pageSize: pagination.pageSize,
+                  };
+                  const newState =
+                    typeof updater === 'function' ? updater(currentState) : updater;
+                  pagination.onPageChange(newState.pageIndex + 1);
+                  pagination.onPageSizeChange(newState.pageSize);
+                }
+              : undefined
+          }
           manualPagination={manualPagination}
           manualSorting={manualSorting}
           pageCount={pageCount}

@@ -50,18 +50,21 @@ export function TableView<T>({
   manualSorting = false,
   pageCount,
 }: TableViewProps<T>) {
+  const hasPaginationState = pagination != null;
+  const enableClientPagination = !manualPagination && hasPaginationState;
+
   const table = useReactTable({
     data,
     columns,
     state: {
       sorting,
-      pagination,
+      ...(hasPaginationState ? { pagination } : {}),
     },
     onSortingChange,
-    onPaginationChange,
+    onPaginationChange: hasPaginationState ? onPaginationChange : undefined,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: manualSorting ? undefined : getSortedRowModel(),
-    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: enableClientPagination ? getPaginationRowModel() : undefined,
     manualPagination,
     manualSorting,
     pageCount,
