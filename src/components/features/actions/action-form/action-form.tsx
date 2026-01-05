@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Building2, Flag, Loader2, User, Users } from 'lucide-react';
+import { Building2, Flag, Loader2, Lock, User, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useUserContext } from '@/lib/contexts/user-context';
 import { actionFormSchema, actionPriorities, type ActionFormData } from '@/lib/validators/action';
 import { useCreateAction, useUpdateAction } from '@/lib/hooks/use-actions';
 import { useCompany } from '@/lib/hooks/use-company';
@@ -77,9 +80,14 @@ export function ActionForm({
   readOnly = false,
 }: ActionFormProps) {
   const router = useRouter();
+  const { user } = useUserContext();
   const { companies } = useCompany();
   const createAction = useCreateAction();
   const updateAction = useUpdateAction();
+
+  // Check if user can block/unblock actions
+  const canBlock = user && ['manager', 'executor', 'admin'].includes(user.globalRole);
+  const isEditing = mode === 'edit';
 
   const form = useForm<ActionFormData>({
     resolver: zodResolver(actionFormSchema),
@@ -92,6 +100,7 @@ export function ActionForm({
       companyId: action?.companyId || initialData?.companyId || '',
       teamId: action?.teamId || initialData?.teamId || undefined,
       responsibleId: action?.responsibleId || initialData?.responsibleId || '',
+      isBlocked: action?.isBlocked || initialData?.isBlocked || false,
     },
   });
 
@@ -350,6 +359,26 @@ export function ActionForm({
             )}
           />
           </div>
+
+          {/* Block Toggle - Only for managers, executors, and admins when editing */}
+          {canBlock && isEditing && (
+            <div className="flex items-center justify-between rounded-lg border border-border/40 bg-muted/30 p-4">
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <Label className="text-sm font-semibold">Bloquear Ação</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Impede edição e movimentação por qualquer usuário
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={form.watch('isBlocked') || false}
+                onCheckedChange={(checked) => form.setValue('isBlocked', checked)}
+                disabled={isSubmitting || readOnly}
+              />
+            </div>
+          )}
 
         </fieldset>
 

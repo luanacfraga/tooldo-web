@@ -26,6 +26,7 @@ const baseActionSchema = z.object({
   companyId: z.string().min(1, 'Empresa é obrigatória'),
   teamId: z.string().optional(),
   responsibleId: z.string().min(1, 'Responsável é obrigatório'),
+  isBlocked: z.boolean().optional(),
 });
 
 export const actionFormSchema = baseActionSchema.refine(

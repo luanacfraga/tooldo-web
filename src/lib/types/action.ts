@@ -69,6 +69,7 @@ export interface CreateActionDto {
   companyId: string;
   teamId?: string;
   responsibleId: string;
+  isBlocked?: boolean;
 }
 
 export interface UpdateActionDto {
@@ -79,6 +80,7 @@ export interface UpdateActionDto {
   priority?: ActionPriority;
   teamId?: string;
   responsibleId?: string;
+  isBlocked?: boolean;
 }
 
 export interface ActionFilters {
