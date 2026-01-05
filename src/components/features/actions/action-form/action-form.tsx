@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Building2, Flag, Loader2, Lock, User, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import {
   Form,
@@ -164,6 +165,17 @@ export function ActionForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {readOnly && (
+          <Alert variant="warning">
+            <Lock className="h-4 w-4" />
+            <AlertDescription>
+              Esta ação está bloqueada.
+              {canBlock
+                ? ' Desmarque o bloqueio para editar.'
+                : ' Somente gestores, executores e admins podem desbloquear.'}
+            </AlertDescription>
+          </Alert>
+        )}
         <fieldset disabled={isSubmitting || readOnly} className="space-y-4">
           {/* Title */}
           <FormField
@@ -375,7 +387,7 @@ export function ActionForm({
               <Switch
                 checked={form.watch('isBlocked') || false}
                 onCheckedChange={(checked) => form.setValue('isBlocked', checked)}
-                disabled={isSubmitting || readOnly}
+                disabled={isSubmitting}
               />
             </div>
           )}
