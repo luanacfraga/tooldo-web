@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Ban } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlockedBadgeProps {
@@ -14,11 +14,11 @@ export function BlockedBadge({ isBlocked, reason, className }: BlockedBadgeProps
   return (
     <Badge
       variant="outline"
-      className={cn('bg-red-50 text-red-700 border-red-300', className)}
-      title={reason || 'This action is blocked'}
+      className={cn('gap-1 border-warning/40 bg-warning/10 text-warning', className)}
+      title={reason || 'Ação bloqueada'}
     >
-      <Ban className="mr-1 h-3 w-3" />
-      Blocked
+      <Lock className="h-3 w-3" />
+      Bloqueada
     </Badge>
   );
 }

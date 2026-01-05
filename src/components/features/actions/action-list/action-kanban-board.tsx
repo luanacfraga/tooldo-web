@@ -29,6 +29,7 @@ import { ActionDetailSheet } from '../action-detail-sheet'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
 import { actionStatusUI } from '../shared/action-status-ui'
 import { LateIndicator } from '../shared/late-indicator'
+import { BlockedBadge } from '../shared/blocked-badge'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
 
@@ -630,6 +631,11 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
             <LateIndicator
               isLate={action.isLate}
               className="rounded-none px-1.5 py-0.5 text-[10px]"
+            />
+            <BlockedBadge
+              isBlocked={action.isBlocked}
+              reason={action.blockedReason}
+              className="px-1.5 py-0.5 text-[10px]"
             />
             <div className="flex items-center gap-1 rounded-full bg-muted/80 px-1.5 py-0.5 text-muted-foreground shadow-sm">
               <span className="text-[10px] font-semibold">☑ {checklistProgress}</span>
