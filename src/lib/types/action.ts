@@ -91,6 +91,8 @@ export interface ActionFilters {
   teamId?: string;
   isLate?: boolean;
   isBlocked?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export interface MoveActionDto {

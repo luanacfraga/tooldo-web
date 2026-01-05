@@ -5,7 +5,9 @@ import {
   type UseMutationResult,
   type UseQueryResult,
 } from '@tanstack/react-query';
+import { keepPreviousData } from '@tanstack/react-query';
 import { actionsApi } from '@/lib/api/endpoints/actions';
+import type { PaginatedResponse } from '@/lib/api/types';
 import type {
   Action,
   ActionFilters,
@@ -32,11 +34,14 @@ export const actionKeys = {
 /**
  * Hook to fetch actions with filters
  */
-export function useActions(filters: ActionFilters = {}): UseQueryResult<Action[], Error> {
+export function useActions(
+  filters: ActionFilters = {}
+): UseQueryResult<PaginatedResponse<Action>, Error> {
   return useQuery({
     queryKey: actionKeys.list(filters),
     queryFn: () => actionsApi.getAll(filters),
     staleTime: 1000 * 60, // 1 minute
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -47,19 +52,10 @@ export function useActions(filters: ActionFilters = {}): UseQueryResult<Action[]
  * by listing actions (scoped to selected company when available) and finding by id.
  */
 export function useAction(id: string): UseQueryResult<Action, Error> {
-  const { selectedCompany } = useCompany();
-
   return useQuery({
     queryKey: actionKeys.detail(id),
     queryFn: async () => {
-      const actions = await actionsApi.getAll(
-        selectedCompany?.id ? { companyId: selectedCompany.id } : {}
-      );
-      const action = actions.find((a) => a.id === id);
-      if (!action) {
-        throw new Error('Action not found');
-      }
-      return action;
+      return actionsApi.getById(id);
     },
     enabled: !!id,
   });

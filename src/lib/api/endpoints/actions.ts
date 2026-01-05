@@ -1,4 +1,5 @@
 import { apiClient } from '../api-client';
+import type { PaginatedResponse } from '@/lib/api/types';
 import type {
   Action,
   ActionFilters,
@@ -27,6 +28,8 @@ function buildQueryString(filters: ActionFilters): string {
     'priority',
     'isLate',
     'isBlocked',
+    'page',
+    'limit',
   ];
 
   supportedKeys.forEach((key) => {
@@ -44,9 +47,16 @@ export const actionsApi = {
   /**
    * Get list of actions with optional filters
    */
-  getAll: (filters: ActionFilters = {}): Promise<Action[]> => {
+  getAll: (filters: ActionFilters = {}): Promise<PaginatedResponse<Action>> => {
     const queryString = buildQueryString(filters);
-    return apiClient.get<Action[]>(`/api/v1/actions${queryString}`);
+    return apiClient.get<PaginatedResponse<Action>>(`/api/v1/actions${queryString}`);
+  },
+
+  /**
+   * Get action by id
+   */
+  getById: (id: string): Promise<Action> => {
+    return apiClient.get<Action>(`/api/v1/actions/${id}`);
   },
 
   /**

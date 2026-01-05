@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Pagination } from '@/components/shared/data/pagination';
 import { useActions, useDeleteAction } from '@/lib/hooks/use-actions';
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store';
 import { useAuth } from '@/lib/hooks/use-auth';
@@ -16,8 +17,10 @@ import { ActionTableRow } from './action-table-row';
 import { ActionListEmpty } from './action-list-empty';
 import { ActionListSkeleton } from './action-list-skeleton';
 import { toast } from 'sonner';
-import type { ActionFilters } from '@/lib/types/action';
+import type { Action, ActionFilters } from '@/lib/types/action';
 import { ActionDetailSheet } from '../action-detail-sheet';
+
+const EMPTY_ACTIONS: Action[] = [];
 
 export function ActionTable() {
   const { user } = useAuth();
@@ -51,10 +54,16 @@ export function ActionTable() {
 
     if (filtersState.teamId) filters.teamId = filtersState.teamId;
 
+    // Pagination (table)
+    filters.page = filtersState.page;
+    filters.limit = filtersState.pageSize;
+
     return filters;
   }, [filtersState, user, selectedCompany]);
 
-  const { data: actions = [], isLoading, error } = useActions(apiFilters);
+  const { data, isLoading, error } = useActions(apiFilters);
+  const actions = data?.data ?? EMPTY_ACTIONS;
+  const meta = data?.meta;
   const visibleActions = useMemo(() => {
     let result = actions;
 
@@ -79,6 +88,13 @@ export function ActionTable() {
     return result;
   }, [actions, filtersState.assignment, filtersState.searchQuery, filtersState.statuses, user?.id]);
 
+  useEffect(() => {
+    if (!meta || meta.totalPages <= 0) return;
+    if (filtersState.page > meta.totalPages) {
+      filtersState.setFilter('page', meta.totalPages);
+    }
+  }, [filtersState, meta]);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta ação?')) return;
 
@@ -100,7 +116,7 @@ export function ActionTable() {
     filtersState.showLateOnly ||
     !!filtersState.searchQuery;
 
-  if (isLoading) return <ActionListSkeleton />;
+  if (isLoading && !data) return <ActionListSkeleton />;
 
   if (error) {
     return (
@@ -161,6 +177,23 @@ export function ActionTable() {
         </TableBody>
       </Table>
       </div>
+
+      {meta && meta.totalPages > 0 && (
+        <div className="mt-4">
+          <Pagination
+            page={meta.page}
+            limit={meta.limit}
+            total={meta.total}
+            totalPages={meta.totalPages}
+            onPageChange={(page) => filtersState.setFilter('page', page)}
+            onLimitChange={(limit) => {
+              filtersState.setFilter('pageSize', limit);
+              filtersState.setFilter('page', 1);
+            }}
+            pageSizeOptions={[20]}
+          />
+        </div>
+      )}
 
       <ActionDetailSheet
         actionId={selectedActionId}

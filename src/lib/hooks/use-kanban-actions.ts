@@ -1,21 +1,21 @@
-import { useMemo, useState, useCallback } from 'react';
+import type { Action, ActionStatus } from '@/lib/types/action'
 import {
-  DragStartEvent,
   DragEndEvent,
+  DragStartEvent,
+  MouseSensor,
   PointerSensor,
   TouchSensor,
-  MouseSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import { useActions, useMoveAction } from './use-actions';
-import type { Action, ActionFilters, ActionStatus } from '@/lib/types/action';
-import { toast } from 'sonner';
+} from '@dnd-kit/core'
+import { useCallback, useState } from 'react'
+import { toast } from 'sonner'
+import { useMoveAction } from './use-actions'
 
-export function useKanbanActions(filters: ActionFilters) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeAction, setActiveAction] = useState<Action | null>(null);
-  const moveAction = useMoveAction();
+export function useKanbanActions(actions: Action[]) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [activeAction, setActiveAction] = useState<Action | null>(null)
+  const moveAction = useMoveAction()
 
   // Configure sensors with proper activation constraints
   const sensors = useSensors(
@@ -28,9 +28,7 @@ export function useKanbanActions(filters: ActionFilters) {
     useSensor(MouseSensor, {
       activationConstraint: { distance: 3 },
     })
-  );
-
-  const { data: actions = [], isLoading, error } = useActions(filters);
+  )
 
   // Sort actions by position within column
   const getColumnActions = useCallback(
@@ -38,85 +36,79 @@ export function useKanbanActions(filters: ActionFilters) {
       return actions
         .filter((action) => action.status === status)
         .sort((a, b) => {
-          const aPos = a.kanbanOrder?.position ?? 0;
-          const bPos = b.kanbanOrder?.position ?? 0;
-          return aPos - bPos;
-        });
+          const aPos = a.kanbanOrder?.position ?? 0
+          const bPos = b.kanbanOrder?.position ?? 0
+          return aPos - bPos
+        })
     },
     [actions]
-  );
+  )
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      const { active } = event;
-      setActiveId(active.id as string);
-      const draggedAction = actions.find((action) => action.id === active.id);
+      const { active } = event
+      setActiveId(active.id as string)
+      const draggedAction = actions.find((action) => action.id === active.id)
       if (draggedAction) {
-        setActiveAction(draggedAction);
+        setActiveAction(draggedAction)
       }
     },
     [actions]
-  );
+  )
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
-      const { active, over } = event;
-      setActiveId(null);
-      setActiveAction(null);
+      const { active, over } = event
+      setActiveId(null)
+      setActiveAction(null)
 
-      if (!over) return;
+      if (!over) return
 
-      const activeAction = actions.find((action) => action.id === active.id);
-      if (!activeAction) return;
+      const activeAction = actions.find((action) => action.id === active.id)
+      if (!activeAction) return
 
       // Determine new status and position
-      const isColumn = ['TODO', 'IN_PROGRESS', 'DONE'].includes(over.id as string);
+      const isColumn = ['TODO', 'IN_PROGRESS', 'DONE'].includes(over.id as string)
       const newStatus = isColumn
         ? (over.id as ActionStatus)
-        : actions.find((a) => a.id === over.id)?.status;
+        : actions.find((a) => a.id === over.id)?.status
 
-      if (!newStatus) return;
+      if (!newStatus) return
 
-      const columnActions = actions.filter((a) => a.status === newStatus);
-      let newPosition = columnActions.length;
+      const columnActions = actions.filter((a) => a.status === newStatus)
+      let newPosition = columnActions.length
 
       if (!isColumn) {
-        const overIndex = columnActions.findIndex((a) => a.id === over.id);
+        const overIndex = columnActions.findIndex((a) => a.id === over.id)
         if (overIndex !== -1) {
-          newPosition = overIndex;
+          newPosition = overIndex
         }
       }
 
       // No-op if same position
-      if (
-        activeAction.status === newStatus &&
-        activeAction.kanbanOrder?.position === newPosition
-      ) {
-        return;
+      if (activeAction.status === newStatus && activeAction.kanbanOrder?.position === newPosition) {
+        return
       }
 
       try {
         await moveAction.mutateAsync({
           id: activeAction.id,
           data: { toStatus: newStatus, position: newPosition },
-        });
-        toast.success('Ação movida com sucesso');
+        })
+        toast.success('Ação movida com sucesso')
       } catch (error) {
-        toast.error('Erro ao mover ação');
+        toast.error('Erro ao mover ação')
       }
     },
     [actions, moveAction]
-  );
+  )
 
   return {
-    actions,
-    isLoading,
-    error,
     getColumnActions,
     sensors,
     handleDragStart,
     handleDragEnd,
     activeId,
     activeAction,
-  };
+  }
 }

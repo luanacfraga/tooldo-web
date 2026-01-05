@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { employeesApi } from '@/lib/api/endpoints/employees'
+import { useActions } from '@/lib/hooks/use-actions'
 import { useUpdateAction } from '@/lib/hooks/use-actions'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
@@ -22,8 +23,8 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Calendar, Eye, Flag, UserCheck } from 'lucide-react'
-import { memo, useCallback, useMemo, useState } from 'react'
+import { Calendar, Eye, Flag, Loader2, UserCheck } from 'lucide-react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ActionDetailSheet } from '../action-detail-sheet'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
@@ -132,6 +133,10 @@ export function ActionKanbanBoard() {
   const [announcement, setAnnouncement] = useState('')
 
   // Build API filters from store
+  const [page, setPage] = useState(1)
+  const [allActions, setAllActions] = useState<Action[]>([])
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
   const apiFilters: ActionFilters = useMemo(() => {
     const filters: ActionFilters = {}
 
@@ -154,19 +159,65 @@ export function ActionKanbanBoard() {
 
     if (filtersState.teamId) filters.teamId = filtersState.teamId
 
+    // Pagination (kanban infinite scroll)
+    filters.page = page
+    filters.limit = 30
+
     return filters
-  }, [filtersState, user, selectedCompany])
+  }, [filtersState, page, user, selectedCompany])
 
   const {
-    actions,
-    isLoading,
-    error,
     getColumnActions,
     sensors,
     handleDragStart: originalHandleDragStart,
     handleDragEnd: originalHandleDragEnd,
     activeAction,
-  } = useKanbanActions(apiFilters)
+  } = useKanbanActions(allActions)
+
+  const { data, isLoading, isFetching, error } = useActions(apiFilters)
+
+  useEffect(() => {
+    if (!data?.data) return
+    setAllActions((prev) => (page === 1 ? data.data : [...prev, ...data.data]))
+  }, [data?.data, page])
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1)
+    setAllActions([])
+  }, [
+    filtersState.statuses,
+    filtersState.priority,
+    filtersState.assignment,
+    filtersState.showBlockedOnly,
+    filtersState.showLateOnly,
+    filtersState.companyId,
+    filtersState.teamId,
+    filtersState.searchQuery,
+  ])
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const el = loadMoreRef.current
+    if (!el) return
+
+    const hasNext =
+      data?.meta?.hasNextPage ?? (data?.meta ? page < data.meta.totalPages : false)
+
+    if (!hasNext) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNext && !isFetching) {
+          setPage((p) => p + 1)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [data?.meta, isFetching, page])
 
   const handleDragStart = (event: any) => {
     originalHandleDragStart(event)
@@ -236,7 +287,7 @@ export function ActionKanbanBoard() {
     setSheetOpen(true)
   }, [])
 
-  if (isLoading) return <ActionListSkeleton />
+  if (isLoading && allActions.length === 0) return <ActionListSkeleton />
 
   if (error) {
     return (
@@ -246,7 +297,7 @@ export function ActionKanbanBoard() {
     )
   }
 
-  if (actions.length === 0) {
+  if (!isLoading && allActions.length === 0) {
     return (
       <ActionListEmpty
         hasFilters={hasFilters}
@@ -290,6 +341,15 @@ export function ActionKanbanBoard() {
             )
           })}
         </div>
+
+        {/* Infinite scroll sentinel */}
+        <div ref={loadMoreRef} className="h-6" />
+
+        {isFetching && page > 1 && (
+          <div className="flex justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
         <DragOverlay>
           {activeAction && <ActionKanbanCard action={activeAction} isDragging />}
