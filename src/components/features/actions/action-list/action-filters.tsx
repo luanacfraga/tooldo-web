@@ -6,6 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionPriority, ActionStatus } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
+import { getActionStatusUI } from '../shared/action-status-ui'
+import { getActionPriorityUI } from '../shared/action-priority-ui'
 import {
   CheckCircle2,
   Filter,
@@ -36,6 +38,44 @@ export function ActionFilters() {
     )
   }
 
+  const getStatusPill = (status: ActionStatus) => {
+    const ui = getActionStatusUI(status)
+    return {
+      dot: ui.dotClass,
+      itemActive: ui.badgeClass,
+    }
+  }
+
+  const getPriorityPill = (priority: ActionPriority) => {
+    switch (priority) {
+      case ActionPriority.LOW:
+        return {
+          flagClass: getActionPriorityUI(ActionPriority.LOW).flagClass,
+          itemActive: getActionPriorityUI(ActionPriority.LOW).itemActiveClass as const,
+        }
+      case ActionPriority.MEDIUM:
+        return {
+          flagClass: getActionPriorityUI(ActionPriority.MEDIUM).flagClass,
+          itemActive: getActionPriorityUI(ActionPriority.MEDIUM).itemActiveClass as const,
+        }
+      case ActionPriority.HIGH:
+        return {
+          flagClass: getActionPriorityUI(ActionPriority.HIGH).flagClass,
+          itemActive: getActionPriorityUI(ActionPriority.HIGH).itemActiveClass as const,
+        }
+      case ActionPriority.URGENT:
+        return {
+          flagClass: getActionPriorityUI(ActionPriority.URGENT).flagClass,
+          itemActive: getActionPriorityUI(ActionPriority.URGENT).itemActiveClass as const,
+        }
+      default:
+        return {
+          flagClass: 'text-muted-foreground',
+          itemActive: 'bg-primary/10 text-primary' as const,
+        }
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border/50 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
@@ -54,12 +94,13 @@ export function ActionFilters() {
         <div className="ml-auto flex w-full items-center gap-2 sm:w-auto">
           <div className="flex items-center rounded-lg border border-border/60 bg-background/40 p-1 shadow-sm">
             <Button
-              variant={filters.viewMode === 'list' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => filters.setFilter('viewMode', 'list')}
               className={cn(
                 'h-7 w-7 p-0',
-                filters.viewMode === 'list' && 'bg-background shadow-sm text-foreground'
+                filters.viewMode === 'list' &&
+                  'bg-primary/15 text-primary shadow-sm hover:bg-primary/20 hover:text-primary'
               )}
               title="Lista"
               aria-label="Visualizar como lista"
@@ -68,12 +109,13 @@ export function ActionFilters() {
               <LayoutList className="h-4 w-4" />
             </Button>
             <Button
-              variant={filters.viewMode === 'kanban' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => filters.setFilter('viewMode', 'kanban')}
               className={cn(
                 'h-7 w-7 p-0',
-                filters.viewMode === 'kanban' && 'bg-background shadow-sm text-foreground'
+                filters.viewMode === 'kanban' &&
+                  'bg-primary/15 text-primary shadow-sm hover:bg-primary/20 hover:text-primary'
               )}
               title="Kanban"
               aria-label="Visualizar como kanban"
@@ -131,21 +173,28 @@ export function ActionFilters() {
                   { label: 'Em Andamento', value: ActionStatus.IN_PROGRESS },
                   { label: 'Concluído', value: ActionStatus.DONE },
                 ].map((option) => (
+                  (() => {
+                    const meta = getStatusPill(option.value)
+                    const isActive = filters.status === option.value
+                    return (
                   <Button
                     key={option.value}
                     variant="ghost"
                     size="sm"
                     className={cn(
                       'w-full justify-start text-xs font-normal',
-                      filters.status === option.value && 'bg-primary/10 text-primary'
+                      isActive && meta.itemActive
                     )}
                     onClick={() => filters.setFilter('status', option.value as ActionStatus)}
                   >
-                    {option.label}
-                    {filters.status === option.value && (
+                    <span className={cn('mr-2 inline-block h-2 w-2 rounded-full', meta.dot)} />
+                    <span>{option.label}</span>
+                    {isActive && (
                       <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
                     )}
                   </Button>
+                    )
+                  })()
                 ))}
               </div>
             </div>
@@ -190,21 +239,28 @@ export function ActionFilters() {
                   { label: 'Alta', value: ActionPriority.HIGH },
                   { label: 'Urgente', value: ActionPriority.URGENT },
                 ].map((option) => (
+                  (() => {
+                    const meta = getPriorityPill(option.value)
+                    const isActive = filters.priority === option.value
+                    return (
                   <Button
                     key={option.value}
                     variant="ghost"
                     size="sm"
                     className={cn(
                       'w-full justify-start text-xs font-normal',
-                      filters.priority === option.value && 'bg-primary/10 text-primary'
+                      isActive && meta.itemActive
                     )}
                     onClick={() => filters.setFilter('priority', option.value as ActionPriority)}
                   >
-                    {option.label}
-                    {filters.priority === option.value && (
+                    <Flag className={cn('mr-2 h-3.5 w-3.5', meta.flagClass)} />
+                    <span>{option.label}</span>
+                    {isActive && (
                       <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
                     )}
                   </Button>
+                    )
+                  })()
                 ))}
               </div>
             </div>

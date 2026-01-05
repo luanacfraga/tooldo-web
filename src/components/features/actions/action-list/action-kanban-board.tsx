@@ -9,7 +9,8 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useKanbanActions } from '@/lib/hooks/use-kanban-actions'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
-import { ActionPriority, ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
+import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
+import { cn } from '@/lib/utils'
 import {
   DndContext,
   DragOverlay,
@@ -21,26 +22,16 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { AlertCircle, Calendar, Eye, UserCheck } from 'lucide-react'
+import { AlertCircle, Calendar, Eye, Flag, UserCheck } from 'lucide-react'
 import { memo, useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ActionDetailSheet } from '../action-detail-sheet'
+import { getActionPriorityUI } from '../shared/action-priority-ui'
+import { actionStatusUI } from '../shared/action-status-ui'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
 
-const priorityColors = {
-  [ActionPriority.LOW]: 'bg-green-100 text-green-600',
-  [ActionPriority.MEDIUM]: 'bg-yellow-100 text-yellow-600',
-  [ActionPriority.HIGH]: 'bg-red-100 text-red-600',
-  [ActionPriority.URGENT]: 'bg-primary-lightest text-primary-base',
-} as const
-
-const priorityLabels = {
-  [ActionPriority.LOW]: 'Baixa',
-  [ActionPriority.MEDIUM]: 'Média',
-  [ActionPriority.HIGH]: 'Alta',
-  [ActionPriority.URGENT]: 'Urgente',
-} as const
+// Priority UI is centralized in getActionPriorityUI()
 
 const columns = [
   {
@@ -61,24 +52,9 @@ const columns = [
 ]
 
 const columnStyles = {
-  [ActionStatus.TODO]: {
-    containerClass: 'bg-warning/5 border-warning/10',
-    barClass: 'bg-warning',
-    titleClass: 'text-warning',
-    countClass: 'bg-warning/10 text-warning border border-warning/20',
-  },
-  [ActionStatus.IN_PROGRESS]: {
-    containerClass: 'bg-primary/5 border-primary/10',
-    barClass: 'bg-primary',
-    titleClass: 'text-primary',
-    countClass: 'bg-primary/10 text-primary border border-primary/20',
-  },
-  [ActionStatus.DONE]: {
-    containerClass: 'bg-success/5 border-success/10',
-    barClass: 'bg-success',
-    titleClass: 'text-success',
-    countClass: 'bg-success/10 text-success border border-success/20',
-  },
+  [ActionStatus.TODO]: actionStatusUI[ActionStatus.TODO].kanban,
+  [ActionStatus.IN_PROGRESS]: actionStatusUI[ActionStatus.IN_PROGRESS].kanban,
+  [ActionStatus.DONE]: actionStatusUI[ActionStatus.DONE].kanban,
 }
 
 const kanbanStyles = `
@@ -578,7 +554,7 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
     }
   }
 
-  const priorityColor = priorityColors[action.priority] || priorityColors[ActionPriority.LOW]
+  const priorityUI = getActionPriorityUI(action.priority)
 
   return (
     <div
@@ -627,9 +603,13 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
             </span>
           </div>
           <span
-            className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${priorityColor} select-none`}
+            className={cn(
+              'select-none rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+              priorityUI.pillClass
+            )}
           >
-            {priorityLabels[action.priority] || 'Baixa'}
+            <Flag className={cn('mr-1 inline-block h-3 w-3 align-[-2px]', priorityUI.flagClass)} />
+            {priorityUI.label}
           </span>
         </div>
 

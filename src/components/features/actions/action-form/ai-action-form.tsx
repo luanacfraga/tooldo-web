@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Building2, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -118,6 +118,7 @@ export function AIActionForm({ onSuggestion, onCancel }: AIActionFormProps) {
                         <SelectContent>
                         {companies.map((company) => (
                             <SelectItem key={company.id} value={company.id} className="text-sm">
+                            <Building2 className="mr-2 h-3.5 w-3.5 text-primary" />
                             {company.name}
                             </SelectItem>
                         ))}

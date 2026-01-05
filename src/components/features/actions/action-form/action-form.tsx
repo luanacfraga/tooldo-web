@@ -4,9 +4,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Building2, Flag, Loader2, User, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Form,
   FormControl,
@@ -30,6 +31,7 @@ import { useCompany } from '@/lib/hooks/use-company';
 import { useTeamsByCompany } from '@/lib/services/queries/use-teams';
 import { useEmployeesByCompany } from '@/lib/services/queries/use-employees';
 import { ActionPriority, type Action } from '@/lib/types/action';
+import { getActionPriorityUI } from '../shared/action-priority-ui';
 
 interface ActionFormProps {
   action?: Action;
@@ -41,10 +43,29 @@ interface ActionFormProps {
 }
 
 const priorityLabels: Record<ActionPriority, string> = {
-  [ActionPriority.LOW]: 'Baixa',
-  [ActionPriority.MEDIUM]: 'Média',
-  [ActionPriority.HIGH]: 'Alta',
-  [ActionPriority.URGENT]: 'Urgente',
+  [ActionPriority.LOW]: getActionPriorityUI(ActionPriority.LOW).label,
+  [ActionPriority.MEDIUM]: getActionPriorityUI(ActionPriority.MEDIUM).label,
+  [ActionPriority.HIGH]: getActionPriorityUI(ActionPriority.HIGH).label,
+  [ActionPriority.URGENT]: getActionPriorityUI(ActionPriority.URGENT).label,
+};
+
+const priorityStyles: Record<ActionPriority, { itemActiveClass: string; flagClass: string }> = {
+  [ActionPriority.LOW]: {
+    itemActiveClass: getActionPriorityUI(ActionPriority.LOW).itemActiveClass,
+    flagClass: getActionPriorityUI(ActionPriority.LOW).flagClass,
+  },
+  [ActionPriority.MEDIUM]: {
+    itemActiveClass: getActionPriorityUI(ActionPriority.MEDIUM).itemActiveClass,
+    flagClass: getActionPriorityUI(ActionPriority.MEDIUM).flagClass,
+  },
+  [ActionPriority.HIGH]: {
+    itemActiveClass: getActionPriorityUI(ActionPriority.HIGH).itemActiveClass,
+    flagClass: getActionPriorityUI(ActionPriority.HIGH).flagClass,
+  },
+  [ActionPriority.URGENT]: {
+    itemActiveClass: getActionPriorityUI(ActionPriority.URGENT).itemActiveClass,
+    flagClass: getActionPriorityUI(ActionPriority.URGENT).flagClass,
+  },
 };
 
 export function ActionForm({
@@ -185,8 +206,16 @@ export function ActionForm({
                   </FormControl>
                   <SelectContent>
                     {actionPriorities.map((priority) => (
-                      <SelectItem key={priority} value={priority} className="text-sm">
-                        {priorityLabels[priority]}
+                      <SelectItem
+                        key={priority}
+                        value={priority}
+                        className={cn(
+                          'text-sm',
+                          field.value === priority && priorityStyles[priority].itemActiveClass
+                        )}
+                      >
+                        <Flag className={cn('mr-2 h-3.5 w-3.5', priorityStyles[priority].flagClass)} />
+                        <span>{priorityLabels[priority]}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -212,6 +241,7 @@ export function ActionForm({
                   <SelectContent>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id} className="text-sm">
+                        <Building2 className="mr-2 h-3.5 w-3.5 text-primary" />
                         {company.name}
                       </SelectItem>
                     ))}
@@ -276,6 +306,7 @@ export function ActionForm({
                   <SelectContent>
                     {teams.map((team) => (
                       <SelectItem key={team.id} value={team.id} className="text-sm">
+                        <Users className="mr-2 h-3.5 w-3.5 text-secondary" />
                         {team.name}
                       </SelectItem>
                     ))}
@@ -306,6 +337,7 @@ export function ActionForm({
                   <SelectContent>
                     {employees.map((employee) => (
                       <SelectItem key={employee.id} value={employee.userId} className="text-sm">
+                        <User className="mr-2 h-3.5 w-3.5 text-info" />
                         {employee.user
                           ? `${employee.user.firstName} ${employee.user.lastName}`
                           : employee.userId}

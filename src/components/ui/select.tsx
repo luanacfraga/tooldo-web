@@ -120,7 +120,10 @@ const SelectItem = React.forwardRef<
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    {/* Use asChild so SelectItem can safely render rich content (icons, badges) while keeping Radix text behavior */}
+    <SelectPrimitive.ItemText asChild>
+      <span className="flex items-center">{children}</span>
+    </SelectPrimitive.ItemText>
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
