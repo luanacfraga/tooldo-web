@@ -17,6 +17,8 @@ const buttonVariants = cva(
           'bg-gradient-to-r from-success via-success/95 to-success/90 text-success-foreground shadow-sm hover:shadow-md hover:from-success/95 hover:via-success/90 hover:to-success/85 active:scale-[0.97]',
         warning:
           'bg-gradient-to-r from-warning via-warning/95 to-warning/90 text-warning-foreground shadow-sm hover:shadow-md hover:from-warning/95 hover:via-warning/90 hover:to-warning/85 active:scale-[0.97]',
+        info:
+          'bg-gradient-to-r from-info via-info/95 to-info/90 text-info-foreground shadow-sm hover:shadow-md hover:from-info/95 hover:via-info/90 hover:to-info/85 active:scale-[0.97]',
         outline:
           'border border-input/60 bg-background/50 backdrop-blur-sm hover:bg-accent/60 hover:border-input hover:text-accent-foreground hover:shadow-sm active:scale-[0.97]',
         secondary:
