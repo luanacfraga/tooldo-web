@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { getActionStatusUI } from '../shared/action-status-ui'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
 import {
+  Calendar as CalendarIcon,
   CheckCircle2,
   Filter,
   Flag,
@@ -28,6 +29,8 @@ export function ActionFilters() {
     filters.statuses.length > 0 ||
     filters.priority !== 'all' ||
     filters.assignment !== 'all' ||
+    !!filters.dateFrom ||
+    !!filters.dateTo ||
     filters.showBlockedOnly ||
     filters.showLateOnly
 
@@ -328,6 +331,113 @@ export function ActionFilters() {
                   </Button>
                 ))}
               </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Date Range Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={getButtonState(!!filters.dateFrom || !!filters.dateTo)}
+            >
+              <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+              <span>Data</span>
+              {(filters.dateFrom || filters.dateTo) && (
+                <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                  1
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[280px] p-0" align="start">
+            <div className="p-3 space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                  Filtrar por
+                </label>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'w-full justify-start text-xs font-normal',
+                      filters.dateFilterType === 'createdAt' && 'bg-primary/10 text-primary'
+                    )}
+                    onClick={() => filters.setFilter('dateFilterType', 'createdAt')}
+                  >
+                    Data de Criação
+                    {filters.dateFilterType === 'createdAt' && (
+                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'w-full justify-start text-xs font-normal',
+                      filters.dateFilterType === 'startDate' && 'bg-primary/10 text-primary'
+                    )}
+                    onClick={() => filters.setFilter('dateFilterType', 'startDate')}
+                  >
+                    Data de Início
+                    {filters.dateFilterType === 'startDate' && (
+                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="h-px bg-muted" />
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                  Período
+                </label>
+                <div className="space-y-2">
+                  <div>
+                    <label className="text-[11px] text-muted-foreground mb-1 block">De</label>
+                    <Input
+                      type="date"
+                      value={filters.dateFrom ? filters.dateFrom.split('T')[0] : ''}
+                      onChange={(e) => {
+                        const date = e.target.value ? new Date(e.target.value + 'T00:00:00').toISOString() : null
+                        filters.setFilter('dateFrom', date)
+                      }}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground mb-1 block">Até</label>
+                    <Input
+                      type="date"
+                      value={filters.dateTo ? filters.dateTo.split('T')[0] : ''}
+                      onChange={(e) => {
+                        const date = e.target.value ? new Date(e.target.value + 'T23:59:59').toISOString() : null
+                        filters.setFilter('dateTo', date)
+                      }}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {(filters.dateFrom || filters.dateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    filters.setFilter('dateFrom', null)
+                    filters.setFilter('dateTo', null)
+                  }}
+                  className="w-full h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                >
+                  <X className="mr-1.5 h-3 w-3" />
+                  Limpar datas
+                </Button>
+              )}
             </div>
           </PopoverContent>
         </Popover>

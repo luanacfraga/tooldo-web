@@ -1,11 +1,15 @@
 import type { ActionFilters, ActionPriority, ActionStatus } from '@/lib/types/action'
 
 type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams'
+type DateFilterType = 'createdAt' | 'startDate'
 
 export type ActionFiltersUIState = {
   statuses: ActionStatus[]
   priority: ActionPriority | 'all'
   assignment: AssignmentFilter
+  dateFrom: string | null
+  dateTo: string | null
+  dateFilterType: DateFilterType
   companyId: string | null
   teamId: string | null
   showBlockedOnly: boolean
@@ -55,6 +59,13 @@ export function buildActionsApiFilters({
   }
 
   if (state.teamId) filters.teamId = state.teamId
+
+  // Date range filters - backend handles the filtering
+  if (state.dateFrom) filters.dateFrom = state.dateFrom
+  if (state.dateTo) filters.dateTo = state.dateTo
+  if (state.dateFrom || state.dateTo) {
+    filters.dateFilterType = state.dateFilterType
+  }
 
   const q = state.searchQuery?.trim()
   if (q) filters.q = q

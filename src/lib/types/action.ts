@@ -94,6 +94,9 @@ export interface ActionFilters {
   isLate?: boolean;
   isBlocked?: boolean;
   q?: string;
+  dateFrom?: string; // ISO string
+  dateTo?: string; // ISO string
+  dateFilterType?: 'createdAt' | 'startDate';
   page?: number;
   limit?: number;
 }

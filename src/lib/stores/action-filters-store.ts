@@ -3,12 +3,16 @@ import { persist } from 'zustand/middleware';
 import type { ActionPriority, ActionStatus } from '@/lib/types/action';
 
 type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams';
+type DateFilterType = 'createdAt' | 'startDate';
 
 interface ActionFiltersState {
   // Filter values
   statuses: ActionStatus[];
   priority: ActionPriority | 'all';
   assignment: AssignmentFilter;
+  dateFrom: string | null; // ISO string
+  dateTo: string | null; // ISO string
+  dateFilterType: DateFilterType; // Filter by creation date or start date
   companyId: string | null;
   teamId: string | null;
   showBlockedOnly: boolean;
@@ -31,6 +35,9 @@ const initialState = {
   statuses: [] as ActionStatus[],
   priority: 'all' as const,
   assignment: 'all' as AssignmentFilter,
+  dateFrom: null,
+  dateTo: null,
+  dateFilterType: 'createdAt' as DateFilterType,
   companyId: null,
   teamId: null,
   showBlockedOnly: false,
@@ -68,6 +75,9 @@ export const useActionFiltersStore = create<ActionFiltersState>()(
         sortBy: state.sortBy,
         sortOrder: state.sortOrder,
         pageSize: state.pageSize,
+        dateFrom: state.dateFrom,
+        dateTo: state.dateTo,
+        dateFilterType: state.dateFilterType,
       }),
     }
   )
