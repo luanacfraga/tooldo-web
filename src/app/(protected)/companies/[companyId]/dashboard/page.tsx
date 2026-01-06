@@ -1,21 +1,21 @@
 'use client'
 
-import Link from 'next/link'
-import { useEffect, useMemo } from 'react'
+import { ProgressBar } from '@/components/shared/data/progress-bar'
 import { StatCard } from '@/components/shared/data/stat-card'
 import { ActivityItem } from '@/components/shared/feedback/activity-item'
+import { LoadingSpinner } from '@/components/shared/feedback/loading-spinner'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
-import { ProgressBar } from '@/components/shared/data/progress-bar'
-import { LoadingSpinner } from '@/components/shared/feedback/loading-spinner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUserContext } from '@/lib/contexts/user-context'
 import { useActions } from '@/lib/hooks/use-actions'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionStatus } from '@/lib/types/action'
 import { BarChart3, CheckSquare, Clock, Lock, Sparkles } from 'lucide-react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useEffect, useMemo } from 'react'
 
 function formatPercent(value: number): string {
   if (!Number.isFinite(value)) return '0%'
@@ -92,10 +92,7 @@ export default function CompanyDashboardPage() {
     setCurrentCompanyId(companyId)
   }, [companyId, setCurrentCompanyId])
 
-  const totalFilters = useMemo(
-    () => ({ companyId, page: 1, limit: 1 }),
-    [companyId]
-  )
+  const totalFilters = useMemo(() => ({ companyId, page: 1, limit: 1 }), [companyId])
   const todoFilters = useMemo(
     () => ({ companyId, status: ActionStatus.TODO, page: 1, limit: 1 }),
     [companyId]
@@ -108,10 +105,7 @@ export default function CompanyDashboardPage() {
     () => ({ companyId, status: ActionStatus.DONE, page: 1, limit: 1 }),
     [companyId]
   )
-  const lateFilters = useMemo(
-    () => ({ companyId, isLate: true, page: 1, limit: 1 }),
-    [companyId]
-  )
+  const lateFilters = useMemo(() => ({ companyId, isLate: true, page: 1, limit: 1 }), [companyId])
   const blockedFilters = useMemo(
     () => ({ companyId, isBlocked: true, page: 1, limit: 1 }),
     [companyId]
@@ -182,9 +176,7 @@ export default function CompanyDashboardPage() {
                   {motivation.title}
                 </span>
               </CardTitle>
-              <CardDescription className="max-w-2xl">
-                {motivation.subtitle}
-              </CardDescription>
+              <CardDescription className="max-w-2xl">{motivation.subtitle}</CardDescription>
             </div>
 
             {isLoadingStats ? (
@@ -192,7 +184,7 @@ export default function CompanyDashboardPage() {
                 <LoadingSpinner size="sm" variant="muted" label="Carregando métricas..." />
               </div>
             ) : (
-              <div className="hidden sm:flex flex-col items-end gap-1">
+              <div className="hidden flex-col items-end gap-1 sm:flex">
                 <div className="text-sm font-semibold text-foreground">
                   {formatPercent(completionRate)}
                 </div>

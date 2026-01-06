@@ -1,15 +1,16 @@
 'use client'
 
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState, type ReactNode } from 'react'
 import Cookies from 'js-cookie'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { BaseLayout } from './base-layout'
 import { DashboardSidebar } from './dashboard-sidebar'
 
-import { useUserContext } from '@/lib/contexts/user-context'
 import { config } from '@/config/config'
+import { useUserContext } from '@/lib/contexts/user-context'
+import { useAuthStore } from '@/lib/stores/auth-store'
 
 interface ProtectedLayoutProps {
   children: ReactNode
@@ -18,34 +19,43 @@ interface ProtectedLayoutProps {
 export function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const { isAuthenticated, user } = useUserContext()
   const router = useRouter()
-  const pathname = usePathname()
-  const [isHydrating, setIsHydrating] = useState(true)
+  const logout = useAuthStore((s) => s.logout)
+  const [hasHydrated, setHasHydrated] = useState(() => useAuthStore.persist.hasHydrated())
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsHydrating(false)
-    }, 100)
-
-    return () => clearTimeout(timer)
+    const unsub = useAuthStore.persist.onFinishHydration(() => setHasHydrated(true))
+    if (useAuthStore.persist.hasHydrated()) setHasHydrated(true)
+    return () => {
+      unsub?.()
+    }
   }, [])
 
   useEffect(() => {
-    if (!isHydrating && !isAuthenticated && !user) {
-      const token = Cookies.get(config.cookies.tokenName)
-      if (!token) {
-        router.push('/login')
-      }
-    }
-  }, [isHydrating, isAuthenticated, user, router])
+    if (!hasHydrated) return
 
-  if (isHydrating || !isAuthenticated || !user) {
-    return <LoadingScreen message="Verificando autenticação..." />
+    const token = Cookies.get(config.cookies.tokenName)
+
+    // Sem token: não existe sessão, redireciona.
+    if (!token) {
+      router.replace('/login')
+      return
+    }
+
+    // Token existe mas não temos usuário autenticado após hidratação:
+    // estado inconsistente -> limpa sessão local e redireciona.
+    if (!user || !isAuthenticated) {
+      logout()
+      router.replace('/login')
+    }
+  }, [hasHydrated, isAuthenticated, user, router, logout])
+
+  if (!hasHydrated) {
+    return <LoadingScreen icon="logo" message="Carregando sessão..." />
   }
 
-  return (
-    <BaseLayout sidebar={<DashboardSidebar />}>
-      {children}
-    </BaseLayout>
-  )
-}
+  if (!isAuthenticated || !user) {
+    return <LoadingScreen icon="logo" message="Redirecionando..." />
+  }
 
+  return <BaseLayout sidebar={<DashboardSidebar />}>{children}</BaseLayout>
+}
