@@ -5,5 +5,5 @@ interface ActionsLayoutProps {
 }
 
 export default function ActionsLayout({ children }: ActionsLayoutProps) {
-  return <div className="container mx-auto">{children}</div>
+  return <div>{children}</div>
 }
