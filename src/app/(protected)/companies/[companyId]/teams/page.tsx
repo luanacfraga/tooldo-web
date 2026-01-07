@@ -140,7 +140,7 @@ export default function TeamsPage() {
           return (
             <div className="flex justify-end gap-1">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   // Abre fluxo de edição com módulo de membros inline
@@ -148,7 +148,7 @@ export default function TeamsPage() {
                   setEditingTeam(team)
                   setError(null)
                 }}
-                className="h-8 gap-1 px-2"
+                className="h-8 gap-1 px-3"
               >
                 <UserCog className="h-4 w-4" />
                 <span className="hidden sm:inline">Gerenciar</span>
