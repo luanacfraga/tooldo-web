@@ -3,24 +3,25 @@
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { ApiError } from '@/lib/api/api-client'
 import type { Team } from '@/lib/api/endpoints/teams'
 import { useExecutorsByCompany } from '@/lib/services/queries/use-employees'
 import {
   useAddTeamMember,
+  useAvailableExecutorsByTeam,
   useRemoveTeamMember,
   useTeamMembers,
 } from '@/lib/services/queries/use-teams'
@@ -62,23 +63,26 @@ export function TeamMembersDialog({ open, onOpenChange, team, companyId }: TeamM
   const [success, setSuccess] = useState<string | null>(null)
 
   const { data: members = [], isLoading: loadingMembers } = useTeamMembers(team.id)
-  const { data: executorsWithTeam = [], isLoading: loadingExecutors } = useExecutorsByCompany(
-    companyId,
-    team.id
-  )
+  const { data: availableExecutorsResponse = [], isLoading: loadingAvailableExecutors } =
+    useAvailableExecutorsByTeam(team.id)
   const { data: allExecutors = [] } = useExecutorsByCompany(companyId)
   const { mutateAsync: addMember, isPending: isAdding } = useAddTeamMember()
   const { mutateAsync: removeMember, isPending: isRemoving } = useRemoveTeamMember()
 
+  // Se a API de available executors não retornar dados, use allExecutors filtrados
   const availableExecutors = useMemo(() => {
+    if (availableExecutorsResponse.length > 0) {
+      return availableExecutorsResponse
+    }
+    // Filtrar executores que já são membros
     const memberUserIds = new Set(members.map((m) => m.userId))
-    return executorsWithTeam.filter((executor) => !memberUserIds.has(executor.userId))
-  }, [executorsWithTeam, members])
+    return allExecutors.filter((executor) => !memberUserIds.has(executor.userId))
+  }, [availableExecutorsResponse, allExecutors, members])
 
   const membersWithInfo = useMemo(() => {
     return members.map((member) => {
       const executor =
-        executorsWithTeam.find((e) => e.userId === member.userId) ||
+        availableExecutorsResponse.find((e) => e.userId === member.userId) ||
         allExecutors.find((e) => e.userId === member.userId)
       return {
         ...member,
@@ -89,7 +93,7 @@ export function TeamMembersDialog({ open, onOpenChange, team, companyId }: TeamM
         email: executor?.user?.email || 'Email não disponível',
       }
     })
-  }, [members, executorsWithTeam, allExecutors])
+  }, [members, availableExecutorsResponse, allExecutors])
 
   const handleAddMember = async () => {
     if (!selectedExecutorId) return
@@ -125,139 +129,145 @@ export function TeamMembersDialog({ open, onOpenChange, team, companyId }: TeamM
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Gerenciar Membros - {team.name}</DialogTitle>
-          <DialogDescription>
-            Adicione ou remova executores desta equipe. Cada executor pode fazer parte de apenas uma
-            equipe.
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="z-drawer flex w-full max-w-xl flex-col p-0 sm:max-w-xl">
+        <div className="flex flex-col gap-4 border-b px-6 py-5">
+          <SheetHeader className="gap-1.5">
+            <SheetTitle className="text-base font-semibold">
+              Gerenciar Membros - {team.name}
+            </SheetTitle>
+            <SheetDescription className="text-sm text-muted-foreground">
+              Adicione ou remova executores desta equipe. Cada executor pode fazer parte de apenas
+              uma equipe.
+            </SheetDescription>
+          </SheetHeader>
+        </div>
 
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-end gap-2">
-              <div className="flex-1">
-                <label className="mb-2 block text-sm font-medium">Adicionar Executor</label>
-                <Select
-                  value={selectedExecutorId || undefined}
-                  onValueChange={setSelectedExecutorId}
-                  disabled={isAdding || loadingExecutors}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um executor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingExecutors ? (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Carregando executores...
-                      </div>
-                    ) : availableExecutors.length === 0 ? (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Nenhum executor disponível para adicionar a esta equipe
-                      </div>
-                    ) : (
-                      availableExecutors.map((executor) => (
-                        <SelectItem key={executor.id} value={executor.userId}>
-                          {executor.user
-                            ? `${executor.user.firstName} ${executor.user.lastName}${
-                                executor.position ? ` - ${executor.position}` : ''
-                              }`
-                            : executor.userId}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleAddMember}
-                disabled={!selectedExecutorId || isAdding || loadingExecutors}
-                className="gap-2"
-              >
-                {isAdding ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Adicionando...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4 w-4" />
-                    Adicionar
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-lg border border-danger-light bg-danger-lightest p-4">
-              <p className="text-sm text-danger-base">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-lg border border-success-light bg-success-lightest p-4">
-              <p className="text-sm text-success-base">{success}</p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Users className="h-4 w-4" />
-              Membros da Equipe ({membersWithInfo.length})
-            </h3>
-
-            {loadingMembers ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : membersWithInfo.length === 0 ? (
-              <EmptyState
-                icon={Users}
-                title="Nenhum membro adicionado"
-                description="Adicione executores para começar a trabalhar com esta equipe."
-              />
-            ) : (
-              <div className="space-y-2">
-                {membersWithInfo.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <label className="mb-2 block text-sm font-medium">Adicionar Executor</label>
+                  <Select
+                    value={selectedExecutorId || undefined}
+                    onValueChange={setSelectedExecutorId}
+                    disabled={isAdding || loadingAvailableExecutors}
                   >
-                    <div className="flex-1">
-                      <div>
-                        <p className="font-medium">{member.displayName}</p>
-                        <p className="text-sm text-muted-foreground">{member.email}</p>
-                        {member.executor?.position && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {member.executor.position}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
-                      disabled={isRemoving}
-                      className="text-danger-base hover:bg-danger-lightest hover:text-danger-dark"
-                      title="Remover membro"
-                    >
-                      {isRemoving ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um executor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loadingAvailableExecutors ? (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          Carregando executores...
+                        </div>
+                      ) : availableExecutors.length === 0 ? (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          Nenhum executor disponível para adicionar a esta equipe
+                        </div>
                       ) : (
-                        <Trash2 className="h-4 w-4" />
+                        availableExecutors.map((executor) => (
+                          <SelectItem key={executor.id} value={executor.userId}>
+                            {executor.user
+                              ? `${executor.user.firstName} ${executor.user.lastName}${
+                                  executor.position ? ` - ${executor.position}` : ''
+                                }`
+                              : executor.userId}
+                          </SelectItem>
+                        ))
                       )}
-                    </Button>
-                  </div>
-                ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={handleAddMember}
+                  disabled={!selectedExecutorId || isAdding || loadingAvailableExecutors}
+                  className="gap-2"
+                >
+                  {isAdding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Adicionando...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4" />
+                      Adicionar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-lg border border-danger-light bg-danger-lightest p-4">
+                <p className="text-sm text-danger-base">{error}</p>
               </div>
             )}
+
+            {success && (
+              <div className="rounded-lg border border-success-light bg-success-lightest p-4">
+                <p className="text-sm text-success-base">{success}</p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <Users className="h-4 w-4" />
+                Membros da Equipe ({membersWithInfo.length})
+              </h3>
+
+              {loadingMembers ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : membersWithInfo.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="Nenhum membro adicionado"
+                  description="Adicione executores para começar a trabalhar com esta equipe."
+                />
+              ) : (
+                <div className="space-y-2">
+                  {membersWithInfo.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex-1">
+                        <div>
+                          <p className="font-medium">{member.displayName}</p>
+                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                          {member.executor?.position && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {member.executor.position}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMember(member.id)}
+                        disabled={isRemoving}
+                        className="text-danger-base hover:bg-danger-lightest hover:text-danger-dark"
+                        title="Remover membro"
+                      >
+                        {isRemoving ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -20,14 +20,13 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const { isAuthenticated, user } = useUserContext()
   const router = useRouter()
   const logout = useAuthStore((s) => s.logout)
-  const [hasHydrated, setHasHydrated] = useState(() => useAuthStore.persist.hasHydrated())
+  const [hasHydrated, setHasHydrated] = useState(false)
 
   useEffect(() => {
-    const unsub = useAuthStore.persist.onFinishHydration(() => setHasHydrated(true))
-    if (useAuthStore.persist.hasHydrated()) setHasHydrated(true)
-    return () => {
-      unsub?.()
-    }
+    // Com Zustand v5, a reidratação do persist acontece de forma síncrona
+    // na primeira leitura do store no cliente, então podemos simplesmente
+    // marcar como hidratado após o primeiro render no client.
+    setHasHydrated(true)
   }, [])
 
   useEffect(() => {
