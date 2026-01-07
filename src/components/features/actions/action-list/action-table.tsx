@@ -65,6 +65,7 @@ export function ActionTable() {
         searchQuery: filtersState.searchQuery,
       },
       userId: user?.id,
+      forceResponsibleId: user?.role === 'executor' ? user.id : undefined,
       selectedCompanyId: selectedCompany?.id,
       page: filtersState.page,
       limit: filtersState.pageSize,

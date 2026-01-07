@@ -156,6 +156,7 @@ export function ActionKanbanBoard() {
         searchQuery: filtersState.searchQuery,
       },
       userId: user?.id,
+      forceResponsibleId: user?.role === 'executor' ? user.id : undefined,
       selectedCompanyId: selectedCompany?.id,
       page: 1,
       limit: 1000,

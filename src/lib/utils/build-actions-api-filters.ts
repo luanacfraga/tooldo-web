@@ -22,6 +22,11 @@ export type ActionFiltersUIState = {
 type BuildActionsApiFiltersInput = {
   state: ActionFiltersUIState
   userId?: string
+  /**
+   * Força o filtro de responsável (ex.: executores devem ver apenas suas ações).
+   * Quando definido, sobrescreve `assignment` e remove `creatorId`.
+   */
+  forceResponsibleId?: string
   selectedCompanyId?: string
   page: number
   limit: number
@@ -30,6 +35,7 @@ type BuildActionsApiFiltersInput = {
 export function buildActionsApiFilters({
   state,
   userId,
+  forceResponsibleId,
   selectedCompanyId,
   page,
   limit,
@@ -52,6 +58,11 @@ export function buildActionsApiFilters({
 
   if (state.assignment === 'created-by-me') {
     filters.creatorId = userId
+  }
+
+  if (forceResponsibleId) {
+    filters.responsibleId = forceResponsibleId
+    delete filters.creatorId
   }
 
   if (state.companyId) {
