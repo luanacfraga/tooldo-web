@@ -422,13 +422,13 @@ function ResponsibleSelector({ action, canEdit }: ResponsibleSelectorProps) {
     ? `${responsibleUser.firstName} ${responsibleUser.lastName}`
     : '—'
   const responsibleInitials =
-    (authUser && action.responsibleId === authUser.id && authUser.initials) ??
-    currentResponsible?.user?.initials ??
-    null
+    authUser && action.responsibleId === authUser.id
+      ? (authUser.initials ?? null)
+      : (currentResponsible?.user?.initials ?? null)
   const responsibleAvatarColor =
-    (authUser && action.responsibleId === authUser.id && authUser.avatarColor) ??
-    currentResponsible?.user?.avatarColor ??
-    null
+    authUser && action.responsibleId === authUser.id
+      ? (authUser.avatarColor ?? null)
+      : (currentResponsible?.user?.avatarColor ?? null)
 
   if (!canEdit) {
     return (
@@ -484,13 +484,13 @@ function ResponsibleSelector({ action, canEdit }: ResponsibleSelectorProps) {
                 const execUser = executor.user
 
                 const execInitials =
-                  (authUser && executor.userId === authUser.id && authUser.initials) ??
-                  execUser?.initials ??
-                  null
+                  authUser && executor.userId === authUser.id
+                    ? (authUser.initials ?? null)
+                    : (execUser?.initials ?? null)
                 const execAvatarColor =
-                  (authUser && executor.userId === authUser.id && authUser.avatarColor) ??
-                  execUser?.avatarColor ??
-                  null
+                  authUser && executor.userId === authUser.id
+                    ? (authUser.avatarColor ?? null)
+                    : (execUser?.avatarColor ?? null)
 
                 return (
                   <Button
