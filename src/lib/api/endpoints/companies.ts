@@ -1,6 +1,6 @@
 import { apiClient } from '../api-client'
 import { PaginatedResponse, PaginationParams } from '../types'
-import type { Company, CreateCompanyRequest, UpdateCompanyRequest } from '@/lib/types/api'
+import type { Company, CreateCompanyRequest, UpdateCompanyRequest, Employee } from '@/lib/types/api'
 import type { ExecutorDashboardResponse } from '@/lib/types/executor-dashboard'
 
 export interface CompanySettings {
@@ -57,6 +57,9 @@ export const companiesApi = {
 
   getSettings: (id: string) =>
     apiClient.get<CompanySettings>(`/api/v1/companies/${id}/settings`),
+
+  listResponsibles: (id: string) =>
+    apiClient.get<Employee[]>(`/api/v1/companies/${id}/responsibles`),
 
   create: (data: CreateCompanyRequest) =>
     apiClient.post<Company>('/api/v1/companies', data),

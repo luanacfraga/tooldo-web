@@ -29,8 +29,8 @@ import {
   useUpdateAction,
 } from '@/lib/hooks/use-actions'
 import { useCompany } from '@/lib/hooks/use-company'
-import { useEmployeesByCompany } from '@/lib/services/queries/use-employees'
-import { useTeamsByCompany, useTeamResponsibles } from '@/lib/services/queries/use-teams'
+import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
+import { useTeamResponsibles, useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useObjectivesStore } from '@/lib/stores/objectives-store'
 import { ActionPriority, type Action } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
@@ -93,7 +93,7 @@ export function ActionForm({
   readOnly = false,
 }: ActionFormProps) {
   const router = useRouter()
-  const { user, currentRole } = useUserContext()
+  const { user, currentRole, currentCompanyId } = useUserContext()
   const { companies } = useCompany()
   const { listByTeam } = useObjectivesStore()
   const createAction = useCreateAction()
@@ -110,6 +110,13 @@ export function ActionForm({
     action?.description || initialData?.description || ''
   )
 
+  const defaultCompanyId =
+    action?.companyId ||
+    initialData?.companyId ||
+    currentCompanyId ||
+    user?.companies?.[0]?.id ||
+    ''
+
   const form = useForm<ActionFormData>({
     resolver: zodResolver(actionFormSchemaWithObjective),
     defaultValues: {
@@ -123,7 +130,7 @@ export function ActionForm({
       estimatedEndDate:
         action?.estimatedEndDate?.split('T')[0] || initialData?.estimatedEndDate || '',
       priority: action?.priority || initialData?.priority || ActionPriority.MEDIUM,
-      companyId: action?.companyId || initialData?.companyId || '',
+      companyId: defaultCompanyId,
       teamId: action?.teamId || initialData?.teamId || undefined,
       responsibleId: action?.responsibleId || initialData?.responsibleId || '',
       isBlocked: action?.isBlocked || initialData?.isBlocked || false,
@@ -134,6 +141,25 @@ export function ActionForm({
   const selectedTeamId = form.watch('teamId')
   const objectives =
     selectedCompanyId && selectedTeamId ? listByTeam(selectedCompanyId, selectedTeamId) : []
+
+  // Garante que a empresa seja preenchida assim que o contexto/carregamento estiver disponível
+  useEffect(() => {
+    if (selectedCompanyId) return
+
+    const fallbackCompanyId =
+      currentCompanyId || user?.companies?.[0]?.id || action?.companyId || initialData?.companyId
+
+    if (fallbackCompanyId) {
+      form.setValue('companyId', fallbackCompanyId)
+    }
+  }, [
+    selectedCompanyId,
+    currentCompanyId,
+    user?.companies,
+    action?.companyId,
+    initialData?.companyId,
+    form,
+  ])
 
   // Keep isBlocked in sync when action updates (e.g. after block/unblock)
   useEffect(() => {
@@ -146,13 +172,13 @@ export function ActionForm({
   const { data: teamsData } = useTeamsByCompany(selectedCompanyId || '')
   const teams = teamsData?.data || []
 
-  // Fetch employees for selected company
-  const { data: employeesData } = useEmployeesByCompany(selectedCompanyId || '')
-  const employees = employeesData?.data || []
-
-  // Responsáveis filtrados por equipe (gestor + executores membros da equipe)
+  // Responsáveis por equipe (quando houver equipe definida)
   const { data: teamResponsibles = [] } = useTeamResponsibles(selectedTeamId || '')
-  const responsibleOptions = selectedTeamId ? teamResponsibles : employees
+
+  // Responsáveis em nível de empresa (backend aplica regras por papel)
+  const { data: companyResponsibles = [] } = useCompanyResponsibles(selectedCompanyId || '')
+
+  const responsibleOptions = selectedTeamId ? teamResponsibles : companyResponsibles
 
   // Reset team and responsible when company changes
   useEffect(() => {
@@ -317,33 +343,17 @@ export function ActionForm({
             )}
           />
 
-          {/* Company - apenas no modo de criação */}
-          {mode === 'create' && (
-            <FormField
-              control={form.control}
-              name="companyId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Empresa</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder="Selecione a empresa" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id} className="text-sm">
-                          <Building2 className="mr-2 h-3.5 w-3.5 text-primary" />
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+          {/* Empresa (definida pelo contexto, não selecionável) */}
+          {selectedCompanyId && (
+            <div className="space-y-1">
+              <FormLabel className="text-sm">Empresa</FormLabel>
+              <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5 text-primary" />
+                <span>
+                  {companies.find((c) => c.id === selectedCompanyId)?.name || 'Empresa selecionada'}
+                </span>
+              </div>
+            </div>
           )}
 
           {/* Responsável (filtrado pela equipe pré-definida) */}
@@ -369,10 +379,7 @@ export function ActionForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={
-                      !selectedCompanyId ||
-                      (selectedTeamId ? responsibleOptions.length === 0 : employees.length === 0)
-                    }
+                    disabled={!selectedCompanyId || responsibleOptions.length === 0}
                   >
                     <FormControl>
                       <SelectTrigger className="h-9 text-sm">

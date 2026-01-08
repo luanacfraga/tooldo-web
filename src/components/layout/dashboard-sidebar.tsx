@@ -165,11 +165,13 @@ export function DashboardSidebar() {
       })
     }
 
-    items.push({
-      name: 'Configurações',
-      href: '/settings',
-      icon: Settings,
-    })
+    if (isAdmin) {
+      items.push({
+        name: 'Configurações',
+        href: '/settings',
+        icon: Settings,
+      })
+    }
 
     return items
   }, [
