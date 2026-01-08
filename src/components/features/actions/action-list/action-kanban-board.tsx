@@ -159,7 +159,6 @@ export function ActionKanbanBoard() {
         showBlockedOnly: filtersState.showBlockedOnly,
         showLateOnly: filtersState.showLateOnly,
         searchQuery: filtersState.searchQuery,
-        objective: filtersState.objective,
       },
       userId: user?.id,
       forceResponsibleId: user?.role === 'executor' ? user.id : undefined,

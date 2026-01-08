@@ -66,7 +66,6 @@ export type ExecutorDashboardResponse = {
   blockedActions: ExecutorDashboardNextAction[]
   impact: {
     categories: Record<ImpactCategory, number>
-    topObjectives: Array<{ objective: string; count: number }>
   }
   quality: {
     doneOnTime: number

@@ -30,19 +30,12 @@ import {
 } from '@/lib/hooks/use-actions'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
-import { useObjectivesByTeam } from '@/lib/services/queries/use-objectives'
 import { useTeamResponsibles, useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { ActionPriority, type Action } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
-import { mergeObjectiveMeta, parseObjectiveMeta } from '@/lib/utils/objective-meta'
-import {
-  actionFormSchemaWithObjective,
-  actionPriorities,
-  type ActionFormData,
-} from '@/lib/validators/action'
+import { actionFormSchema, actionPriorities, type ActionFormData } from '@/lib/validators/action'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2, Flag, Loader2, Lock, Target, User, Users } from 'lucide-react'
-import Link from 'next/link'
+import { Building2, Flag, Loader2, Lock, User, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -105,10 +98,6 @@ export function ActionForm({
   const canBlock = !!role && ['manager', 'executor', 'admin', 'master'].includes(role)
   const isEditing = mode === 'edit'
 
-  const parsedDescription = parseObjectiveMeta(
-    action?.description || initialData?.description || ''
-  )
-
   const defaultCompanyId =
     action?.companyId ||
     initialData?.companyId ||
@@ -117,13 +106,10 @@ export function ActionForm({
     ''
 
   const form = useForm<ActionFormData>({
-    resolver: zodResolver(actionFormSchemaWithObjective),
+    resolver: zodResolver(actionFormSchema),
     defaultValues: {
       title: action?.title || initialData?.title || '',
-      description: parsedDescription.cleanDescription || '',
-      objective: parsedDescription.meta.objective || '',
-      objectiveId: parsedDescription.meta.objectiveId || '',
-      objectiveDue: parsedDescription.meta.objectiveDue || '',
+      description: action?.description || initialData?.description || '',
       estimatedStartDate:
         action?.estimatedStartDate?.split('T')[0] || initialData?.estimatedStartDate || '',
       estimatedEndDate:
@@ -176,11 +162,6 @@ export function ActionForm({
 
   const responsibleOptions = selectedTeamId ? teamResponsibles : companyResponsibles
 
-  const { data: objectives = [] } = useObjectivesByTeam(
-    selectedCompanyId || '',
-    selectedTeamId || ''
-  )
-
   // Reset team and responsible when company changes
   useEffect(() => {
     if (mode === 'create' && !initialData) {
@@ -193,14 +174,9 @@ export function ActionForm({
     try {
       if (readOnly) return
       if (mode === 'create') {
-        const { isBlocked: _isBlocked, objective, objectiveId, objectiveDue, ...payload } = data
+        const { isBlocked: _isBlocked, ...payload } = data
         await createAction.mutateAsync({
           ...payload,
-          description: mergeObjectiveMeta(payload.description, {
-            objectiveId,
-            objective,
-            objectiveDue,
-          }),
           teamId: payload.teamId || undefined,
         })
 
@@ -213,9 +189,6 @@ export function ActionForm({
       } else if (action) {
         const {
           isBlocked: _isBlocked,
-          objective,
-          objectiveId,
-          objectiveDue,
           companyId: _companyId, // não é permitido no UpdateActionDto da API
           ...payload
         } = data
@@ -223,11 +196,6 @@ export function ActionForm({
           id: action.id,
           data: {
             ...payload,
-            description: mergeObjectiveMeta(payload.description ?? '', {
-              objectiveId,
-              objective,
-              objectiveDue,
-            }),
             teamId: payload.teamId || undefined,
           },
         })
@@ -398,111 +366,6 @@ export function ActionForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Objective + Due (depois de equipe e responsável) */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="objective"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Objetivo (opcional)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      {objectives.length ? (
-                        <>
-                          <Select
-                            value={field.value ?? ''}
-                            onValueChange={(value) => {
-                              // value é o título do objetivo selecionado
-                              field.onChange(value)
-                              const selected = objectives.find((o) => o.title === value)
-                              form.setValue('objectiveId', selected?.id ?? '')
-                              form.setValue('objectiveDue', selected?.dueDate ?? '')
-                            }}
-                            disabled={!selectedTeamId}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-9 text-sm">
-                                <SelectValue placeholder="Selecione o objetivo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {objectives.map((o) => (
-                                <SelectItem key={o.id} value={o.title} className="text-sm">
-                                  <div className="flex flex-col">
-                                    <span className="flex items-center gap-2">
-                                      <Target className="h-3.5 w-3.5 text-primary" />
-                                      <span>{o.title}</span>
-                                    </span>
-                                    {o.dueDate ? (
-                                      <span className="pl-5 text-[11px] text-muted-foreground">
-                                        Prazo: {o.dueDate}
-                                      </span>
-                                    ) : null}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                          {field.value && (
-                            <button
-                              type="button"
-                              className="text-[11px] text-muted-foreground underline underline-offset-4"
-                              onClick={() => {
-                                form.setValue('objective', '')
-                                form.setValue('objectiveId', '')
-                                form.setValue('objectiveDue', '')
-                              }}
-                            >
-                              Remover objetivo
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-xs text-muted-foreground">
-                          {selectedTeamId
-                            ? 'Sem objetivos cadastrados para esta equipe.'
-                            : 'Selecione uma equipe para ver os objetivos.'}{' '}
-                          <Link
-                            href={
-                              selectedCompanyId
-                                ? `/companies/${selectedCompanyId}/objectives`
-                                : '/companies'
-                            }
-                            className="text-primary underline underline-offset-4"
-                          >
-                            Gerenciar objetivos
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="objectiveDue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Prazo do objetivo (opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={field.value ?? ''}
-                      className="h-9 text-sm"
-                    />
-                  </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
               )}

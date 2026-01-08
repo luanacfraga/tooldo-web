@@ -31,7 +31,6 @@ function buildQueryString(filters: ActionFilters): string {
     'isLate',
     'isBlocked',
     'q',
-    'objective',
     'dateFrom',
     'dateTo',
     'dateFilterType',

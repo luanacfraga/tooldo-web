@@ -88,7 +88,6 @@ export interface ActionFilters {
   isLate?: boolean
   isBlocked?: boolean
   q?: string
-  objective?: string
   dateFrom?: string
   dateTo?: string
   dateFilterType?: 'createdAt' | 'startDate'

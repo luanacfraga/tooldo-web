@@ -6,12 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
-import { useObjectivesStore } from '@/lib/stores/objectives-store'
 import { ActionPriority, ActionStatus } from '@/lib/types/action'
-import { datePresets, getPresetById } from '@/lib/utils/date-presets'
 import { cn } from '@/lib/utils'
-import { getActionStatusUI } from '../shared/action-status-ui'
-import { getActionPriorityUI } from '../shared/action-priority-ui'
+import { datePresets, getPresetById } from '@/lib/utils/date-presets'
 import {
   Calendar as CalendarIcon,
   CheckCircle2,
@@ -20,17 +17,17 @@ import {
   LayoutGrid,
   LayoutList,
   Search,
-  Target,
   UserCircle2,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
+import { getActionPriorityUI } from '../shared/action-priority-ui'
+import { getActionStatusUI } from '../shared/action-status-ui'
 
 export function ActionFilters() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
   const filters = useActionFiltersStore()
-  const objectivesStore = useObjectivesStore()
 
   // Executors should always see only their assigned actions
   useEffect(() => {
@@ -47,22 +44,15 @@ export function ActionFilters() {
     !!filters.dateFrom ||
     !!filters.dateTo ||
     filters.showBlockedOnly ||
-    filters.showLateOnly ||
-    !!filters.objective?.trim()
-
-  const companyId = filters.companyId || selectedCompany?.id || ''
-  const teamId = filters.teamId || ''
-  const teamObjectives = useMemo(() => {
-    if (!companyId || !teamId) return []
-    return objectivesStore.listByTeam(companyId, teamId)
-  }, [objectivesStore, companyId, teamId])
+    filters.showLateOnly
 
   const getButtonState = (isActive: boolean) => {
     return cn(
       'h-9 text-xs font-medium transition-all',
       'border-border/50 bg-background/80 hover:bg-accent/70 hover:border-border',
       'shadow-sm',
-      isActive && 'border-primary/60 bg-primary/10 text-primary hover:bg-primary/15 shadow-primary/10'
+      isActive &&
+        'border-primary/60 bg-primary/10 text-primary hover:bg-primary/15 shadow-primary/10'
     )
   }
 
@@ -108,13 +98,13 @@ export function ActionFilters() {
     <div className="flex flex-col gap-3 rounded-xl border border-border/40 bg-gradient-to-br from-card to-card/80 p-4 shadow-sm backdrop-blur-sm">
       <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         {/* Search Bar */}
-        <div className="relative w-full sm:max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+        <div className="relative w-full flex-1 sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
           <Input
             placeholder="Buscar ações..."
             value={filters.searchQuery}
             onChange={(e) => filters.setFilter('searchQuery', e.target.value)}
-            className="h-10 bg-background/80 pl-10 pr-4 border-border/50 focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+            className="h-10 border-border/50 bg-background/80 pl-10 pr-4 transition-all focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
           />
         </div>
 
@@ -158,8 +148,8 @@ export function ActionFilters() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wide pr-2">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border/30 pt-1">
+        <div className="flex items-center gap-1.5 pr-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/80">
           <Filter className="h-3.5 w-3.5" />
           <span>Filtros</span>
         </div>
@@ -203,33 +193,33 @@ export function ActionFilters() {
                   { label: 'Pendente', value: ActionStatus.TODO },
                   { label: 'Em Andamento', value: ActionStatus.IN_PROGRESS },
                   { label: 'Concluído', value: ActionStatus.DONE },
-                ].map((option) => (
+                ].map((option) =>
                   (() => {
                     const meta = getStatusPill(option.value)
                     const isActive = filters.statuses.includes(option.value)
                     return (
-                  <Button
-                    key={option.value}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'w-full justify-start text-xs font-normal',
-                      isActive && meta.itemActive
-                    )}
-                    onClick={() => {
-                      const next = isActive
-                        ? filters.statuses.filter((s) => s !== option.value)
-                        : [...filters.statuses, option.value]
-                      filters.setFilter('statuses', next)
-                    }}
-                  >
-                    <span className={cn('mr-2 inline-block h-2 w-2 rounded-full', meta.dot)} />
-                    <span>{option.label}</span>
-                    {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
-                  </Button>
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start text-xs font-normal',
+                          isActive && meta.itemActive
+                        )}
+                        onClick={() => {
+                          const next = isActive
+                            ? filters.statuses.filter((s) => s !== option.value)
+                            : [...filters.statuses, option.value]
+                          filters.setFilter('statuses', next)
+                        }}
+                      >
+                        <span className={cn('mr-2 inline-block h-2 w-2 rounded-full', meta.dot)} />
+                        <span>{option.label}</span>
+                        {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
+                      </Button>
                     )
                   })()
-                ))}
+                )}
               </div>
             </div>
           </PopoverContent>
@@ -275,99 +265,30 @@ export function ActionFilters() {
                   { label: 'Média', value: ActionPriority.MEDIUM },
                   { label: 'Alta', value: ActionPriority.HIGH },
                   { label: 'Urgente', value: ActionPriority.URGENT },
-                ].map((option) => (
+                ].map((option) =>
                   (() => {
                     const meta = getPriorityPill(option.value)
                     const isActive = filters.priority === option.value
                     return (
-                  <Button
-                    key={option.value}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'w-full justify-start text-xs font-normal',
-                      isActive && meta.itemActive
-                    )}
-                    onClick={() => filters.setFilter('priority', option.value as ActionPriority)}
-                  >
-                    <Flag className={cn('mr-2 h-3.5 w-3.5', meta.flagClass)} />
-                    <span>{option.label}</span>
-                    {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
-                  </Button>
+                      <Button
+                        key={option.value}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start text-xs font-normal',
+                          isActive && meta.itemActive
+                        )}
+                        onClick={() =>
+                          filters.setFilter('priority', option.value as ActionPriority)
+                        }
+                      >
+                        <Flag className={cn('mr-2 h-3.5 w-3.5', meta.flagClass)} />
+                        <span>{option.label}</span>
+                        {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
+                      </Button>
                     )
                   })()
-                ))}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Objective Popover */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className={getButtonState(!!filters.objective?.trim())}
-            >
-              <Target className="mr-1.5 h-3.5 w-3.5" />
-              <span>Objetivo</span>
-              {!!filters.objective?.trim() && (
-                <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                  1
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[260px] p-3" align="start">
-            <div className="space-y-2">
-              <div className="text-xs font-semibold text-muted-foreground">Filtrar por objetivo</div>
-              <Input
-                value={filters.objective ?? ''}
-                onChange={(e) => filters.setFilter('objective', e.target.value)}
-                placeholder="Ex.: reduzir churn"
-                className="h-9 text-sm"
-              />
-
-              <div className="rounded-lg border border-border/40 bg-muted/20 p-2">
-                {!teamId ? (
-                  <div className="text-xs text-muted-foreground">
-                    Selecione uma equipe para escolher objetivos cadastrados.
-                  </div>
-                ) : teamObjectives.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {teamObjectives.slice(0, 10).map((o) => (
-                      <Button
-                        key={o.id}
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => filters.setFilter('objective', o.title)}
-                        title={o.dueDate ? `Prazo: ${o.dueDate}` : undefined}
-                      >
-                        {o.title}
-                      </Button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground">
-                    Nenhum objetivo cadastrado para esta equipe.
-                  </div>
                 )}
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2 text-xs"
-                  onClick={() => filters.setFilter('objective', '')}
-                  disabled={!filters.objective?.trim()}
-                >
-                  Limpar
-                </Button>
               </div>
             </div>
           </PopoverContent>
@@ -447,7 +368,7 @@ export function ActionFilters() {
               <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
               <span>Data</span>
               {filters.datePreset && (
-                <span className="ml-1.5 inline-flex h-5 px-1.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                <span className="ml-1.5 inline-flex h-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                   {getPresetById(filters.datePreset)?.label || 'Ativo'}
                 </span>
               )}
@@ -459,10 +380,10 @@ export function ActionFilters() {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[280px] p-0" align="start">
-            <div className="p-3 space-y-3">
+            <div className="space-y-3 p-3">
               {/* Presets Section */}
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                   Períodos Rápidos
                 </label>
                 <div className="space-y-1">
@@ -492,7 +413,7 @@ export function ActionFilters() {
 
               {/* Filter Type Selection */}
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                   Filtrar por
                 </label>
                 <div className="grid grid-cols-2 gap-1">
@@ -500,7 +421,7 @@ export function ActionFilters() {
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'text-xs font-normal h-8 justify-between',
+                      'h-8 justify-between text-xs font-normal',
                       filters.dateFilterType === 'createdAt' && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => filters.setFilter('dateFilterType', 'createdAt')}
@@ -514,7 +435,7 @@ export function ActionFilters() {
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'text-xs font-normal h-8 justify-between',
+                      'h-8 justify-between text-xs font-normal',
                       filters.dateFilterType === 'startDate' && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => filters.setFilter('dateFilterType', 'startDate')}
@@ -531,12 +452,12 @@ export function ActionFilters() {
 
               {/* Custom Date Range */}
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                   Personalizado
                 </label>
                 <div className="space-y-2">
                   <div>
-                    <label className="text-[11px] text-muted-foreground mb-1 block">De</label>
+                    <label className="mb-1 block text-[11px] text-muted-foreground">De</label>
                     <Input
                       type="date"
                       value={filters.dateFrom ? filters.dateFrom.split('T')[0] : ''}
@@ -551,7 +472,7 @@ export function ActionFilters() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-muted-foreground mb-1 block">Até</label>
+                    <label className="mb-1 block text-[11px] text-muted-foreground">Até</label>
                     <Input
                       type="date"
                       value={filters.dateTo ? filters.dateTo.split('T')[0] : ''}
@@ -577,7 +498,7 @@ export function ActionFilters() {
                     filters.setFilter('dateTo', null)
                     filters.setFilter('datePreset', null)
                   }}
-                  className="w-full h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  className="h-7 w-full text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 >
                   <X className="mr-1.5 h-3 w-3" />
                   Limpar datas
@@ -615,7 +536,7 @@ export function ActionFilters() {
               variant="ghost"
               size="sm"
               onClick={filters.resetFilters}
-              className="h-9 px-3 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+              className="h-9 px-3 text-xs font-medium text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive"
             >
               <span>Limpar</span>
               <X className="ml-1.5 h-3.5 w-3.5" />

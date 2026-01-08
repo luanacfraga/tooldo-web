@@ -36,7 +36,6 @@ import {
   Play,
   ShieldAlert,
   Sparkles,
-  Target,
   TrendingUp,
   Users,
 } from 'lucide-react'
@@ -79,9 +78,8 @@ const IMPACT_LABELS: Record<ImpactCategory, string> = {
   'nao-informado': 'Não informado',
 }
 
-function buildDoneNotes(input: { objective?: string; impact?: ImpactCategory; note?: string }) {
+function buildDoneNotes(input: { impact?: ImpactCategory; note?: string }) {
   const lines: string[] = []
-  if (input.objective?.trim()) lines.push(`Objetivo: ${input.objective.trim()}`)
   if (input.impact && input.impact !== 'nao-informado')
     lines.push(`Impacto: ${IMPACT_LABELS[input.impact]}`)
   if (input.note?.trim()) lines.push(`Nota: ${input.note.trim()}`)
@@ -165,14 +163,12 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
   const [customOpen, setCustomOpen] = useState(false)
   const [customFrom, setCustomFrom] = useState<string>('') // YYYY-MM-DD
   const [customTo, setCustomTo] = useState<string>('') // YYYY-MM-DD
-  const [objectiveFilter, setObjectiveFilter] = useState<string>('')
   const moveAction = useMoveAction()
   const blockAction = useBlockAction()
   const unblockAction = useUnblockAction()
 
   const [completeOpen, setCompleteOpen] = useState(false)
   const [completeAction, setCompleteAction] = useState<{ id: string; title: string } | null>(null)
-  const [objective, setObjective] = useState('')
   const [impact, setImpact] = useState<ImpactCategory>('nao-informado')
   const [quickNote, setQuickNote] = useState('')
 
@@ -187,12 +183,10 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
     return presetRange
   }, [customFrom, customTo, presetRange])
 
-  const objectiveFilterValue = objectiveFilter.trim()
   const q = useExecutorDashboard({
     companyId: props.companyId,
     dateFrom: effectiveRange.dateFrom,
     dateTo: effectiveRange.dateTo,
-    objective: objectiveFilterValue ? objectiveFilterValue : undefined,
   })
 
   const data = q.data
@@ -272,66 +266,6 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Dica: os presets continuam disponíveis ao lado.
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-2 px-3 text-xs">
-                <Target className="h-4 w-4" />
-                {objectiveFilterValue ? (
-                  <span className="max-w-[160px] truncate">{objectiveFilterValue}</span>
-                ) : (
-                  'Objetivo'
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-[320px]">
-              <div className="space-y-3">
-                <div className="text-sm font-semibold">Objetivo</div>
-                <Input
-                  value={objectiveFilter}
-                  onChange={(e) => setObjectiveFilter(e.target.value)}
-                  placeholder="Ex.: reduzir churn"
-                  className="h-9 text-sm"
-                />
-
-                {data?.impact?.topObjectives?.length ? (
-                  <div className="space-y-2">
-                    <div className="text-xs font-semibold text-muted-foreground">
-                      Sugestões (do período)
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {data.impact.topObjectives.slice(0, 6).map((o) => (
-                        <Button
-                          key={o.objective}
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => setObjectiveFilter(o.objective)}
-                        >
-                          {o.objective}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="flex items-center justify-between gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => setObjectiveFilter('')}
-                    disabled={!objectiveFilterValue}
-                  >
-                    Limpar
-                  </Button>
-                  <div className="text-xs text-muted-foreground">Filtra métricas e listas</div>
                 </div>
               </div>
             </PopoverContent>
@@ -503,7 +437,6 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
                             disabled={!canInteract}
                             onClick={() => {
                               setCompleteAction({ id: a.id, title: a.title })
-                              setObjective('')
                               setImpact('nao-informado')
                               setQuickNote('')
                               setCompleteOpen(true)
@@ -605,25 +538,9 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
                     </span>
                   )}
                 </div>
-                {data.impact?.topObjectives?.length ? (
-                  <div className="space-y-1">
-                    <div className="text-xs font-semibold text-muted-foreground">
-                      Objetivos em destaque
-                    </div>
-                    <ul className="text-sm">
-                      {data.impact.topObjectives.map((o) => (
-                        <li key={o.objective} className="flex items-center justify-between gap-2">
-                          <span className="truncate">{o.objective}</span>
-                          <span className="text-xs text-muted-foreground">{o.count}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Dica: ao concluir uma ação, marque “Objetivo” e “Impacto” em 5s.
-                  </div>
-                )}
+                <div className="text-sm text-muted-foreground">
+                  Dica: ao concluir uma ação, marque &quot;Impacto&quot; em 5s.
+                </div>
               </CardContent>
             </Card>
 
@@ -821,14 +738,6 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
               <div className="space-y-3">
                 <div className="text-sm font-medium">{completeAction?.title}</div>
                 <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Objetivo (opcional)</div>
-                  <Input
-                    value={objective}
-                    onChange={(e) => setObjective(e.target.value)}
-                    placeholder="Ex.: reduzir churn"
-                  />
-                </div>
-                <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">Impacto</div>
                   <div className="grid grid-cols-2 gap-2">
                     {(Object.keys(IMPACT_LABELS) as ImpactCategory[]).map((k) => (
@@ -863,7 +772,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
                   disabled={!completeAction || !canInteract}
                   onClick={async () => {
                     if (!completeAction) return
-                    const notes = buildDoneNotes({ objective, impact, note: quickNote })
+                    const notes = buildDoneNotes({ impact, note: quickNote })
                     try {
                       await moveAction.mutateAsync({
                         id: completeAction.id,

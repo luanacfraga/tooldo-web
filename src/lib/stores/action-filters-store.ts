@@ -20,7 +20,6 @@ interface ActionFiltersState {
   showBlockedOnly: boolean;
   showLateOnly: boolean;
   searchQuery: string;
-  objective: string;
 
   // Table preferences
   viewMode: 'list' | 'kanban';
@@ -47,7 +46,6 @@ const initialState = {
   showBlockedOnly: false,
   showLateOnly: false,
   searchQuery: '',
-  objective: '',
   viewMode: 'list' as const,
   sortBy: 'estimatedEndDate',
   sortOrder: 'asc' as const,
