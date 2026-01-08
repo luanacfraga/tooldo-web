@@ -14,10 +14,10 @@ export function BlockedBadge({ isBlocked, reason, className }: BlockedBadgeProps
   return (
     <Badge
       variant="outline"
-      className={cn('gap-1 border-warning/40 bg-warning/10 text-warning', className)}
+      className={cn('gap-1 border-muted-foreground/25 bg-muted/40 text-muted-foreground', className)}
       title={reason || 'Ação bloqueada'}
     >
-      <Lock className="h-3 w-3" />
+      <Lock className="h-3 w-3 text-muted-foreground" />
       Bloqueada
     </Badge>
   );

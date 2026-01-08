@@ -37,6 +37,7 @@ export interface Employee {
     lastName: string
     email: string
     phone: string
+    document: string
     role: string
     initials?: string | null
     avatarColor?: string | null

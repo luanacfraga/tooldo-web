@@ -17,11 +17,17 @@ export type ActionFiltersUIState = {
   showBlockedOnly: boolean
   showLateOnly: boolean
   searchQuery: string
+  objective: string
 }
 
 type BuildActionsApiFiltersInput = {
   state: ActionFiltersUIState
   userId?: string
+  /**
+   * Força o filtro de responsável (ex.: executores devem ver apenas suas ações).
+   * Quando definido, sobrescreve `assignment` e remove `creatorId`.
+   */
+  forceResponsibleId?: string
   selectedCompanyId?: string
   page: number
   limit: number
@@ -30,6 +36,7 @@ type BuildActionsApiFiltersInput = {
 export function buildActionsApiFilters({
   state,
   userId,
+  forceResponsibleId,
   selectedCompanyId,
   page,
   limit,
@@ -54,6 +61,11 @@ export function buildActionsApiFilters({
     filters.creatorId = userId
   }
 
+  if (forceResponsibleId) {
+    filters.responsibleId = forceResponsibleId
+    delete filters.creatorId
+  }
+
   if (state.companyId) {
     filters.companyId = state.companyId
   } else if (selectedCompanyId) {
@@ -71,6 +83,9 @@ export function buildActionsApiFilters({
 
   const q = state.searchQuery?.trim()
   if (q) filters.q = q
+
+  const objective = state.objective?.trim()
+  if (objective) filters.objective = objective
 
   filters.page = page
   filters.limit = limit

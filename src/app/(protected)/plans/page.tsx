@@ -10,8 +10,8 @@ import { PageHeader } from '@/components/shared/layout/page-header'
 import { ResponsiveDataTable } from '@/components/shared/table'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api/api-client'
-import type { Plan } from '@/lib/types/plan'
 import { useCreatePlan, usePlans, useUpdatePlan } from '@/lib/services/queries/use-plans'
+import type { Plan } from '@/lib/types/plan'
 import type { PlanFormData } from '@/lib/validators/plan'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Edit, Package, Plus } from 'lucide-react'
@@ -107,62 +107,62 @@ export default function PlansPage() {
   if (isLoading) {
     return (
       <MasterOnly>
-          <LoadingScreen message="Carregando planos..." />
+        <LoadingScreen message="Carregando planos..." />
       </MasterOnly>
     )
   }
 
   return (
     <MasterOnly>
-        <PageContainer maxWidth="7xl">
-          <PageHeader
-            title="Planos"
-            description="Gerencie os planos disponíveis no sistema"
-            action={
-              <Button onClick={handleCreate} className="gap-1.5 font-medium sm:gap-2">
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>Novo Plano</span>
-              </Button>
-            }
+      <PageContainer maxWidth="7xl">
+        <PageHeader
+          title="Planos"
+          description="Gerencie os planos disponíveis no sistema"
+          action={
+            <Button onClick={handleCreate} className="gap-1.5 font-medium sm:gap-2">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Novo Plano</span>
+            </Button>
+          }
+        />
+
+        {error && (
+          <div className="mb-6">
+            <ErrorState message="Erro ao carregar planos" onRetry={() => refetch()} />
+          </div>
+        )}
+
+        {!error && plans.length === 0 && (
+          <EmptyState
+            icon={Package}
+            title="Nenhum plano cadastrado"
+            description="Você ainda não possui planos cadastrados. Crie seu primeiro plano para começar."
+            action={{
+              label: 'Criar Primeiro Plano',
+              onClick: handleCreate,
+            }}
           />
+        )}
 
-          {error && (
-            <div className="mb-6">
-              <ErrorState message="Erro ao carregar planos" onRetry={() => refetch()} />
-            </div>
-          )}
-
-          {!error && plans.length === 0 && (
-            <EmptyState
-              icon={Package}
-              title="Nenhum plano cadastrado"
-              description="Você ainda não possui planos cadastrados. Crie seu primeiro plano para começar."
-              action={{
-                label: 'Criar Primeiro Plano',
-                onClick: handleCreate,
-              }}
-            />
-          )}
-
-          {!error && plans.length > 0 && (
-            <ResponsiveDataTable
-              data={plans}
-              columns={columns}
-              CardComponent={PlanCard}
-              isLoading={false}
-              emptyMessage="Nenhum plano cadastrado"
-              getRowId={(plan) => plan.id}
-            />
-          )}
-
-          <PlanDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            plan={editingPlan}
-            onSubmit={handleSubmit}
-            isLoading={isCreating || isUpdating}
+        {!error && plans.length > 0 && (
+          <ResponsiveDataTable
+            data={plans}
+            columns={columns}
+            CardComponent={PlanCard}
+            isLoading={false}
+            emptyMessage="Nenhum plano cadastrado"
+            getRowId={(plan) => plan.id}
           />
-        </PageContainer>
+        )}
+
+        <PlanDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          plan={editingPlan}
+          onSubmit={handleSubmit}
+          isLoading={isCreating || isUpdating}
+        />
+      </PageContainer>
     </MasterOnly>
   )
 }

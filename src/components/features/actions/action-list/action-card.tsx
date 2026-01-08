@@ -7,6 +7,7 @@ import { LateIndicator } from '../shared/late-indicator';
 import { BlockedBadge } from '../shared/blocked-badge';
 import { ActionButton } from '@/components/ui/action-button';
 import { Calendar, UserCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils'
 
 interface ActionCardProps {
   data: Action;
@@ -30,7 +31,10 @@ export function ActionCard({ data, onView }: ActionCardProps) {
   
   return (
     <Card 
-      className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer active:scale-[0.98] duration-200"
+      className={cn(
+        'overflow-hidden hover:border-primary/50 transition-colors cursor-pointer active:scale-[0.98] duration-200',
+        data.isBlocked && 'bg-muted/40 border-muted-foreground/20 hover:border-muted-foreground/30'
+      )}
       onClick={onView}
     >
       <CardContent className="p-4 space-y-3">

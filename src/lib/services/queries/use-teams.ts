@@ -6,6 +6,7 @@ import {
   type AddTeamMemberRequest,
   type Team,
 } from '@/lib/api/endpoints/teams'
+import type { Employee } from '@/lib/types/api'
 import type { PaginationParams } from '@/lib/api/types'
 
 const TEAMS_KEY = ['teams'] as const
@@ -110,6 +111,22 @@ export function useTeamMembers(teamId: string) {
   })
 }
 
+export function useAvailableExecutorsByTeam(teamId: string) {
+  return useQuery({
+    queryKey: [...TEAMS_KEY, teamId, 'available-executors'],
+    queryFn: () => teamsApi.listAvailableExecutors(teamId),
+    enabled: !!teamId,
+  })
+}
+
+export function useTeamResponsibles(teamId: string) {
+  return useQuery({
+    queryKey: [...TEAMS_KEY, teamId, 'responsibles'],
+    queryFn: () => teamsApi.listResponsibles(teamId),
+    enabled: !!teamId,
+  })
+}
+
 export function useAddTeamMember() {
   const queryClient = useQueryClient()
 
@@ -122,6 +139,9 @@ export function useAddTeamMember() {
 
       queryClient.invalidateQueries({
         queryKey: [...TEAMS_KEY, variables.teamId, 'members'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...TEAMS_KEY, variables.teamId, 'available-executors'],
       })
       queryClient.invalidateQueries({ queryKey: [...TEAMS_KEY, variables.teamId] })
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY })
@@ -150,6 +170,9 @@ export function useRemoveTeamMember() {
 
       queryClient.invalidateQueries({
         queryKey: [...TEAMS_KEY, variables.teamId, 'members'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...TEAMS_KEY, variables.teamId, 'available-executors'],
       })
       queryClient.invalidateQueries({ queryKey: [...TEAMS_KEY, variables.teamId] })
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY })

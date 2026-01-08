@@ -5,7 +5,15 @@ import { USER_ROLES } from '@/lib/constants'
 import { useUserContext } from '@/lib/contexts/user-context'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { usePermissions } from '@/lib/hooks/use-permissions'
-import { BarChart3, Building2, ClipboardList, Settings, Users, UsersRound } from 'lucide-react'
+import {
+  BarChart3,
+  Building2,
+  ClipboardList,
+  Settings,
+  Target,
+  Users,
+  UsersRound,
+} from 'lucide-react'
 import { useParams } from 'next/navigation'
 import { useMemo } from 'react'
 import { Sidebar, type MenuItem } from './sidebar'
@@ -34,15 +42,6 @@ export function DashboardSidebar() {
           name: 'Dashboard',
           href: `${basePath}/dashboard`,
           icon: BarChart3,
-        },
-        {
-          name: 'Ações',
-          href: '/actions',
-          icon: ClipboardList,
-          subItems: [
-            { name: 'Lista de Ações', href: '/actions' },
-            ...(canCreateActions ? [{ name: 'Nova Ação', href: '/actions/new' }] : []),
-          ],
         },
         {
           name: 'Funcionários',
@@ -84,7 +83,12 @@ export function DashboardSidebar() {
           ],
         },
         {
-          name: 'Minhas equipes',
+          name: 'Objetivos',
+          href: `${basePath}/objectives`,
+          icon: Target,
+        },
+        {
+          name: 'Equipe',
           href: `${basePath}/teams`,
           icon: Users,
         },
@@ -118,6 +122,11 @@ export function DashboardSidebar() {
           href: '/actions',
           icon: ClipboardList,
           subItems: [{ name: 'Lista de Ações', href: '/actions' }],
+        },
+        {
+          name: 'Objetivos',
+          href: `${basePath}/objectives`,
+          icon: Target,
         }
       )
     }
@@ -156,11 +165,13 @@ export function DashboardSidebar() {
       })
     }
 
-    items.push({
-      name: 'Configurações',
-      href: companyId ? `${basePath}/settings` : '/settings',
-      icon: Settings,
-    })
+    if (isAdmin) {
+      items.push({
+        name: 'Configurações',
+        href: '/settings',
+        icon: Settings,
+      })
+    }
 
     return items
   }, [

@@ -39,6 +39,9 @@ export function Sidebar({
 
   const shouldShowText = !isWebMenuCollapsed || isMobile
 
+  const settingsItem = items.find((item) => item.href === '/settings')
+  const menuItems = settingsItem ? items.filter((item) => item.href !== '/settings') : items
+
   const sidebarClasses = useMemo(
     () =>
       [
@@ -103,7 +106,7 @@ export function Sidebar({
           )}
         >
           <ul className="space-y-1">
-            {items.map((item) => {
+            {menuItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.subItems && item.subItems.some((subItem) => pathname === subItem.href))
@@ -185,6 +188,22 @@ export function Sidebar({
               isWebMenuCollapsed ? 'lg:p-2' : 'p-4'
             )}
           >
+            {settingsItem && (
+              <Link
+                href={settingsItem.href}
+                onClick={closeMobileMenu}
+                className={cn(
+                  'mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground',
+                  !shouldShowText && 'lg:justify-center lg:px-2'
+                )}
+                title={isWebMenuCollapsed ? settingsItem.name : ''}
+              >
+                {settingsItem.icon && (
+                  <settingsItem.icon className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                )}
+                {shouldShowText && <span className="truncate">{settingsItem.name}</span>}
+              </Link>
+            )}
             <button
               onClick={() => {
                 onLogout()

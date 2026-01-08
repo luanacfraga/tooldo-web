@@ -1,8 +1,8 @@
-import { companiesApi } from '@/lib/api/endpoints/companies'
+import { companiesApi, type CompanySettings } from '@/lib/api/endpoints/companies'
 import { USER_ROLES } from '@/lib/constants'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useCompanyStore } from '@/lib/stores/company-store'
-import type { CreateCompanyRequest } from '@/lib/types/api'
+import type { CreateCompanyRequest, Employee } from '@/lib/types/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const COMPANIES_KEY = ['companies'] as const
@@ -24,6 +24,30 @@ export function useCompany(id: string) {
     queryFn: () => companiesApi.getById(id),
     enabled: !!id,
   })
+}
+
+export function useCompanySettings(id: string) {
+  return useQuery({
+    queryKey: [...COMPANIES_KEY, id, 'settings'],
+    queryFn: () => companiesApi.getSettings(id),
+    enabled: !!id,
+  }) as {
+    data: CompanySettings | undefined
+    isLoading: boolean
+    error: Error | null
+  }
+}
+
+export function useCompanyResponsibles(id: string) {
+  return useQuery({
+    queryKey: [...COMPANIES_KEY, id, 'responsibles'],
+    queryFn: () => companiesApi.listResponsibles(id),
+    enabled: !!id,
+  }) as {
+    data: Employee[] | undefined
+    isLoading: boolean
+    error: Error | null
+  }
 }
 
 export function useCreateCompany() {

@@ -23,7 +23,7 @@ import type { Employee } from '@/lib/types/api'
 import { teamSchema, type TeamFormData } from '@/lib/validators/team'
 import { cn } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FileText, Loader2, Save, Sparkles, UserCog, Users } from 'lucide-react'
+import { Loader2, Save, Sparkles, UserCog, Users } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -178,40 +178,15 @@ export function TeamForm({
 
           <FormField
             control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm">Descrição</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Textarea
-                      placeholder="Descreva a equipe (opcional)"
-                      className="min-h-[100px] resize-none pl-10 text-sm"
-                      {...field}
-                      disabled={isLoading || form.formState.isSubmitting}
-                    />
-                  </div>
-                </FormControl>
-                <FormDescription className="text-xs">
-                  Adicione uma descrição sobre a equipe (opcional)
-                </FormDescription>
-                <FormMessage className="text-xs" />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="iaContext"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm">Contexto de IA</FormLabel>
+              <FormLabel className="text-sm">Descrição da equipe e contexto para IA</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Sparkles className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Textarea
-                      placeholder="Ex: Equipe responsável por campanhas de mídia paga no setor de varejo"
+                    placeholder="Descreva o propósito da equipe, responsabilidades, perfil dos membros, tipos de atividades, etc."
                       className="min-h-[100px] resize-none pl-10 text-sm"
                       {...field}
                       disabled={isLoading || form.formState.isSubmitting}
@@ -219,7 +194,7 @@ export function TeamForm({
                   </div>
                 </FormControl>
                 <FormDescription className="text-xs">
-                  Contexto específico para uso de IA (máximo 1000 caracteres, opcional)
+                Este texto será usado como descrição da equipe e também poderá servir de contexto para a IA ao sugerir ou criar ações para esta equipe (máximo 1000 caracteres, opcional).
                 </FormDescription>
                 <FormMessage className="text-xs" />
               </FormItem>

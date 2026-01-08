@@ -42,6 +42,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
+import { formatCPF } from '@/lib/formatters'
 import {
   ArrowUpDown,
   Mail,
@@ -105,8 +106,14 @@ export default function CompanyMembersPage() {
       const fullName = e.user ? `${e.user.firstName} ${e.user.lastName}`.toLowerCase() : ''
       const email = e.user?.email?.toLowerCase() || ''
       const role = (e.role || '').toLowerCase()
+      const document = e.user?.document?.toLowerCase() || ''
       if (!q) return true
-      return fullName.includes(q) || email.includes(q) || role.includes(q)
+      return (
+        fullName.includes(q) ||
+        email.includes(q) ||
+        role.includes(q) ||
+        document.includes(q)
+      )
     })
   }, [employees, searchQuery, selectedStatuses])
   const meta = useMemo(
@@ -246,6 +253,23 @@ export default function CompanyMembersPage() {
             return <div className="text-muted-foreground">-</div>
           }
           return <div className="max-w-[200px] truncate">{employee.user.email}</div>
+        },
+      },
+      {
+        accessorFn: (row) => row.user?.document || '',
+        id: 'document',
+        header: () => <span>CPF</span>,
+        cell: ({ row }) => {
+          const employee = row.original
+          const document = employee.user?.document
+          if (!document) {
+            return <div className="text-muted-foreground">-</div>
+          }
+          return (
+            <div className="font-mono text-xs sm:text-sm">
+              {formatCPF(document.replace(/\D/g, ''))}
+            </div>
+          )
         },
       },
       {

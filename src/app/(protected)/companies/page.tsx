@@ -4,16 +4,16 @@ import { AdminOnly } from '@/components/features/auth/guards/admin-only'
 import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { ErrorState } from '@/components/shared/feedback/error-state'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
+import { StandardFilters } from '@/components/shared/filters/standard-filters'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
 import { ResponsiveDataTable } from '@/components/shared/table'
-import { StandardFilters } from '@/components/shared/filters/standard-filters'
 import { Button } from '@/components/ui/button'
+import type { Company } from '@/lib/api/endpoints/companies'
 import { useCompanies } from '@/lib/services/queries/use-companies'
 import { useCompanyFiltersStore } from '@/lib/stores/company-filters-store'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { Company } from '@/lib/api/endpoints/companies'
-import { Building2, Plus, Edit, Trash2 } from 'lucide-react'
+import { Building2, Edit, Plus, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 import { CompanyCard } from './company-card'
@@ -29,9 +29,10 @@ export default function CompaniesPage() {
 
     // Apply search query
     if (query) {
-      filtered = filtered.filter((company) =>
-        company.name.toLowerCase().includes(query.toLowerCase()) ||
-        (company.description && company.description.toLowerCase().includes(query.toLowerCase()))
+      filtered = filtered.filter(
+        (company) =>
+          company.name.toLowerCase().includes(query.toLowerCase()) ||
+          (company.description && company.description.toLowerCase().includes(query.toLowerCase()))
       )
     }
 
@@ -50,7 +51,7 @@ export default function CompaniesPage() {
         cell: ({ row }) => {
           const description = row.getValue('description') as string | undefined
           return description ? (
-            <span className="text-sm text-muted-foreground line-clamp-1">{description}</span>
+            <span className="line-clamp-1 text-sm text-muted-foreground">{description}</span>
           ) : (
             <span className="text-sm text-muted-foreground">-</span>
           )
@@ -72,11 +73,7 @@ export default function CompaniesPage() {
                 <Edit className="h-4 w-4" />
                 <span className="sr-only">Ver empresa</span>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive"
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Excluir empresa</span>
               </Button>
@@ -88,18 +85,24 @@ export default function CompaniesPage() {
     [router]
   )
 
-  const filterConfig = useMemo(() => [
-    {
-      type: 'search' as const,
-      key: 'query',
-      label: 'Buscar',
-      placeholder: 'Buscar empresas...',
-    },
-  ], [])
+  const filterConfig = useMemo(
+    () => [
+      {
+        type: 'search' as const,
+        key: 'query',
+        label: 'Buscar',
+        placeholder: 'Buscar empresas...',
+      },
+    ],
+    []
+  )
 
-  const filterValues = useMemo(() => ({
-    query,
-  }), [query])
+  const filterValues = useMemo(
+    () => ({
+      query,
+    }),
+    [query]
+  )
 
   if (isLoading) {
     return (

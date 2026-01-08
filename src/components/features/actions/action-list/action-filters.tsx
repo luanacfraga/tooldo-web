@@ -3,8 +3,12 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useAuth } from '@/lib/hooks/use-auth'
+import { useCompany } from '@/lib/hooks/use-company'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
+import { useObjectivesStore } from '@/lib/stores/objectives-store'
 import { ActionPriority, ActionStatus } from '@/lib/types/action'
+import { datePresets, getPresetById } from '@/lib/utils/date-presets'
 import { cn } from '@/lib/utils'
 import { getActionStatusUI } from '../shared/action-status-ui'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
@@ -16,14 +20,25 @@ import {
   LayoutGrid,
   LayoutList,
   Search,
+  Target,
   UserCircle2,
   X,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo } from 'react'
 
 export function ActionFilters() {
+  const { user } = useAuth()
+  const { selectedCompany } = useCompany()
   const filters = useActionFiltersStore()
-  const router = useRouter()
+  const objectivesStore = useObjectivesStore()
+
+  // Executors should always see only their assigned actions
+  useEffect(() => {
+    if (user?.role !== 'executor') return
+    if (filters.assignment !== 'assigned-to-me') {
+      filters.setFilter('assignment', 'assigned-to-me')
+    }
+  }, [user?.role, filters])
 
   const hasActiveFilters =
     filters.statuses.length > 0 ||
@@ -32,7 +47,15 @@ export function ActionFilters() {
     !!filters.dateFrom ||
     !!filters.dateTo ||
     filters.showBlockedOnly ||
-    filters.showLateOnly
+    filters.showLateOnly ||
+    !!filters.objective?.trim()
+
+  const companyId = filters.companyId || selectedCompany?.id || ''
+  const teamId = filters.teamId || ''
+  const teamObjectives = useMemo(() => {
+    if (!companyId || !teamId) return []
+    return objectivesStore.listByTeam(companyId, teamId)
+  }, [objectivesStore, companyId, teamId])
 
   const getButtonState = (isActive: boolean) => {
     return cn(
@@ -164,7 +187,10 @@ export function ActionFilters() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-xs font-normal"
+                  className={cn(
+                    'w-full justify-start text-xs font-normal',
+                    filters.statuses.length === 0 && 'bg-primary/10 text-primary'
+                  )}
                   onClick={() => filters.setFilter('statuses', [])}
                 >
                   Todos
@@ -199,9 +225,7 @@ export function ActionFilters() {
                   >
                     <span className={cn('mr-2 inline-block h-2 w-2 rounded-full', meta.dot)} />
                     <span>{option.label}</span>
-                    {isActive && (
-                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
-                    )}
+                    {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
                   </Button>
                     )
                   })()
@@ -234,7 +258,10 @@ export function ActionFilters() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-xs font-normal"
+                  className={cn(
+                    'w-full justify-start text-xs font-normal',
+                    filters.priority === 'all' && 'bg-primary/10 text-primary'
+                  )}
                   onClick={() => filters.setFilter('priority', 'all')}
                 >
                   Todas
@@ -265,9 +292,7 @@ export function ActionFilters() {
                   >
                     <Flag className={cn('mr-2 h-3.5 w-3.5', meta.flagClass)} />
                     <span>{option.label}</span>
-                    {isActive && (
-                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
-                    )}
+                    {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
                   </Button>
                     )
                   })()
@@ -277,63 +302,139 @@ export function ActionFilters() {
           </PopoverContent>
         </Popover>
 
-        {/* Assignment Popover */}
+        {/* Objective Popover */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className={getButtonState(filters.assignment !== 'all')}
+              className={getButtonState(!!filters.objective?.trim())}
             >
-              <UserCircle2 className="mr-1.5 h-3.5 w-3.5" />
-              <span>Atribuição</span>
-              {filters.assignment !== 'all' && (
+              <Target className="mr-1.5 h-3.5 w-3.5" />
+              <span>Objetivo</span>
+              {!!filters.objective?.trim() && (
                 <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                   1
                 </span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0" align="start">
-            <div className="p-2">
-              <div className="space-y-1">
+          <PopoverContent className="w-[260px] p-3" align="start">
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-muted-foreground">Filtrar por objetivo</div>
+              <Input
+                value={filters.objective ?? ''}
+                onChange={(e) => filters.setFilter('objective', e.target.value)}
+                placeholder="Ex.: reduzir churn"
+                className="h-9 text-sm"
+              />
+
+              <div className="rounded-lg border border-border/40 bg-muted/20 p-2">
+                {!teamId ? (
+                  <div className="text-xs text-muted-foreground">
+                    Selecione uma equipe para escolher objetivos cadastrados.
+                  </div>
+                ) : teamObjectives.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {teamObjectives.slice(0, 10).map((o) => (
+                      <Button
+                        key={o.id}
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => filters.setFilter('objective', o.title)}
+                        title={o.dueDate ? `Prazo: ${o.dueDate}` : undefined}
+                      >
+                        {o.title}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">
+                    Nenhum objetivo cadastrado para esta equipe.
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-xs font-normal"
-                  onClick={() => filters.setFilter('assignment', 'all')}
+                  className="h-8 px-2 text-xs"
+                  onClick={() => filters.setFilter('objective', '')}
+                  disabled={!filters.objective?.trim()}
                 >
-                  Todas
-                  {filters.assignment === 'all' && (
-                    <CheckCircle2 className="ml-auto h-3.5 w-3.5 opacity-50" />
-                  )}
+                  Limpar
                 </Button>
-                <div className="my-1 h-px bg-muted" />
-                {[
-                  { label: 'Atribuídas a Mim', value: 'assigned-to-me' as const },
-                  { label: 'Criadas por Mim', value: 'created-by-me' as const },
-                  { label: 'Minhas Equipes', value: 'my-teams' as const },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'w-full justify-start text-xs font-normal',
-                      filters.assignment === option.value && 'bg-primary/10 text-primary'
-                    )}
-                    onClick={() => filters.setFilter('assignment', option.value)}
-                  >
-                    {option.label}
-                    {filters.assignment === option.value && (
-                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                ))}
               </div>
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Assignment Popover (hidden for executors; they are always "assigned-to-me") */}
+        {user?.role !== 'executor' ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={getButtonState(filters.assignment !== 'all')}
+              >
+                <UserCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                <span>Atribuição</span>
+                {filters.assignment !== 'all' && (
+                  <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                    1
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0" align="start">
+              <div className="p-2">
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'w-full justify-start text-xs font-normal',
+                      filters.assignment === 'all' && 'bg-primary/10 text-primary'
+                    )}
+                    onClick={() => filters.setFilter('assignment', 'all')}
+                  >
+                    Todas
+                    {filters.assignment === 'all' && (
+                      <CheckCircle2 className="ml-auto h-3.5 w-3.5 opacity-50" />
+                    )}
+                  </Button>
+                  <div className="my-1 h-px bg-muted" />
+                  {[
+                    { label: 'Atribuídas a Mim', value: 'assigned-to-me' as const },
+                    { label: 'Criadas por Mim', value: 'created-by-me' as const },
+                    { label: 'Minhas Equipes', value: 'my-teams' as const },
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'w-full justify-start text-xs font-normal',
+                        filters.assignment === option.value && 'bg-primary/10 text-primary'
+                      )}
+                      onClick={() => filters.setFilter('assignment', option.value)}
+                    >
+                      {option.label}
+                      {filters.assignment === option.value && (
+                        <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        ) : null}
 
         {/* Date Range Popover */}
         <Popover>
@@ -345,7 +446,12 @@ export function ActionFilters() {
             >
               <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
               <span>Data</span>
-              {(filters.dateFrom || filters.dateTo) && (
+              {filters.datePreset && (
+                <span className="ml-1.5 inline-flex h-5 px-1.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  {getPresetById(filters.datePreset)?.label || 'Ativo'}
+                </span>
+              )}
+              {!filters.datePreset && (filters.dateFrom || filters.dateTo) && (
                 <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
                   1
                 </span>
@@ -354,37 +460,68 @@ export function ActionFilters() {
           </PopoverTrigger>
           <PopoverContent className="w-[280px] p-0" align="start">
             <div className="p-3 space-y-3">
+              {/* Presets Section */}
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-2 block">
+                  Períodos Rápidos
+                </label>
+                <div className="space-y-1">
+                  {datePresets.map((preset) => (
+                    <Button
+                      key={preset.id}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'w-full justify-start text-xs font-normal',
+                        filters.datePreset === preset.id && 'bg-primary/10 text-primary'
+                      )}
+                      onClick={() => {
+                        const range = preset.getRange()
+                        filters.setFilter('dateFrom', range.dateFrom)
+                        filters.setFilter('dateTo', range.dateTo)
+                        filters.setFilter('datePreset', preset.id)
+                      }}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px bg-muted" />
+
+              {/* Filter Type Selection */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-2 block">
                   Filtrar por
                 </label>
-                <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'w-full justify-start text-xs font-normal',
+                      'text-xs font-normal h-8 justify-between',
                       filters.dateFilterType === 'createdAt' && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => filters.setFilter('dateFilterType', 'createdAt')}
                   >
-                    Data de Criação
+                    Criação
                     {filters.dateFilterType === 'createdAt' && (
-                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
+                      <CheckCircle2 className="ml-2 h-3.5 w-3.5" />
                     )}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      'w-full justify-start text-xs font-normal',
+                      'text-xs font-normal h-8 justify-between',
                       filters.dateFilterType === 'startDate' && 'bg-primary/10 text-primary'
                     )}
                     onClick={() => filters.setFilter('dateFilterType', 'startDate')}
                   >
-                    Data de Início
+                    Início
                     {filters.dateFilterType === 'startDate' && (
-                      <CheckCircle2 className="ml-auto h-3.5 w-3.5" />
+                      <CheckCircle2 className="ml-2 h-3.5 w-3.5" />
                     )}
                   </Button>
                 </div>
@@ -392,9 +529,10 @@ export function ActionFilters() {
 
               <div className="h-px bg-muted" />
 
+              {/* Custom Date Range */}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground mb-2 block">
-                  Período
+                  Personalizado
                 </label>
                 <div className="space-y-2">
                   <div>
@@ -403,8 +541,11 @@ export function ActionFilters() {
                       type="date"
                       value={filters.dateFrom ? filters.dateFrom.split('T')[0] : ''}
                       onChange={(e) => {
-                        const date = e.target.value ? new Date(e.target.value + 'T00:00:00').toISOString() : null
+                        const date = e.target.value
+                          ? new Date(e.target.value + 'T00:00:00').toISOString()
+                          : null
                         filters.setFilter('dateFrom', date)
+                        filters.setFilter('datePreset', null)
                       }}
                       className="h-8 text-xs"
                     />
@@ -415,8 +556,11 @@ export function ActionFilters() {
                       type="date"
                       value={filters.dateTo ? filters.dateTo.split('T')[0] : ''}
                       onChange={(e) => {
-                        const date = e.target.value ? new Date(e.target.value + 'T23:59:59').toISOString() : null
+                        const date = e.target.value
+                          ? new Date(e.target.value + 'T23:59:59').toISOString()
+                          : null
                         filters.setFilter('dateTo', date)
+                        filters.setFilter('datePreset', null)
                       }}
                       className="h-8 text-xs"
                     />
@@ -431,6 +575,7 @@ export function ActionFilters() {
                   onClick={() => {
                     filters.setFilter('dateFrom', null)
                     filters.setFilter('dateTo', null)
+                    filters.setFilter('datePreset', null)
                   }}
                   className="w-full h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 >

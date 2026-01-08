@@ -1,6 +1,5 @@
 'use client'
 
-import { memo, useCallback, useMemo, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -8,17 +7,16 @@ import {
   useDroppable,
   type DragEndEvent,
   type DragStartEvent,
+  type DraggableAttributes,
   type DraggableSyntheticListeners,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { Calendar, UserCheck } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -36,7 +34,6 @@ import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/actio
 import { cn } from '@/lib/utils'
 import { buildActionsApiFilters } from '@/lib/utils/build-actions-api-filters'
 
-import { ActionDetailSheet } from '../action-detail-sheet'
 import { actionStatusUI } from '../shared/action-status-ui'
 import { BlockedBadge } from '../shared/blocked-badge'
 import { LateIndicator } from '../shared/late-indicator'
@@ -135,9 +132,17 @@ export function ActionKanbanBoard() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
   const filtersState = useActionFiltersStore()
-  const [selectedActionId, setSelectedActionId] = useState<string | null>(null)
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [announcement, setAnnouncement] = useState('')
+  const router = useRouter()
+
+  // Gestores devem iniciar o Kanban com atribuição "todas"
+  useEffect(() => {
+    if (user?.role !== 'manager') return
+    if (filtersState.viewMode !== 'kanban') return
+    if (filtersState.assignment === 'all') return
+
+    filtersState.setFilter('assignment', 'all')
+  }, [user?.role, filtersState])
 
   const apiFilters: ActionFilters = useMemo(() => {
     return buildActionsApiFilters({
@@ -154,8 +159,10 @@ export function ActionKanbanBoard() {
         showBlockedOnly: filtersState.showBlockedOnly,
         showLateOnly: filtersState.showLateOnly,
         searchQuery: filtersState.searchQuery,
+        objective: filtersState.objective,
       },
       userId: user?.id,
+      forceResponsibleId: user?.role === 'executor' ? user.id : undefined,
       selectedCompanyId: selectedCompany?.id,
       page: 1,
       limit: 1000,
@@ -201,10 +208,12 @@ export function ActionKanbanBoard() {
     filtersState.showLateOnly ||
     !!filtersState.searchQuery
 
-  const handleActionClick = useCallback((actionId: string) => {
-    setSelectedActionId(actionId)
-    setSheetOpen(true)
-  }, [])
+  const handleActionClick = useCallback(
+    (actionId: string) => {
+      router.push(`/actions/${actionId}/edit`)
+    },
+    [router]
+  )
 
   if (!hasScope) return <ActionListSkeleton />
 
@@ -240,8 +249,8 @@ export function ActionKanbanBoard() {
       </div>
 
       {isFetching && actions.length > 0 && (
-        <div className="sticky top-0 left-0 right-0 h-1 bg-primary/20 z-50 mb-4">
-          <div className="h-full bg-primary animate-pulse" />
+        <div className="sticky left-0 right-0 top-0 z-50 mb-4 h-1 bg-primary/20">
+          <div className="h-full animate-pulse bg-primary" />
         </div>
       )}
 
@@ -277,8 +286,6 @@ export function ActionKanbanBoard() {
           {activeAction && <ActionKanbanCard action={activeAction} isDragging />}
         </DragOverlay>
       </DndContext>
-
-      <ActionDetailSheet actionId={selectedActionId} open={sheetOpen} onOpenChange={setSheetOpen} />
     </>
   )
 }
@@ -360,12 +367,13 @@ const SortableActionCard = memo(function SortableActionCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} role="listitem">
+    <div ref={setNodeRef} style={style} role="listitem">
       <ActionKanbanCard
         action={action}
         onClick={onClick}
         isDragging={isDragging}
         dragListeners={action.isBlocked ? undefined : listeners}
+        dragAttributes={action.isBlocked ? undefined : attributes}
       />
     </div>
   )
@@ -515,11 +523,13 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
   onClick,
   isDragging = false,
   dragListeners,
+  dragAttributes,
 }: {
   action: Action
   onClick?: () => void
   isDragging?: boolean
   dragListeners?: DraggableSyntheticListeners | undefined
+  dragAttributes?: DraggableAttributes | undefined
 }) {
   const { user } = useAuth()
   const canEdit = user?.role === 'admin' || user?.role === 'manager'
@@ -549,21 +559,18 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
   return (
     <div
       className={cn(
-        'kanban-card relative flex w-full flex-col gap-2 rounded-xl border bg-card p-3 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98]',
+        'kanban-card relative flex w-full cursor-grab flex-col gap-2 rounded-xl border bg-card p-3 shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] active:cursor-grabbing',
         isDragging && 'kanban-card-dragging z-50 scale-105 shadow-xl',
-        action.isBlocked && 'border-warning/30 bg-warning/5'
+        action.isBlocked && 'border-muted-foreground/20 bg-muted/40'
       )}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      role="button"
+      {...dragAttributes}
+      {...dragListeners}
     >
-      <div
-        className="flex cursor-pointer flex-col gap-2"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onMouseDown={(e) => {
-          e.stopPropagation()
-        }}
-        tabIndex={0}
-        role="button"
-      >
+      <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <h4 className="line-clamp-2 flex-1 text-sm font-semibold text-foreground">
             {action.title}
@@ -579,7 +586,7 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
         </div>
       </div>
 
-      <div {...dragListeners} className="cursor-grab active:cursor-grabbing">
+      <div>
         {action.description && (
           <p className="mb-2 line-clamp-2 text-xs text-muted-foreground">{action.description}</p>
         )}
