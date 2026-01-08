@@ -30,7 +30,7 @@ import {
 } from '@/lib/hooks/use-actions'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useEmployeesByCompany } from '@/lib/services/queries/use-employees'
-import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
+import { useTeamsByCompany, useTeamResponsibles } from '@/lib/services/queries/use-teams'
 import { useObjectivesStore } from '@/lib/stores/objectives-store'
 import { ActionPriority, type Action } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
@@ -149,6 +149,10 @@ export function ActionForm({
   // Fetch employees for selected company
   const { data: employeesData } = useEmployeesByCompany(selectedCompanyId || '')
   const employees = employeesData?.data || []
+
+  // Responsáveis filtrados por equipe (gestor + executores membros da equipe)
+  const { data: teamResponsibles = [] } = useTeamResponsibles(selectedTeamId || '')
+  const responsibleOptions = selectedTeamId ? teamResponsibles : employees
 
   // Reset team and responsible when company changes
   useEffect(() => {
@@ -342,40 +346,20 @@ export function ActionForm({
             />
           )}
 
-          {/* Team + Responsible (antes do objetivo) */}
+          {/* Responsável (filtrado pela equipe pré-definida) */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Team (Optional) */}
-            <FormField
-              control={form.control}
-              name="teamId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Equipe (Opcional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!selectedCompanyId || teams.length === 0}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder="Selecione a equipe" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {teams.map((team) => (
-                        <SelectItem key={team.id} value={team.id} className="text-sm">
-                          <Users className="mr-2 h-3.5 w-3.5 text-secondary" />
-                          {team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+            {selectedTeamId && (
+              <div className="space-y-1">
+                <FormLabel className="text-sm">Equipe</FormLabel>
+                <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
+                  <Users className="h-3.5 w-3.5 text-secondary" />
+                  <span>
+                    {teams.find((t) => t.id === selectedTeamId)?.name || 'Equipe vinculada à ação'}
+                  </span>
+                </div>
+              </div>
+            )}
 
-            {/* Responsible */}
             <FormField
               control={form.control}
               name="responsibleId"
@@ -385,7 +369,10 @@ export function ActionForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={!selectedCompanyId || employees.length === 0}
+                    disabled={
+                      !selectedCompanyId ||
+                      (selectedTeamId ? responsibleOptions.length === 0 : employees.length === 0)
+                    }
                   >
                     <FormControl>
                       <SelectTrigger className="h-9 text-sm">
@@ -393,7 +380,7 @@ export function ActionForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {employees.map((employee) => (
+                      {responsibleOptions.map((employee) => (
                         <SelectItem key={employee.id} value={employee.userId} className="text-sm">
                           <User className="mr-2 h-3.5 w-3.5 text-info" />
                           {employee.user

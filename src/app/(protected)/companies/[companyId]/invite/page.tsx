@@ -307,9 +307,9 @@ export default function CompanyInvitePage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {!isManager && <SelectItem value="manager">Gestor</SelectItem>}
+                            <SelectItem value="manager">Gestor</SelectItem>
                             <SelectItem value="executor">Executor</SelectItem>
-                            {!isManager && <SelectItem value="consultant">Consultor</SelectItem>}
+                            <SelectItem value="consultant">Consultor</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription className="text-xs">

@@ -67,4 +67,7 @@ export const teamsApi = {
 
   listAvailableExecutors: (teamId: string) =>
     apiClient.get<Employee[]>(`/api/v1/teams/${teamId}/available-executors`),
+
+  listResponsibles: (teamId: string) =>
+    apiClient.get<Employee[]>(`/api/v1/teams/${teamId}/responsibles`),
 }

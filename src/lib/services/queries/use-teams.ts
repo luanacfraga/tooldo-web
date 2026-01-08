@@ -119,6 +119,14 @@ export function useAvailableExecutorsByTeam(teamId: string) {
   })
 }
 
+export function useTeamResponsibles(teamId: string) {
+  return useQuery({
+    queryKey: [...TEAMS_KEY, teamId, 'responsibles'],
+    queryFn: () => teamsApi.listResponsibles(teamId),
+    enabled: !!teamId,
+  })
+}
+
 export function useAddTeamMember() {
   const queryClient = useQueryClient()
 

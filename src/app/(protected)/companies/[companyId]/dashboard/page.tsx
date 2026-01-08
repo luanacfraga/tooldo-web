@@ -1,6 +1,9 @@
 'use client'
 
 import { ExecutorDashboard } from '@/components/features/dashboard/executor/executor-dashboard'
+import { MetricCardWithComparison } from '@/components/features/dashboard/shared/metric-card-with-comparison'
+import { PeriodFilter } from '@/components/features/dashboard/shared/period-filter'
+import { PeriodIndicator } from '@/components/features/dashboard/shared/period-indicator'
 import { ProgressBar } from '@/components/shared/data/progress-bar'
 import { StatCard } from '@/components/shared/data/stat-card'
 import { ActivityItem } from '@/components/shared/feedback/activity-item'
@@ -11,15 +14,27 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { USER_ROLES } from '@/lib/constants'
 import { useUserContext } from '@/lib/contexts/user-context'
+import { useCompanyPerformance } from '@/lib/hooks/use-company-performance'
 import { useActions } from '@/lib/hooks/use-actions'
+import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
+import type { TeamMetrics } from '@/lib/types/dashboard'
 import { ActionStatus } from '@/lib/types/action'
+import type { DatePreset } from '@/lib/utils/date-presets'
+import { getPeriodComparisonLabel } from '@/lib/utils/period-comparator'
+import { createMetricComparison } from '@/lib/utils/metrics-calculator'
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { BarChart3, CheckSquare, Clock, Lock, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 function formatPercent(value: number): string {
+  if (!Number.isFinite(value)) return '0%'
+  return `${Math.round(value)}%`
+}
+
+function formatRate(value: number): string {
   if (!Number.isFinite(value)) return '0%'
   return `${Math.round(value)}%`
 }
@@ -99,7 +114,211 @@ export default function CompanyDashboardPage() {
     )
   }
 
+  if (currentRole === USER_ROLES.ADMIN) {
+    return (
+      <PageContainer maxWidth="7xl">
+        <AdminCompanyDashboard companyId={companyId} />
+      </PageContainer>
+    )
+  }
+
   return <ManagerCompanyDashboard companyId={companyId} />
+}
+
+function AdminCompanyDashboard({ companyId }: { companyId: string }) {
+  const { user } = useUserContext()
+  const [preset, setPreset] = useState<DatePreset>('esta-semana')
+  const { metrics, trendData, isLoading, error } = useCompanyPerformance({
+    companyId,
+    preset,
+  })
+
+  const { data: teamsData } = useTeamsByCompany(companyId)
+  const company = user?.companies.find((c) => c.id === companyId)
+
+  const statusDistribution = useMemo(() => {
+    const total = metrics.totalActions || 1
+    return [
+      {
+        name: 'Concluídas',
+        value: metrics.totalDeliveries,
+      },
+      {
+        name: 'Em andamento',
+        value: metrics.totalActions - metrics.totalDeliveries - metrics.totalLate,
+      },
+      {
+        name: 'Atrasadas',
+        value: metrics.totalLate,
+      },
+    ]
+  }, [metrics])
+
+  const deliveriesComparison = createMetricComparison(
+    metrics.totalDeliveries,
+    metrics.totalDeliveries - metrics.deliveriesChange,
+  )
+
+  const completionRateComparison = createMetricComparison(
+    metrics.avgCompletionRate,
+    metrics.avgCompletionRate - metrics.completionRateChange,
+  )
+
+  const lateComparison = createMetricComparison(
+    metrics.totalLate,
+    metrics.totalLate - metrics.lateChange,
+    true,
+  )
+
+  return (
+    <>
+      <PageHeader
+        title={company ? `Visão geral • ${company.name}` : 'Visão geral da empresa'}
+        description="Acompanhe o desempenho das equipes desta empresa por entregas e atrasos, sem chamadas para ação."
+        action={<PeriodFilter selected={preset} onChange={setPreset} />}
+      />
+
+      <PeriodIndicator preset={preset} className="mb-4" />
+
+      {error ? (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Não foi possível carregar as métricas</CardTitle>
+            <CardDescription>Tente novamente em instantes.</CardDescription>
+          </CardHeader>
+        </Card>
+      ) : isLoading ? (
+        <div className="flex h-[300px] items-center justify-center">
+          <LoadingSpinner size="lg" variant="muted" label="Carregando desempenho da empresa..." />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Cards principais - visão descritiva */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCardWithComparison
+              title="Entregas no período"
+              value={metrics.totalDeliveries}
+              comparison={deliveriesComparison}
+            />
+            <MetricCardWithComparison
+              title="Taxa de conclusão"
+              value={formatRate(metrics.avgCompletionRate)}
+              comparison={completionRateComparison}
+            />
+            <MetricCardWithComparison
+              title="Atrasadas"
+              value={metrics.totalLate}
+              comparison={lateComparison}
+            />
+            <MetricCardWithComparison
+              title="Total de ações"
+              value={metrics.totalActions}
+            />
+          </div>
+
+          {/* Gráficos */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribuição por status</CardTitle>
+                <CardDescription>Proporção de ações concluídas, em andamento e atrasadas.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={statusDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" tickLine={false} />
+                    <YAxis allowDecimals={false} tickLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 6,
+                      }}
+                    />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tendência de entregas</CardTitle>
+                <CardDescription>
+                  Quantidade de ações concluídas ao longo do período selecionado.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="h-[280px]">
+                {trendData.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-sm text-muted-foreground">
+                      Ainda não há dados suficientes de entregas neste período.
+                    </p>
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={trendData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="label" tickLine={false} />
+                      <YAxis allowDecimals={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 6,
+                        }}
+                        labelFormatter={(label) => `Dia ${label}`}
+                      />
+                      <Bar dataKey="deliveries" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Comparação simples entre equipes (descritivo) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Equipes da empresa</CardTitle>
+              <CardDescription>
+                Visão estrutural para comparação: quais equipes existem e qual o tamanho aproximado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {teamsData?.data && teamsData.data.length > 0 ? (
+                <div className="space-y-2 text-sm">
+                  {teamsData.data.map((team) => (
+                    <div
+                      key={team.id}
+                      className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{team.name}</span>
+                        {team.description ? (
+                          <span className="text-xs text-muted-foreground">
+                            {team.description}
+                          </span>
+                        ) : null}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Criada em {new Date(team.createdAt).toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma equipe cadastrada nesta empresa ainda.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
+  )
 }
 
 function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
