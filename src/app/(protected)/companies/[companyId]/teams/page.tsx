@@ -29,7 +29,7 @@ import { type TeamFormData } from '@/lib/validators/team'
 import type { ColumnDef } from '@tanstack/react-table'
 import { AlertCircle, Building2, CheckCircle2, Plus, UserCog, Users } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { TeamCard } from './team-card'
 
 export default function TeamsPage() {
@@ -69,6 +69,25 @@ export default function TeamsPage() {
 
   const allTeams = useMemo(() => teamsResponse?.data || [], [teamsResponse?.data])
   const company = user?.companies.find((c) => c.id === companyId)
+
+  const managersByUserId = useMemo(() => {
+    const map = new Map<string, (typeof managers)[number]>()
+    managers.forEach((m) => {
+      map.set(m.userId, m)
+    })
+    return map
+  }, [managers])
+
+  const getManagerLabel = useCallback(
+    (team: Team) => {
+      const manager = managersByUserId.get(team.managerId)
+      if (manager?.user) {
+        return `${manager.user.firstName} ${manager.user.lastName}`
+      }
+      return 'Gestor não encontrado'
+    },
+    [managersByUserId]
+  )
 
   // Filtrar equipes: gerente vê apenas sua equipe
   const teams = useMemo(() => {
@@ -121,6 +140,14 @@ export default function TeamsPage() {
         header: 'Nome',
       },
       {
+        id: 'manager',
+        header: 'Gestor',
+        cell: ({ row }) => {
+          const team = row.original
+          return <span className="text-sm text-muted-foreground">{getManagerLabel(team)}</span>
+        },
+      },
+      {
         accessorKey: 'description',
         header: 'Descrição',
         cell: ({ row }) => {
@@ -158,7 +185,7 @@ export default function TeamsPage() {
         },
       },
     ],
-    []
+    [getManagerLabel]
   )
 
   const getErrorMessage = (err: unknown, defaultMessage: string): string => {
@@ -459,6 +486,9 @@ export default function TeamsPage() {
                                 Sua equipe
                               </span>
                             </div>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Gestor: {getManagerLabel(myTeam)}
+                            </p>
                             {myTeam.description && (
                               <CardDescription className="mt-2 text-base">
                                 {myTeam.description}
@@ -515,6 +545,7 @@ export default function TeamsPage() {
                   CardComponent={(props) => (
                     <TeamCard
                       {...props}
+                      managerName={getManagerLabel(props.item)}
                       onEdit={(team) => {
                         setEditingTeam(team)
                         setError(null)

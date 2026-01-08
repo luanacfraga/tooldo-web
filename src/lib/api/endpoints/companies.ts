@@ -3,6 +3,43 @@ import { PaginatedResponse, PaginationParams } from '../types'
 import type { Company, CreateCompanyRequest, UpdateCompanyRequest } from '@/lib/types/api'
 import type { ExecutorDashboardResponse } from '@/lib/types/executor-dashboard'
 
+export interface CompanySettings {
+  company: {
+    id: string
+    name: string
+    description: string | null
+    adminId: string
+    document: string
+    documentType: 'CPF' | 'CNPJ'
+  }
+  admin: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    document: string
+    documentType: 'CPF' | 'CNPJ'
+    role: string
+  }
+  plan: {
+    id: string
+    name: string
+    maxCompanies: number
+    maxManagers: number
+    maxExecutors: number
+    maxConsultants: number
+    iaCallsLimit: number
+  }
+  subscription: {
+    id: string
+    adminId: string
+    planId: string
+    startedAt: string
+    isActive: boolean
+  }
+}
+
 export const companiesApi = {
   getAll: (params?: PaginationParams) =>
     apiClient.get<PaginatedResponse<Company>>('/api/v1/companies', {
@@ -17,6 +54,9 @@ export const companiesApi = {
 
   getById: (id: string) =>
     apiClient.get<Company>(`/api/v1/companies/${id}`),
+
+  getSettings: (id: string) =>
+    apiClient.get<CompanySettings>(`/api/v1/companies/${id}/settings`),
 
   create: (data: CreateCompanyRequest) =>
     apiClient.post<Company>('/api/v1/companies', data),

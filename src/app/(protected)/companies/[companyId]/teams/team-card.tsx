@@ -5,11 +5,12 @@ import { Pencil, Users } from 'lucide-react'
 
 interface TeamCardProps {
   item: Team
+  managerName?: string
   onEdit?: (team: Team) => void
   onManageMembers?: (team: Team) => void
 }
 
-export function TeamCard({ item, onEdit }: TeamCardProps) {
+export function TeamCard({ item, managerName, onEdit }: TeamCardProps) {
   return (
     <Card className="group/card relative overflow-hidden border border-border/60 bg-card/95 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:border-border/80 hover:bg-card hover:shadow-md">
       <div className="space-y-3">
@@ -27,6 +28,13 @@ export function TeamCard({ item, onEdit }: TeamCardProps) {
             )}
           </div>
         </div>
+
+        {/* Gestor */}
+        {managerName && (
+          <p className="text-xs text-muted-foreground">
+            Gestor: <span className="font-medium text-foreground">{managerName}</span>
+          </p>
+        )}
 
         {/* Description */}
         {item.description && (

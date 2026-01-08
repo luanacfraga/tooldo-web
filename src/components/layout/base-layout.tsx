@@ -1,8 +1,9 @@
 'use client'
 
 import { useUIStore } from '@/lib/stores/ui-store'
-import { ReactNode, useEffect, useMemo } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { HeaderMenu } from './header-menu'
+import { UserProfileDialog } from './user-profile-dialog'
 
 interface BaseLayoutProps {
   children: ReactNode
@@ -11,6 +12,7 @@ interface BaseLayoutProps {
 
 export function BaseLayout({ children, sidebar }: BaseLayoutProps) {
   const { isWebMenuCollapsed, isMobileMenuOpen } = useUIStore()
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -39,7 +41,8 @@ export function BaseLayout({ children, sidebar }: BaseLayoutProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background overflow-hidden">
-      <HeaderMenu />
+      <HeaderMenu onProfileClick={() => setIsProfileOpen(true)} />
+      <UserProfileDialog open={isProfileOpen} onOpenChange={setIsProfileOpen} />
 
       <div className="flex flex-1 pt-14 sm:pt-16 min-h-0">
         {sidebar}

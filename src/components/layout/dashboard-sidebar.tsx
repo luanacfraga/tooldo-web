@@ -167,7 +167,7 @@ export function DashboardSidebar() {
 
     items.push({
       name: 'Configurações',
-      href: companyId ? `${basePath}/settings` : '/settings',
+      href: '/settings',
       icon: Settings,
     })
 

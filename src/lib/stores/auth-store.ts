@@ -12,6 +12,9 @@ export interface User {
   role: UserRole
   initials?: string | null
   avatarColor?: string | null
+  phone?: string | null
+  document?: string | null
+  documentType?: 'CPF' | 'CNPJ' | null
 }
 
 interface AuthState {
