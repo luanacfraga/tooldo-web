@@ -22,6 +22,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { ApiError } from '@/lib/api/api-client'
 import { useUserContext } from '@/lib/contexts/user-context'
 import {
   useBlockAction,
@@ -211,7 +212,14 @@ export function ActionForm({
         }
       }
     } catch (error) {
-      toast.error(mode === 'create' ? 'Erro ao criar ação' : 'Erro ao atualizar ação')
+      const defaultMessage = mode === 'create' ? 'Erro ao criar ação' : 'Erro ao atualizar ação'
+      const message =
+        error instanceof ApiError && (error.data as any)?.message
+          ? (error.data as any).message
+          : error instanceof Error && error.message
+            ? error.message
+            : defaultMessage
+      toast.error(message)
       console.error(error)
     }
   }

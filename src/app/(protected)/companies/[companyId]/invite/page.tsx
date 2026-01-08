@@ -34,6 +34,7 @@ import { AlertCircle, ArrowLeft, Building2, CheckCircle2, Loader2, Send } from '
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
 export default function CompanyInvitePage() {
   const params = useParams()
@@ -97,6 +98,7 @@ export default function CompanyInvitePage() {
         notes: data.notes || undefined,
       })
 
+      toast.success('Convite enviado com sucesso!')
       setSuccess(true)
       setTimeout(() => {
         router.push(`/companies/${companyId}/members`)
@@ -106,8 +108,11 @@ export default function CompanyInvitePage() {
         const errorData = err.data as { message?: string }
         const errorMessage = errorData?.message || 'Erro ao convidar funcionário. Tente novamente.'
         setError(errorMessage)
+        toast.error(errorMessage)
       } else {
-        setError('Erro ao convidar funcionário. Tente novamente.')
+        const fallback = 'Erro ao convidar funcionário. Tente novamente.'
+        setError(fallback)
+        toast.error(fallback)
       }
     }
   }
