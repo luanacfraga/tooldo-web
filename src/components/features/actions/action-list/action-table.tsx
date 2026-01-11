@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { ResponsiveDataTable } from '@/components/shared/data/responsive-data-table';
 import { ActionCard } from './action-card';
 
 import { Pagination } from '@/components/shared/data/pagination';
 import { useActions, useDeleteAction } from '@/lib/hooks/use-actions';
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store';
+import { useActionDialogStore } from '@/lib/stores/action-dialog-store';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useCompany } from '@/lib/hooks/use-company';
 import { ActionTableRow } from './action-table-row';
@@ -23,8 +23,8 @@ export function ActionTable() {
   const { user } = useAuth();
   const { selectedCompany } = useCompany();
   const filtersState = useActionFiltersStore();
+  const { openEdit } = useActionDialogStore();
   const deleteActionMutation = useDeleteAction();
-  const router = useRouter();
 
   // Build API filters from store
   const apiFilters: ActionFilters = useMemo(() => {
@@ -128,7 +128,7 @@ export function ActionTable() {
                 <ActionCard
                     data={props.data}
                     onView={() => {
-                        router.push(`/actions/${props.data.id}/edit`);
+                        openEdit(props.data.id);
                     }}
                 />
             )}
@@ -150,7 +150,7 @@ export function ActionTable() {
                 canDelete={canDelete}
                 onDelete={handleDelete}
                 onView={() => {
-                  router.push(`/actions/${action.id}/edit`);
+                  openEdit(action.id);
                 }}
               />
             );
