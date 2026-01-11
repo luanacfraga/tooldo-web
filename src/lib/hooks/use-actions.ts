@@ -92,6 +92,8 @@ export function useUpdateAction(): UseMutationResult<
     onSuccess: (updatedAction) => {
       // Update cache for specific action
       queryClient.setQueryData(actionKeys.detail(updatedAction.id), updatedAction)
+      // Invalidate detail to ensure fresh data (especially for nested relations like checklistItems)
+      queryClient.invalidateQueries({ queryKey: actionKeys.detail(updatedAction.id) })
       // Invalidate lists to refresh
       queryClient.invalidateQueries({ queryKey: actionKeys.lists() })
     },
@@ -144,7 +146,7 @@ export function useMoveAction(): UseMutationResult<
 
       return { previousAction }
     },
-    onError: (err, { id }, context) => {
+    onError: (_err, { id }, context) => {
       // Rollback on error
       if (context?.previousAction) {
         queryClient.setQueryData(actionKeys.detail(id), context.previousAction)

@@ -144,14 +144,6 @@ export function ActionForm({
         }))
       : []
 
-    if (itemsFromAction.length === 0 && checklistItems.length > 0) {
-      console.log('[ActionForm] Ignoring empty checklist from action to preserve local state', {
-        actionId: action.id,
-        currentLocalItems: checklistItems.length,
-      })
-      return
-    }
-
     console.log('[ActionForm] Syncing checklist from action:', {
       actionId: action.id,
       itemsFromAction: itemsFromAction.length,
@@ -159,7 +151,7 @@ export function ActionForm({
     })
 
     setChecklistItems(itemsFromAction)
-  }, [action, checklistItems.length])
+  }, [action?.id, action?.checklistItems])
 
   const selectedCompanyId = form.watch('companyId')
   const selectedTeamId = form.watch('teamId')
