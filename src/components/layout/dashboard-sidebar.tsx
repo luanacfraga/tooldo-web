@@ -22,7 +22,6 @@ export function DashboardSidebar() {
   const isExecutor = currentRole === USER_ROLES.EXECUTOR
   const isConsultant = currentRole === USER_ROLES.CONSULTANT
   const isMaster = currentRole === USER_ROLES.MASTER
-  const canCreateActions = isAdmin || isManager
 
   const menuItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = []
@@ -69,9 +68,7 @@ export function DashboardSidebar() {
           name: 'Ações',
           href: '/actions',
           icon: ClipboardList,
-          subItems: [
-            { name: 'Lista de Ações', href: '/actions' },
-          ],
+          subItems: [{ name: 'Lista de Ações', href: '/actions' }],
         },
         {
           name: 'Equipe',
@@ -172,16 +169,7 @@ export function DashboardSidebar() {
     }
 
     return items
-  }, [
-    isAdmin,
-    isManager,
-    isExecutor,
-    isConsultant,
-    isMaster,
-    companyId,
-    canInviteEmployee,
-    canCreateActions,
-  ])
+  }, [isAdmin, isManager, isExecutor, isConsultant, isMaster, companyId, canInviteEmployee])
 
   return (
     <Sidebar
