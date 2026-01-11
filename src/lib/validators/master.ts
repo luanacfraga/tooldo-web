@@ -25,19 +25,6 @@ export const registerMasterSchema = z
           return digits.length === 11 || digits.length === 10
         },
         { message: 'Digite o telefone completo (10 ou 11 dígitos)' }
-      )
-      .refine(
-        (val) => {
-          const digits = val.replace(/\D/g, '')
-          if (digits.length === 11) {
-            return /^[1-9]{2}9[0-9]{8}$/.test(digits)
-          }
-          if (digits.length === 10) {
-            return /^[1-9]{2}[2-5][0-9]{7}$/.test(digits)
-          }
-          return false
-        },
-        { message: 'Número de telefone inválido' }
       ),
     document: z
       .string()

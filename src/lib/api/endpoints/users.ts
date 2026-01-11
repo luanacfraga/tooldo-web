@@ -32,6 +32,12 @@ export interface UpdateAvatarColorRequest {
   avatarColor: string
 }
 
+export interface UpdateProfileRequest {
+  phone?: string
+  firstName?: string
+  lastName?: string
+}
+
 export const usersApi = {
   getAll: (params?: PaginationParams & { role?: User['role'] }) =>
     apiClient.get<PaginatedResponse<User>>('/api/v1/users', {
@@ -50,4 +56,7 @@ export const usersApi = {
 
   updateAvatarColor: (data: UpdateAvatarColorRequest) =>
     apiClient.patch<User>('/api/v1/users/me/avatar-color', data),
+
+  updateProfile: (data: UpdateProfileRequest) =>
+    apiClient.patch<User>('/api/v1/users/me/profile', data),
 }

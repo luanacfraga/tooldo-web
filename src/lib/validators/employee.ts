@@ -18,23 +18,6 @@ export const inviteEmployeeSchema = z.object({
         return digits.length === 11 || digits.length === 10
       },
       { message: 'Digite o telefone completo (10 ou 11 dígitos)' }
-    )
-    .refine(
-      (val) => {
-        if (!val || val.trim() === '') return true
-        const digits = val.replace(/\D/g, '')
-        // Valida se é um número de telefone brasileiro válido
-        if (digits.length === 11) {
-          // Celular: DDD (2 dígitos) + 9 + 8 dígitos
-          return /^[1-9]{2}9[0-9]{8}$/.test(digits)
-        }
-        if (digits.length === 10) {
-          // Fixo: DDD (2 dígitos) + 8 dígitos
-          return /^[1-9]{2}[2-5][0-9]{7}$/.test(digits)
-        }
-        return false
-      },
-      { message: 'Número de telefone inválido' }
     ),
   document: z
     .string()

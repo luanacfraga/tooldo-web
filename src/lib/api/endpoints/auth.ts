@@ -15,6 +15,7 @@ export interface LoginResponse {
     role: 'master' | 'admin' | 'manager' | 'executor' | 'consultant'
     initials?: string | null
     avatarColor?: string | null
+    phone?: string | null
   }
 }
 
