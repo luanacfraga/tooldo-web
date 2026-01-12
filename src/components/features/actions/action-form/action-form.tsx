@@ -34,16 +34,18 @@ import { useCompany } from '@/lib/hooks/use-company'
 import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
 import { useTeamResponsibles, useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useAuthStore } from '@/lib/stores/auth-store'
-import { ActionPriority, type Action } from '@/lib/types/action'
+import { ActionPriority, type Action, type UpsertChecklistItemInput } from '@/lib/types/action'
+import type { Employee } from '@/lib/types/api'
 import { cn } from '@/lib/utils'
 import { actionFormSchema, actionPriorities, type ActionFormData } from '@/lib/validators/action'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Flag, Loader2, Lock, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
+import { ActionFormChecklist } from './action-form-checklist'
 
 interface ActionFormProps {
   action?: Action
@@ -97,7 +99,6 @@ export function ActionForm({
   const blockAction = useBlockAction()
   const unblockAction = useUnblockAction()
 
-  // Check if user can block/unblock actions
   const role = currentRole ?? user?.globalRole
   const canBlock = !!role && ['manager', 'executor', 'admin', 'master'].includes(role)
   const isEditing = mode === 'edit'
@@ -123,12 +124,37 @@ export function ActionForm({
       teamId: action?.teamId || initialData?.teamId || undefined,
       responsibleId: action?.responsibleId || initialData?.responsibleId || '',
       isBlocked: action?.isBlocked || initialData?.isBlocked || false,
+      actualStartDate:
+        action?.actualStartDate?.split('T')[0] || initialData?.actualStartDate || undefined,
+      actualEndDate:
+        action?.actualEndDate?.split('T')[0] || initialData?.actualEndDate || undefined,
     },
   })
 
+  const [checklistItems, setChecklistItems] = useState<UpsertChecklistItemInput[]>([])
+
+  useEffect(() => {
+    if (!action) return
+
+    const itemsFromAction = action.checklistItems
+      ? action.checklistItems.map((item) => ({
+          description: item.description,
+          isCompleted: item.isCompleted,
+          order: item.order,
+        }))
+      : []
+
+    console.log('[ActionForm] Syncing checklist from action:', {
+      actionId: action.id,
+      itemsFromAction: itemsFromAction.length,
+      items: itemsFromAction,
+    })
+
+    setChecklistItems(itemsFromAction)
+  }, [action?.id, action?.checklistItems])
+
   const selectedCompanyId = form.watch('companyId')
   const selectedTeamId = form.watch('teamId')
-  // Garante que a empresa seja preenchida assim que o contexto/carregamento estiver disponível
   useEffect(() => {
     if (selectedCompanyId) return
 
@@ -147,26 +173,75 @@ export function ActionForm({
     form,
   ])
 
-  // Keep isBlocked in sync when action updates (e.g. after block/unblock)
   useEffect(() => {
     if (isEditing && action) {
       form.setValue('isBlocked', action.isBlocked)
     }
   }, [action, form, isEditing])
 
-  // Fetch teams for selected company
   const { data: teamsData } = useTeamsByCompany(selectedCompanyId || '')
   const teams = teamsData?.data || []
 
-  // Responsáveis por equipe (quando houver equipe definida)
   const { data: teamResponsibles = [] } = useTeamResponsibles(selectedTeamId || '')
 
-  // Responsáveis em nível de empresa (backend aplica regras por papel)
   const { data: companyResponsibles = [] } = useCompanyResponsibles(selectedCompanyId || '')
+  const baseResponsibleOptions: Employee[] = selectedTeamId ? teamResponsibles : companyResponsibles
 
-  const responsibleOptions = selectedTeamId ? teamResponsibles : companyResponsibles
+  const shouldInjectCurrentUserAsResponsible =
+    !selectedTeamId &&
+    baseResponsibleOptions.length === 0 &&
+    !!selectedCompanyId &&
+    !!authUser &&
+    !!role &&
+    ['manager', 'admin'].includes(role)
 
-  // Reset team and responsible when company changes
+  const injectedCurrentUserAsEmployee: Employee | null = shouldInjectCurrentUserAsResponsible
+    ? {
+        id: `self-${authUser!.id}-${selectedCompanyId}`,
+        userId: authUser!.id,
+        companyId: selectedCompanyId!,
+        role: 'manager',
+        status: 'ACTIVE',
+        position: undefined,
+        notes: undefined,
+        invitedAt: null,
+        acceptedAt: null,
+        invitedBy: null,
+        user: (() => {
+          const fullName = authUser!.name || ''
+          const [firstName, ...rest] = fullName.split(' ')
+          const lastName = rest.join(' ') || firstName
+          return {
+            id: authUser!.id,
+            firstName: firstName || fullName || 'Usuário',
+            lastName: lastName || '',
+            email: authUser!.email,
+            phone: authUser!.phone ?? '',
+            document: authUser!.document ?? '',
+            role: role!,
+            initials: authUser!.initials ?? null,
+            avatarColor: authUser!.avatarColor ?? null,
+          }
+        })(),
+      }
+    : null
+
+  const responsibleOptions: Employee[] = (() => {
+    if (!injectedCurrentUserAsEmployee) return baseResponsibleOptions
+    const exists = baseResponsibleOptions.some(
+      (emp) => emp.userId === injectedCurrentUserAsEmployee.userId
+    )
+    if (exists) return baseResponsibleOptions
+    return [...baseResponsibleOptions, injectedCurrentUserAsEmployee]
+  })()
+
+  useEffect(() => {
+    const currentResponsibleId = form.getValues('responsibleId')
+    if (!currentResponsibleId && responsibleOptions.length === 1) {
+      form.setValue('responsibleId', responsibleOptions[0].userId)
+    }
+  }, [form, responsibleOptions])
+
   useEffect(() => {
     if (mode === 'create' && !initialData) {
       form.setValue('teamId', undefined)
@@ -182,6 +257,11 @@ export function ActionForm({
         await createAction.mutateAsync({
           ...payload,
           teamId: payload.teamId || undefined,
+          checklistItems: checklistItems.map((item, index) => ({
+            description: item.description,
+            isCompleted: item.isCompleted ?? false,
+            order: item.order ?? index,
+          })),
         })
 
         toast.success('Ação criada com sucesso!')
@@ -196,12 +276,38 @@ export function ActionForm({
           companyId: _companyId, // não é permitido no UpdateActionDto da API
           ...payload
         } = data
-        await updateAction.mutateAsync({
+
+        const checklistPayload = checklistItems.map((item, index) => ({
+          description: item.description,
+          isCompleted: item.isCompleted ?? false,
+          order: item.order ?? index,
+        }))
+
+        console.log('[ActionForm] Updating action with checklist:', {
+          actionId: action.id,
+          checklistItemsCount: checklistItems.length,
+          checklistItems: checklistPayload,
+        })
+
+        const result = await updateAction.mutateAsync({
           id: action.id,
           data: {
             ...payload,
             teamId: payload.teamId || undefined,
+            actualStartDate: payload.actualStartDate
+              ? new Date(payload.actualStartDate).toISOString()
+              : undefined,
+            actualEndDate: payload.actualEndDate
+              ? new Date(payload.actualEndDate).toISOString()
+              : undefined,
+            checklistItems: checklistPayload,
           },
+        })
+
+        console.log('[ActionForm] Update result:', {
+          actionId: result.id,
+          checklistItemsCount: result.checklistItems?.length || 0,
+          checklistItems: result.checklistItems,
         })
 
         toast.success('Ação atualizada com sucesso!')
@@ -233,12 +339,10 @@ export function ActionForm({
   const handleToggleBlocked = async (checked: boolean) => {
     if (!action || !isEditing || !canBlock) return
 
-    // optimistic UI
     form.setValue('isBlocked', checked)
 
     try {
       if (checked) {
-        // Backend/domain requires a non-empty reason when blocking; we set a default
         await blockAction.mutateAsync({ id: action.id, data: { reason: 'Bloqueado' } })
         toast.success('Ação bloqueada')
       } else {
@@ -468,47 +572,99 @@ export function ActionForm({
           />
 
           {/* Dates */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Start Date */}
-            <FormField
-              control={form.control}
-              name="estimatedStartDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Data de Início</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      className="h-9 text-sm"
-                      max={form.watch('estimatedEndDate') ?? undefined}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* Estimated Start Date */}
+              <FormField
+                control={form.control}
+                name="estimatedStartDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Início Previsto</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        className="h-9 text-sm"
+                        max={form.watch('estimatedEndDate') ?? undefined}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
 
-            {/* End Date */}
-            <FormField
-              control={form.control}
-              name="estimatedEndDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">Data de Término</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      className="h-9 text-sm"
-                      min={form.watch('estimatedStartDate') ?? undefined}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+              {/* Estimated End Date */}
+              <FormField
+                control={form.control}
+                name="estimatedEndDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Fim Previsto</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        className="h-9 text-sm"
+                        min={form.watch('estimatedStartDate') ?? undefined}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {isEditing && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Actual Start Date */}
+                <FormField
+                  control={form.control}
+                  name="actualStartDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Início Real</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          className="h-9 text-sm"
+                          max={form.watch('actualEndDate') ?? undefined}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Actual End Date */}
+                <FormField
+                  control={form.control}
+                  name="actualEndDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm">Fim Real</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          className="h-9 text-sm"
+                          min={form.watch('actualStartDate') ?? undefined}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
           </div>
+
+          <ActionFormChecklist
+            items={checklistItems}
+            onItemsChange={setChecklistItems}
+            readOnly={readOnly}
+          />
         </fieldset>
 
         {/* Actions */}

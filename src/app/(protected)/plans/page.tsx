@@ -116,7 +116,7 @@ export default function PlansPage() {
     <MasterOnly>
       <PageContainer maxWidth="7xl">
         <PageHeader
-          title="Planos"
+          title="Planos de Acesso"
           description="Gerencie os planos disponíveis no sistema"
           action={
             <Button onClick={handleCreate} className="gap-1.5 font-medium sm:gap-2">

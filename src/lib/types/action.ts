@@ -11,6 +11,12 @@ export enum ActionPriority {
   URGENT = 'URGENT',
 }
 
+export enum ActionLateStatus {
+  LATE_TO_START = 'LATE_TO_START',
+  LATE_TO_FINISH = 'LATE_TO_FINISH',
+  COMPLETED_LATE = 'COMPLETED_LATE',
+}
+
 export interface KanbanOrder {
   id: string
   column: ActionStatus
@@ -42,6 +48,7 @@ export interface Action {
     lastName: string
   } | null
   checklistItems: ChecklistItem[]
+  lateStatus: ActionLateStatus | null
   kanbanOrder: KanbanOrder | null
 }
 
@@ -54,6 +61,12 @@ export interface ChecklistItem {
   order: number
 }
 
+export interface UpsertChecklistItemInput {
+  description: string
+  isCompleted?: boolean
+  order?: number
+}
+
 export interface CreateActionDto {
   title: string
   description: string
@@ -64,6 +77,7 @@ export interface CreateActionDto {
   teamId?: string
   responsibleId: string
   isBlocked?: boolean
+  checklistItems?: UpsertChecklistItemInput[]
 }
 
 export interface UpdateActionDto {
@@ -75,6 +89,9 @@ export interface UpdateActionDto {
   teamId?: string
   responsibleId?: string
   isBlocked?: boolean
+  actualStartDate?: string | null
+  actualEndDate?: string | null
+  checklistItems?: UpsertChecklistItemInput[]
 }
 
 export interface ActionFilters {
@@ -87,6 +104,7 @@ export interface ActionFilters {
   teamId?: string
   isLate?: boolean
   isBlocked?: boolean
+  lateStatus?: ActionLateStatus | ActionLateStatus[]
   q?: string
   dateFrom?: string
   dateTo?: string

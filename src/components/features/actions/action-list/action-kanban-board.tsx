@@ -15,7 +15,6 @@ import { CSS } from '@dnd-kit/utilities'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { Calendar, UserCheck } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -29,12 +28,14 @@ import { useActions, useUpdateAction } from '@/lib/hooks/use-actions'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
 import { useKanbanActions } from '@/lib/hooks/use-kanban-actions'
+import { useActionDialogStore } from '@/lib/stores/action-dialog-store'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
 import { buildActionsApiFilters } from '@/lib/utils/build-actions-api-filters'
 
 import { actionStatusUI } from '../shared/action-status-ui'
+import { ActionLateStatusBadge } from '../shared/action-late-status-badge'
 import { BlockedBadge } from '../shared/blocked-badge'
 import { LateIndicator } from '../shared/late-indicator'
 import { ActionListEmpty } from './action-list-empty'
@@ -132,8 +133,8 @@ export function ActionKanbanBoard() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
   const filtersState = useActionFiltersStore()
+  const { openEdit } = useActionDialogStore()
   const [announcement, setAnnouncement] = useState('')
-  const router = useRouter()
 
   // Gestores devem iniciar o Kanban com atribuição "todas"
   useEffect(() => {
@@ -156,8 +157,10 @@ export function ActionKanbanBoard() {
         datePreset: filtersState.datePreset,
         companyId: filtersState.companyId,
         teamId: filtersState.teamId,
+        responsibleId: filtersState.responsibleId,
         showBlockedOnly: filtersState.showBlockedOnly,
         showLateOnly: filtersState.showLateOnly,
+        lateStatusFilter: filtersState.lateStatusFilter,
         searchQuery: filtersState.searchQuery,
       },
       userId: user?.id,
@@ -209,9 +212,9 @@ export function ActionKanbanBoard() {
 
   const handleActionClick = useCallback(
     (actionId: string) => {
-      router.push(`/actions/${actionId}/edit`)
+      openEdit(actionId)
     },
-    [router]
+    [openEdit]
   )
 
   if (!hasScope) return <ActionListSkeleton />
@@ -598,6 +601,7 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
             <BlockedBadge isBlocked={action.isBlocked} reason={action.blockedReason} />
           )}
           <LateIndicator isLate={action.isLate} />
+          <ActionLateStatusBadge lateStatus={action.lateStatus} size="sm" />
         </div>
       </div>
 
@@ -610,10 +614,17 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
           <ResponsibleSelector action={action} canEdit={canEdit} />
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1" title="Prazo">
-              <Calendar className="h-3 w-3" />
-              <span>{format(new Date(action.estimatedEndDate), 'dd/MM')}</span>
-            </div>
+            {action.actualEndDate ? (
+              <div className="flex items-center gap-1" title="Fim Real">
+                <Calendar className="h-3 w-3" />
+                <span>{format(new Date(action.actualEndDate), 'dd/MM')}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1" title="Fim Previsto">
+                <Calendar className="h-3 w-3" />
+                <span>{format(new Date(action.estimatedEndDate), 'dd/MM')}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1" title="Checklist">
               <span className="font-medium">{checklistProgress}</span>
             </div>

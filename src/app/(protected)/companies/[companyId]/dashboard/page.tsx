@@ -1,5 +1,6 @@
 'use client'
 
+import { ActionDialog } from '@/components/features/actions/action-dialog'
 import { ExecutorDashboard } from '@/components/features/dashboard/executor/executor-dashboard'
 import { MetricCardWithComparison } from '@/components/features/dashboard/shared/metric-card-with-comparison'
 import { PeriodFilter } from '@/components/features/dashboard/shared/period-filter'
@@ -18,6 +19,7 @@ import { useCompanyPerformance } from '@/lib/hooks/use-company-performance'
 import { useActions } from '@/lib/hooks/use-actions'
 import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
+import { useActionDialogStore } from '@/lib/stores/action-dialog-store'
 import type { TeamMetrics } from '@/lib/types/dashboard'
 import { ActionStatus } from '@/lib/types/action'
 import type { DatePreset } from '@/lib/utils/date-presets'
@@ -127,6 +129,7 @@ export default function CompanyDashboardPage() {
 
 function AdminCompanyDashboard({ companyId }: { companyId: string }) {
   const { user } = useUserContext()
+  const filters = useActionFiltersStore()
   const [preset, setPreset] = useState<DatePreset>('esta-semana')
   const { metrics, trendData, isLoading, error } = useCompanyPerformance({
     companyId,
@@ -174,8 +177,27 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
     <>
       <PageHeader
         title={company ? `Visão geral • ${company.name}` : 'Visão geral da empresa'}
-        description="Acompanhe o desempenho das equipes desta empresa por entregas e atrasos, sem chamadas para ação."
-        action={<PeriodFilter selected={preset} onChange={setPreset} />}
+        description="Acompanhe o desempenho das equipes desta empresa por entregas e atrasos, e navegue para as ações quando quiser se aprofundar."
+        action={
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                filters.resetFilters()
+                filters.setFilter('companyId', companyId)
+                filters.setFilter('viewMode', 'kanban')
+              }}
+              asChild
+            >
+              <Link href="/actions">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Ver ações da empresa
+              </Link>
+            </Button>
+            <PeriodFilter selected={preset} onChange={setPreset} />
+          </div>
+        }
       />
 
       <PeriodIndicator preset={preset} className="mb-4" />
@@ -324,6 +346,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
 function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
   const { user } = useUserContext()
   const filters = useActionFiltersStore()
+  const { openCreate } = useActionDialogStore()
   const company = user?.companies.find((c) => c.id === companyId)
 
   const totalFilters = useMemo(() => ({ companyId, page: 1, limit: 1 }), [companyId])
@@ -383,21 +406,22 @@ function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
     blockedQ.isLoading
 
   return (
-    <PageContainer maxWidth="7xl">
-      <PageHeader
-        title={`Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
-        description={`Bem-vindo(a) ao painel de controle${company ? ` - ${company.name}` : ''}`}
-        action={
-          <div className="flex items-center gap-2">
-            <Button asChild size="sm" className="hidden sm:inline-flex">
-              <Link href="/actions/new">Nova Ação</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/actions">Ver Ações</Link>
-            </Button>
-          </div>
-        }
-      />
+    <>
+      <PageContainer maxWidth="7xl">
+        <PageHeader
+          title={`Olá, ${user?.name?.split(' ')[0] || 'Usuário'}!`}
+          description={`Bem-vindo(a) ao painel de controle${company ? ` - ${company.name}` : ''}`}
+          action={
+            <div className="flex items-center gap-2">
+              <Button onClick={openCreate} size="sm" className="hidden sm:inline-flex">
+                Nova Ação
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/actions">Ver Ações</Link>
+              </Button>
+            </div>
+          }
+        />
 
       {/* Motivation hero */}
       <Card className="mb-6 overflow-hidden border-border/40 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
@@ -589,6 +613,9 @@ function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
           </CardContent>
         </Card>
       </div>
-    </PageContainer>
+      </PageContainer>
+
+      <ActionDialog />
+    </>
   )
 }

@@ -5,9 +5,9 @@ export interface User {
   id: string
   email: string
   name: string
+  firstName: string
+  lastName: string
   role: 'master' | 'admin' | 'manager' | 'executor' | 'consultant'
-  createdAt: string
-  updatedAt: string
 }
 
 export interface CreateUserRequest {
@@ -32,9 +32,15 @@ export interface UpdateAvatarColorRequest {
   avatarColor: string
 }
 
+export interface UpdateProfileRequest {
+  phone?: string
+  firstName?: string
+  lastName?: string
+}
+
 export const usersApi = {
-  getAll: (params?: PaginationParams) =>
-    apiClient.get<PaginatedResponse<User>>('/users', {
+  getAll: (params?: PaginationParams & { role?: User['role'] }) =>
+    apiClient.get<PaginatedResponse<User>>('/api/v1/users', {
       params: params as Record<string, string | number | boolean | undefined>,
     }),
 
@@ -50,4 +56,7 @@ export const usersApi = {
 
   updateAvatarColor: (data: UpdateAvatarColorRequest) =>
     apiClient.patch<User>('/api/v1/users/me/avatar-color', data),
+
+  updateProfile: (data: UpdateProfileRequest) =>
+    apiClient.patch<User>('/api/v1/users/me/profile', data),
 }

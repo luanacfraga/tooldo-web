@@ -23,6 +23,7 @@ export function useAuth() {
         role: response.user.role,
         initials: response.user.initials ?? null,
         avatarColor: response.user.avatarColor ?? null,
+        phone: response.user.phone ?? null,
       }
 
       setAuth(userForStore, response.access_token)

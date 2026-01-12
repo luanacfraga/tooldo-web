@@ -1,14 +1,12 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Company } from '@/lib/api/endpoints/companies'
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 interface CompanyState {
-  // State
   companies: Company[]
   selectedCompany: Company | null
   isLoading: boolean
 
-  // Actions
   setCompanies: (companies: Company[]) => void
   selectCompany: (company: Company | null) => void
   addCompany: (company: Company) => void
@@ -26,21 +24,32 @@ export const useCompanyStore = create<CompanyState>()(
       isLoading: false,
 
       setCompanies: (companies) => {
+        const { selectedCompany } = get()
+        console.log('[CompanyStore] setCompanies called:', {
+          companiesCount: companies.length,
+          currentSelectedCompany: selectedCompany?.id,
+        })
+
         set({ companies })
 
-        // Auto-select first company if none selected and companies exist
-        const { selectedCompany } = get()
         if (!selectedCompany && companies.length > 0) {
+          console.log('[CompanyStore] Auto-selecting first company:', companies[0].id)
           set({ selectedCompany: companies[0] })
         }
 
-        // Clear selection if selected company is not in the list
-        if (selectedCompany && !companies.find(c => c.id === selectedCompany.id)) {
+        if (selectedCompany && !companies.find((c) => c.id === selectedCompany.id)) {
+          console.log('[CompanyStore] Selected company not in list - changing selection:', {
+            was: selectedCompany.id,
+            changingTo: companies[0]?.id || null,
+          })
           set({ selectedCompany: companies[0] || null })
         }
       },
 
       selectCompany: (company) => {
+        console.log('[CompanyStore] selectCompany called:', {
+          companyId: company?.id || null,
+        })
         set({ selectedCompany: company })
       },
 
@@ -48,7 +57,6 @@ export const useCompanyStore = create<CompanyState>()(
         const { companies } = get()
         set({ companies: [...companies, company] })
 
-        // Auto-select if first company
         if (companies.length === 0) {
           set({ selectedCompany: company })
         }
@@ -56,12 +64,9 @@ export const useCompanyStore = create<CompanyState>()(
 
       updateCompany: (id, updates) => {
         const { companies, selectedCompany } = get()
-        const updatedCompanies = companies.map(c =>
-          c.id === id ? { ...c, ...updates } : c
-        )
+        const updatedCompanies = companies.map((c) => (c.id === id ? { ...c, ...updates } : c))
         set({ companies: updatedCompanies })
 
-        // Update selected company if it was the one updated
         if (selectedCompany?.id === id) {
           set({ selectedCompany: { ...selectedCompany, ...updates } })
         }
@@ -69,10 +74,9 @@ export const useCompanyStore = create<CompanyState>()(
 
       removeCompany: (id) => {
         const { companies, selectedCompany } = get()
-        const filteredCompanies = companies.filter(c => c.id !== id)
+        const filteredCompanies = companies.filter((c) => c.id !== id)
         set({ companies: filteredCompanies })
 
-        // Clear or change selection if removed company was selected
         if (selectedCompany?.id === id) {
           set({ selectedCompany: filteredCompanies[0] || null })
         }
@@ -95,7 +99,6 @@ export const useCompanyStore = create<CompanyState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         selectedCompany: state.selectedCompany,
-        // Don't persist companies list, it will be fetched on load
       }),
     }
   )

@@ -1,12 +1,12 @@
 'use client'
 
+import { Building2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, type ReactNode } from 'react'
-import { Building2 } from 'lucide-react'
 
+import { EmptyState } from '@/components/shared/feedback/empty-state'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { PageContainer } from '@/components/shared/layout/page-container'
-import { EmptyState } from '@/components/shared/feedback/empty-state'
 
 import { useUserContext } from '@/lib/contexts/user-context'
 import { calculateCompanyNavigation } from '@/lib/utils/company-navigation'
@@ -18,11 +18,20 @@ interface CompanyLayoutProps {
 export function CompanyLayout({ children }: CompanyLayoutProps) {
   const params = useParams()
   const router = useRouter()
-  const { user, currentCompanyId, setCurrentCompanyId, currentRole } = useUserContext()
+  const { user, currentCompanyId, setCurrentCompanyId, currentRole, isLoadingCompanies } =
+    useUserContext()
   const companyId = params.companyId as string
 
   useEffect(() => {
     if (!user) return
+
+    if (isLoadingCompanies) {
+      console.log('[CompanyLayout] Waiting for companies to load...', {
+        companyId,
+        isLoadingCompanies,
+      })
+      return
+    }
 
     const navigation = calculateCompanyNavigation({
       companyId,
@@ -31,20 +40,32 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
       userGlobalRole: user.globalRole,
     })
 
+    console.log('[CompanyLayout] Navigation decision:', {
+      companyId,
+      currentCompanyId,
+      userRole: user.globalRole,
+      companiesCount: user.companies.length,
+      isLoadingCompanies,
+      navigation,
+    })
+
     if (navigation.shouldUpdateCompanyId) {
+      console.log('[CompanyLayout] Updating company ID to:', companyId)
       setCurrentCompanyId(companyId)
       return
     }
 
     if (navigation.shouldRedirectToSelectCompany && navigation.redirectPath) {
+      console.log('[CompanyLayout] Redirecting to select company:', navigation.redirectPath)
       router.push(navigation.redirectPath)
       return
     }
 
     if (navigation.shouldRedirectToFirstCompany && navigation.redirectPath) {
+      console.log('[CompanyLayout] Redirecting to first company:', navigation.redirectPath)
       router.push(navigation.redirectPath)
     }
-  }, [companyId, currentCompanyId, user, setCurrentCompanyId, router])
+  }, [companyId, currentCompanyId, user, setCurrentCompanyId, router, isLoadingCompanies])
 
   if (!user) {
     return <LoadingScreen message="Carregando..." />
@@ -108,4 +129,3 @@ export function CompanyLayout({ children }: CompanyLayoutProps) {
 
   return <>{children}</>
 }
-

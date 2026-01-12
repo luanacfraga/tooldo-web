@@ -28,6 +28,7 @@ interface UserContextValue {
   currentCompanyId: string | null
   currentRole: UserRole | null
   isAuthenticated: boolean
+  isLoadingCompanies: boolean
   setCurrentCompanyId: (companyId: string | null) => void
   refreshCompanies: () => void
 }
@@ -41,7 +42,7 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   const { user: authUser, isAuthenticated: authIsAuthenticated, initAuth } = useAuthStore()
   const { selectedCompany, setCompanies, selectCompany } = useCompanyStore()
-  const { data: companies = [], refetch } = useCompanies()
+  const { data: companies = [], refetch, isLoading: isLoadingCompanies } = useCompanies()
 
   useEffect(() => {
     initAuth()
@@ -59,6 +60,10 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     if (selectedCompany?.id !== currentCompanyId) {
+      console.log('[UserContext] Syncing currentCompanyId with selectedCompany:', {
+        from: currentCompanyId,
+        to: selectedCompany?.id || null,
+      })
       setCurrentCompanyIdState(selectedCompany?.id || null)
     }
   }, [selectedCompany, currentCompanyId])
@@ -102,6 +107,7 @@ export function UserProvider({ children }: UserProviderProps) {
       currentCompanyId,
       currentRole,
       isAuthenticated: authIsAuthenticated,
+      isLoadingCompanies,
       setCurrentCompanyId,
       refreshCompanies: () => {
         refetch()
@@ -115,6 +121,7 @@ export function UserProvider({ children }: UserProviderProps) {
       companiesWithRoles,
       refetch,
       setCurrentCompanyId,
+      isLoadingCompanies,
     ]
   )
 

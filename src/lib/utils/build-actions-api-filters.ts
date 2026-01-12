@@ -1,4 +1,9 @@
-import type { ActionFilters, ActionPriority, ActionStatus } from '@/lib/types/action'
+import type {
+  ActionFilters,
+  ActionLateStatus,
+  ActionPriority,
+  ActionStatus,
+} from '@/lib/types/action'
 import type { DatePreset } from '@/lib/utils/date-presets'
 
 type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams'
@@ -14,8 +19,10 @@ export type ActionFiltersUIState = {
   datePreset: DatePreset | null
   companyId: string | null
   teamId: string | null
+  responsibleId: string | null
   showBlockedOnly: boolean
   showLateOnly: boolean
+  lateStatusFilter: ActionLateStatus | 'all' | null
   searchQuery: string
 }
 
@@ -50,7 +57,15 @@ export function buildActionsApiFilters({
 
   if (state.priority !== 'all') filters.priority = state.priority
   if (state.showBlockedOnly) filters.isBlocked = true
-  if (state.showLateOnly) filters.isLate = true
+  if (state.showLateOnly) {
+    filters.isLate = true
+  }
+
+  if (state.lateStatusFilter && state.lateStatusFilter !== 'all') {
+    filters.lateStatus = [state.lateStatusFilter]
+    // lateStatusFilter é mais específico que isLate; garantimos coerência
+    delete filters.isLate
+  }
 
   if (state.assignment === 'assigned-to-me') {
     filters.responsibleId = userId
@@ -58,6 +73,12 @@ export function buildActionsApiFilters({
 
   if (state.assignment === 'created-by-me') {
     filters.creatorId = userId
+  }
+
+  // Filtro explícito por responsável sempre tem precedência sobre "assignment"
+  if (state.responsibleId) {
+    filters.responsibleId = state.responsibleId
+    delete filters.creatorId
   }
 
   if (forceResponsibleId) {
@@ -88,5 +109,3 @@ export function buildActionsApiFilters({
 
   return filters
 }
-
-

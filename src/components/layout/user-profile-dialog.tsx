@@ -39,6 +39,7 @@ interface UserProfileDialogProps {
 }
 
 const profileFormSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('Email inválido'),
   phone: z.string().optional(),
 })
@@ -134,6 +135,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
+      name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
     },
@@ -143,6 +145,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   React.useEffect(() => {
     if (user) {
       form.reset({
+        name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
       })
@@ -166,7 +169,23 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      // Aqui você pode adicionar a lógica para atualizar email/telefone quando necessário
+      const fullName = data.name.trim()
+      const [firstName, ...rest] = fullName.split(/\s+/)
+      const lastName = rest.join(' ') || firstName
+
+      const updated = await usersApi.updateProfile({
+        firstName,
+        lastName,
+        phone: data.phone || undefined,
+      })
+
+      if (authUser) {
+        setUser({
+          ...authUser,
+          name: `${updated.firstName} ${updated.lastName}`.trim(),
+        })
+      }
+
       toast.success('Perfil atualizado com sucesso!')
     } catch (error) {
       toast.error('Erro ao atualizar perfil')
@@ -244,6 +263,23 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
               <FormField
                 control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1 text-xs">
+                      <User className="h-3 w-3" />
+                      Nome
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} type="text" className="h-9 text-sm" />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -269,7 +305,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                       Telefone
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" className="h-9 text-sm" disabled readOnly />
+                      <Input {...field} type="tel" className="h-9 text-sm" />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -295,6 +331,9 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Fechar
+              </Button>
+              <Button type="submit" size="sm">
+                Salvar
               </Button>
             </div>
           </form>

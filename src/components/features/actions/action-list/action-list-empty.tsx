@@ -1,6 +1,6 @@
 import { FileText } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useActionDialogStore } from '@/lib/stores/action-dialog-store';
 
 interface ActionListEmptyProps {
   hasFilters: boolean;
@@ -9,6 +9,8 @@ interface ActionListEmptyProps {
 }
 
 export function ActionListEmpty({ hasFilters, canCreate, onClearFilters }: ActionListEmptyProps) {
+  const { openCreate } = useActionDialogStore();
+
   if (hasFilters) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -32,8 +34,8 @@ export function ActionListEmpty({ hasFilters, canCreate, onClearFilters }: Actio
           : 'Nenhuma ação foi atribuída a você ainda'}
       </p>
       {canCreate && (
-        <Button asChild>
-          <Link href="/actions/new">Criar ação</Link>
+        <Button onClick={openCreate}>
+          Criar ação
         </Button>
       )}
     </div>

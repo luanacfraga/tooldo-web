@@ -1,12 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { Button } from '@/components/ui/button'
-import { Building2 } from 'lucide-react'
 import { useAuthGuard } from '@/lib/hooks/auth/use-auth-guard'
 import { useCompanyStore } from '@/lib/stores/company-store'
-import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
+import { Building2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 interface RequireCompanyProps {
   children: React.ReactNode
@@ -18,7 +18,15 @@ export function RequireCompany({ children }: RequireCompanyProps) {
   const selectedCompany = useCompanyStore((state) => state.selectedCompany)
 
   useEffect(() => {
+    console.log('[RequireCompany] Effect triggered:', {
+      isChecking,
+      userRole: user?.role,
+      selectedCompany: selectedCompany?.id,
+      willRedirect: !isChecking && user?.role === 'admin' && !selectedCompany,
+    })
+
     if (!isChecking && user?.role === 'admin' && !selectedCompany) {
+      console.log('[RequireCompany] Redirecting admin to /companies - no selected company')
       router.push('/companies')
     }
   }, [isChecking, user, selectedCompany, router])
