@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { PriorityBadge } from '@/components/ui/priority-badge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
 
 import { employeesApi } from '@/lib/api/endpoints/employees'
@@ -317,8 +318,15 @@ function KanbanColumn({ column, actions, onActionClick }: KanbanColumnProps) {
         style={{ minHeight: '500px', maxHeight: 'calc(100vh - 220px)' }}
       >
         <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3">
-          <span className={`h-2.5 w-2.5 rounded-full ${barClass}`} />
-          <h3 className={`text-sm font-semibold tracking-tight ${titleClass}`}>{column.title}</h3>
+          <div className={`flex items-center gap-2 ${titleClass}`}>
+            <StatusBadge
+              status={column.status}
+              showLabel={false}
+              variant="minimal"
+              className="text-[13px]"
+            />
+            <h3 className="text-sm font-semibold tracking-tight">{column.title}</h3>
+          </div>
           <span
             className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold ${countClass}`}
           >

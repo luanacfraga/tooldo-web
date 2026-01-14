@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
@@ -11,6 +12,7 @@ import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionLateStatus, ActionPriority, ActionStatus } from '@/lib/types/action'
 import { cn, getPriorityExclamation } from '@/lib/utils'
 import { datePresets, getPresetById } from '@/lib/utils/date-presets'
+import { getActionStatusUI } from '../shared/action-status-ui'
 import {
   Calendar as CalendarIcon,
   CheckCircle2,
@@ -24,7 +26,6 @@ import {
 } from 'lucide-react'
 import { useEffect } from 'react'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
-import { getActionStatusUI } from '../shared/action-status-ui'
 
 export function ActionFilters() {
   const { user } = useAuth()
@@ -64,7 +65,6 @@ export function ActionFilters() {
   const getStatusPill = (status: ActionStatus) => {
     const ui = getActionStatusUI(status)
     return {
-      dot: ui.dotClass,
       itemActive: ui.badgeClass,
     }
   }
@@ -225,8 +225,11 @@ export function ActionFilters() {
                           filters.setFilter('statuses', next)
                         }}
                       >
-                        <span className={cn('mr-2 inline-block h-2 w-2 rounded-full', meta.dot)} />
-                        <span>{option.label}</span>
+                        <StatusBadge
+                          status={option.value}
+                          variant="minimal"
+                          className="text-[11px]"
+                        />
                         {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
                       </Button>
                     )
