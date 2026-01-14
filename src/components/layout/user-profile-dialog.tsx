@@ -111,6 +111,8 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
         })
       }
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] })
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      queryClient.invalidateQueries({ queryKey: ['executors'] })
       toast.success('Cor do avatar atualizada com sucesso!')
     },
     onError: (error: Error) => {

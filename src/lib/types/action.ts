@@ -108,7 +108,7 @@ export interface ActionFilters {
   q?: string
   dateFrom?: string
   dateTo?: string
-  dateFilterType?: 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'createdAt'
+  dateFilterType?: 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'actualEndDate' | 'createdAt'
   page?: number
   limit?: number
 }

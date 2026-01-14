@@ -358,9 +358,22 @@ export function ActionFilters() {
                     ) : companyResponsibles && companyResponsibles.length > 0 ? (
                       companyResponsibles.map((employee) => {
                         const isActive = filters.responsibleId === employee.userId
-                        const fullName = employee.user
-                          ? `${employee.user.firstName} ${employee.user.lastName}`
+                        const execUser = employee.user
+
+                        const execInitials =
+                          user && employee.userId === user.id
+                            ? user.initials ?? null
+                            : execUser?.initials ?? null
+
+                        const execAvatarColor =
+                          user && employee.userId === user.id
+                            ? user.avatarColor ?? null
+                            : execUser?.avatarColor ?? null
+
+                        const fullName = execUser
+                          ? `${execUser.firstName} ${execUser.lastName}`
                           : employee.userId
+
                         return (
                           <Button
                             key={employee.id}
@@ -377,10 +390,10 @@ export function ActionFilters() {
                           >
                             <div className="flex items-center gap-2">
                               <UserAvatar
-                                firstName={employee.user?.firstName}
-                                lastName={employee.user?.lastName}
-                                initials={employee.user?.initials ?? null}
-                                avatarColor={employee.user?.avatarColor ?? null}
+                                firstName={execUser?.firstName}
+                                lastName={execUser?.lastName}
+                                initials={execInitials}
+                                avatarColor={execAvatarColor}
                                 size="sm"
                                 className="h-5 w-5 text-[9px]"
                               />
@@ -469,6 +482,21 @@ export function ActionFilters() {
                   >
                     <span>Término Previsto</span>
                     {filters.dateFilterType === 'estimatedEndDate' && (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      'h-9 w-full justify-between rounded-xl text-xs font-normal transition-all',
+                      filters.dateFilterType === 'actualEndDate' &&
+                        'bg-primary/10 text-primary shadow-sm'
+                    )}
+                    onClick={() => filters.setFilter('dateFilterType', 'actualEndDate')}
+                  >
+                    <span>Término Real</span>
+                    {filters.dateFilterType === 'actualEndDate' && (
                       <CheckCircle2 className="h-3.5 w-3.5" />
                     )}
                   </Button>

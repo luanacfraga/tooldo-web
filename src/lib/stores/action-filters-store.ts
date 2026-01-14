@@ -7,7 +7,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams'
-type DateFilterType = 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'createdAt'
+type DateFilterType = 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'actualEndDate' | 'createdAt'
 
 interface ActionFiltersState {
   // Filter values

@@ -6,7 +6,7 @@ import type {
 } from '@/lib/types/action'
 
 type AssignmentFilter = 'all' | 'assigned-to-me' | 'created-by-me' | 'my-teams'
-type DateFilterType = 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'createdAt'
+type DateFilterType = 'estimatedStartDate' | 'actualStartDate' | 'estimatedEndDate' | 'actualEndDate' | 'createdAt'
 
 export type ActionFiltersUIState = {
   statuses: ActionStatus[]
