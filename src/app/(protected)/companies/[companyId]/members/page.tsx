@@ -1,6 +1,7 @@
 'use client'
 
 import { ChangeRoleModal } from '@/components/features/company/company-members/change-role-modal'
+import { EditEmployeeModal } from '@/components/features/company/company-members/edit-employee-modal'
 import { EmployeeFilters } from '@/components/features/company/company-members/employee-filters'
 import { Pagination } from '@/components/shared/data/pagination'
 import { StatusBadge } from '@/components/shared/data/status-badge'
@@ -48,6 +49,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   ArrowUpDown,
+  Edit,
   Mail,
   MoreHorizontal,
   RefreshCw,
@@ -76,6 +78,7 @@ export default function CompanyMembersPage() {
   const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [employeeToChangeRole, setEmployeeToChangeRole] = useState<Employee | null>(null)
+  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null)
 
   const apiStatusParam = selectedStatuses.length === 1 ? selectedStatuses[0] : undefined
 
@@ -343,6 +346,13 @@ export default function CompanyMembersPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setEmployeeToEdit(employee)}
+                    disabled={isLoading}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Editar Dados
+                  </DropdownMenuItem>
                   {employee.status === 'INVITED' && (
                     <DropdownMenuItem
                       onClick={() => handleResendInvite(employee.id)}
@@ -551,6 +561,15 @@ export default function CompanyMembersPage() {
           employee={employeeToChangeRole}
           open={!!employeeToChangeRole}
           onOpenChange={(open) => !open && setEmployeeToChangeRole(null)}
+          onSuccess={() => refetch()}
+        />
+      )}
+
+      {employeeToEdit && (
+        <EditEmployeeModal
+          employee={employeeToEdit}
+          open={!!employeeToEdit}
+          onOpenChange={(open) => !open && setEmployeeToEdit(null)}
           onSuccess={() => refetch()}
         />
       )}

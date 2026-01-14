@@ -20,6 +20,16 @@ interface ChangeRoleRequest {
   newRole: 'manager' | 'executor' | 'consultant'
 }
 
+interface UpdateEmployeeRequest {
+  firstName?: string
+  lastName?: string
+  phone?: string
+  document?: string
+  position?: string
+  notes?: string
+  role?: 'manager' | 'executor' | 'consultant'
+}
+
 export const employeesApi = {
   invite: (data: InviteEmployeeRequest) =>
     apiClient.post<Employee>('/api/v1/employees/invite', data),
@@ -47,6 +57,9 @@ export const employeesApi = {
 
   changeRole: (id: string, data: ChangeRoleRequest) =>
     apiClient.patch<Employee>(`/api/v1/employees/${id}/role`, data),
+
+  update: (id: string, data: UpdateEmployeeRequest) =>
+    apiClient.put<Employee>(`/api/v1/employees/${id}`, data),
 }
 
 export type { Employee, InviteEmployeeRequest }

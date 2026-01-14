@@ -153,3 +153,18 @@ export function useChangeEmployeeRole() {
     },
   })
 }
+
+export function useUpdateEmployee() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { firstName?: string; lastName?: string; phone?: string; document?: string; position?: string; notes?: string } }) =>
+      employeesApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
+    },
+  })
+}
