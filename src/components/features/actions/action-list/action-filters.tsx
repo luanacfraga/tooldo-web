@@ -9,14 +9,13 @@ import { useCompany } from '@/lib/hooks/use-company'
 import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionLateStatus, ActionPriority, ActionStatus } from '@/lib/types/action'
-import { cn } from '@/lib/utils'
+import { cn, getPriorityExclamation } from '@/lib/utils'
 import { datePresets, getPresetById } from '@/lib/utils/date-presets'
 import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
   Filter,
-  Flag,
   LayoutGrid,
   LayoutList,
   Search,
@@ -98,6 +97,13 @@ export function ActionFilters() {
           itemActive: 'bg-primary/10 text-primary' as const,
         }
     }
+  }
+
+  const priorityExclamations: Record<ActionPriority, string> = {
+    [ActionPriority.LOW]: getPriorityExclamation(0),
+    [ActionPriority.MEDIUM]: getPriorityExclamation(1),
+    [ActionPriority.HIGH]: getPriorityExclamation(2),
+    [ActionPriority.URGENT]: getPriorityExclamation(3),
   }
 
   return (
@@ -239,7 +245,7 @@ export function ActionFilters() {
               size="sm"
               className={getButtonState(filters.priority !== 'all')}
             >
-              <Flag className="mr-1.5 h-3.5 w-3.5" />
+              <span className="mr-1.5 text-xs font-black text-muted-foreground">!</span>
               <span>Prioridade</span>
               {filters.priority !== 'all' && (
                 <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
@@ -288,7 +294,14 @@ export function ActionFilters() {
                           filters.setFilter('priority', option.value as ActionPriority)
                         }
                       >
-                        <Flag className={cn('mr-2 h-3.5 w-3.5', meta.flagClass)} />
+                        <span
+                          className={cn(
+                            'mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[9px] font-bold leading-none',
+                            meta.flagClass
+                          )}
+                        >
+                          {priorityExclamations[option.value]}
+                        </span>
                         <span>{option.label}</span>
                         {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
                       </Button>
