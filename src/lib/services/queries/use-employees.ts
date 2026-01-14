@@ -1,4 +1,4 @@
-import { employeesApi } from '@/lib/api/endpoints/employees'
+import { employeesApi, type UpdateEmployeeRequest } from '@/lib/api/endpoints/employees'
 import type { PaginationParams } from '@/lib/api/types'
 import type { InviteEmployeeRequest } from '@/lib/types/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -158,7 +158,7 @@ export function useUpdateEmployee() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { firstName?: string; lastName?: string; phone?: string; document?: string; position?: string; notes?: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateEmployeeRequest }) =>
       employeesApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })

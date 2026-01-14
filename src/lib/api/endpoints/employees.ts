@@ -62,4 +62,4 @@ export const employeesApi = {
     apiClient.put<Employee>(`/api/v1/employees/${id}`, data),
 }
 
-export type { Employee, InviteEmployeeRequest }
+export type { Employee, InviteEmployeeRequest, UpdateEmployeeRequest }
