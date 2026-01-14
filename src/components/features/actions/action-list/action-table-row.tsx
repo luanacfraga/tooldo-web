@@ -5,10 +5,11 @@ import { PriorityBadge } from '@/components/ui/priority-badge'
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { TableCell, TableRow } from '@/components/ui/table'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { useMoveAction } from '@/lib/hooks/use-actions'
 import { ActionStatus, type Action } from '@/lib/types/action'
-import { format } from 'date-fns'
 import { toast } from 'sonner'
+import { getActionDateDisplay } from '../shared/action-date-display'
 import { BlockedBadge } from '../shared/blocked-badge'
 
 interface ActionTableRowProps {
@@ -33,8 +34,8 @@ export function ActionTableRow({
     : '—'
   const responsibleName =
     action.responsible?.firstName && action.responsible?.lastName
-      ? `${action.responsible.firstName} ${action.responsible.lastName}`
-      : '—'
+      ? `${action.responsible.firstName} ${action.responsible.lastName[0] || ''}.`
+      : action.responsible?.firstName || '—'
 
   const handleStatusChange = async (newStatus: ActionStatus) => {
     try {
@@ -79,12 +80,25 @@ export function ActionTableRow({
           </SelectContent>
         </Select>
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[120px]">
         <PriorityBadge priority={action.priority} />
       </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{responsibleName}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {format(new Date(action.estimatedEndDate), 'dd/MM/yyyy')}
+      <TableCell className="w-[120px] text-sm text-muted-foreground">
+        <div className="flex items-center justify-center">
+          <span className="sr-only">{responsibleName}</span>
+          <UserAvatar
+            id={action.responsibleId}
+            firstName={action.responsible?.firstName}
+            lastName={action.responsible?.lastName}
+            size="sm"
+            className="h-6 w-6 text-[9px]"
+          />
+        </div>
+      </TableCell>
+      <TableCell className="w-[180px] text-sm text-muted-foreground">
+        <span title={getActionDateDisplay(action).tooltip}>
+          {getActionDateDisplay(action).label}
+        </span>
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">{checklistProgress}</TableCell>
       <TableCell>

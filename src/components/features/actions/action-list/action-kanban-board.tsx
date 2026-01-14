@@ -38,6 +38,7 @@ import { buildActionsApiFilters } from '@/lib/utils/build-actions-api-filters'
 import { ActionLateStatusBadge } from '../shared/action-late-status-badge'
 import { actionStatusUI } from '../shared/action-status-ui'
 import { BlockedBadge } from '../shared/blocked-badge'
+import { getActionDateDisplay } from '../shared/action-date-display'
 import { ActionListEmpty } from './action-list-empty'
 import { ActionListSkeleton } from './action-list-skeleton'
 
@@ -620,17 +621,10 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
           <ResponsibleSelector action={action} canEdit={canEdit} />
 
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {action.actualEndDate ? (
-              <div className="flex items-center gap-1" title="Fim Real">
-                <Calendar className="h-3 w-3" />
-                <span>{format(new Date(action.actualEndDate), 'dd/MM')}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1" title="Fim Previsto">
-                <Calendar className="h-3 w-3" />
-                <span>{format(new Date(action.estimatedEndDate), 'dd/MM')}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1" title={getActionDateDisplay(action).tooltip}>
+              <Calendar className="h-3 w-3" />
+              <span>{getActionDateDisplay(action).label}</span>
+            </div>
             <div className="flex items-center gap-1" title="Checklist">
               <span className="font-medium">{checklistProgress}</span>
             </div>

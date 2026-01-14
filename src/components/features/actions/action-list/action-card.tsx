@@ -3,9 +3,9 @@ import { PriorityBadge } from '@/components/ui/priority-badge'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Action } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
 import { Calendar, UserCircle2 } from 'lucide-react'
 import { BlockedBadge } from '../shared/blocked-badge'
+import { getActionDateDisplay } from '../shared/action-date-display'
 
 interface ActionCardProps {
   data: Action
@@ -49,7 +49,7 @@ export function ActionCard({ data, onView }: ActionCardProps) {
           <BlockedBadge isBlocked={data.isBlocked} reason={data.blockedReason} />
         </div>
 
-        {/* Footer info: Responsible + Date */}
+        {/* Footer info: Responsible + Date range */}
         <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <UserCircle2 className="h-3.5 w-3.5" />
@@ -59,9 +59,9 @@ export function ActionCard({ data, onView }: ActionCardProps) {
                 : '—'}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" title={getActionDateDisplay(data).tooltip}>
             <Calendar className="h-3.5 w-3.5" />
-            <span>{format(new Date(data.estimatedEndDate), 'dd/MM')}</span>
+            <span>{getActionDateDisplay(data).label}</span>
           </div>
         </div>
       </CardContent>
