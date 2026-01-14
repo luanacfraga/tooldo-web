@@ -77,9 +77,9 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
                 <Image
                   src="/images/logo.png"
                   alt="Weedu"
-                  width={120}
-                  height={40}
-                  className="h-8 w-auto object-contain sm:h-10"
+                  width={180}
+                  height={64}
+                  className="h-10 w-auto object-contain sm:h-12"
                   priority
                 />
               </Link>
