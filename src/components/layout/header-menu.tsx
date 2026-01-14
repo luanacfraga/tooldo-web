@@ -1,7 +1,7 @@
 'use client'
 
 import { UserAvatar } from '@/components/ui/user-avatar'
-import { formatRole } from '@/lib/formatters'
+import { RoleBadge } from '@/components/ui/role-badge'
 import { useIsMobile } from '@/lib/hooks/use-media-query'
 import { usePermissions } from '@/lib/hooks/use-permissions'
 import { useUIStore } from '@/lib/stores/ui-store'
@@ -41,11 +41,6 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
       toggleMobileMenu()
     }
   }, [pathname, shouldShowMobileMenu, isMobileMenuOpen, toggleMobileMenu])
-
-  const getRoleLabel = (role: string | undefined) => {
-    if (!role) return 'Usuário'
-    return formatRole(role as any)
-  }
 
   return (
     <header
@@ -108,9 +103,11 @@ export function HeaderMenu({ onProfileClick }: HeaderMenuProps) {
                 <span className="max-w-[140px] truncate text-sm font-medium leading-tight text-foreground md:max-w-[200px]">
                   {user?.name}
                 </span>
-                <span className="text-xs leading-tight text-muted-foreground">
-                  {role && getRoleLabel(role)}
-                </span>
+                {role && (
+                  <div className="mt-0.5">
+                    <RoleBadge role={role} />
+                  </div>
+                )}
               </div>
 
               <UserAvatar

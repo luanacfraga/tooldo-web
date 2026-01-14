@@ -16,6 +16,7 @@ import { ActionListSkeleton } from './action-list-skeleton';
 import { toast } from 'sonner';
 import type { Action, ActionFilters } from '@/lib/types/action';
 import { buildActionsApiFilters } from '@/lib/utils/build-actions-api-filters';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 
 const EMPTY_ACTIONS: Action[] = [];
 
@@ -25,6 +26,7 @@ export function ActionTable() {
   const filtersState = useActionFiltersStore();
   const { openEdit } = useActionDialogStore();
   const deleteActionMutation = useDeleteAction();
+  const { isAdmin, isManager, isExecutor } = usePermissions();
 
   // Build API filters from store
   const apiFilters: ActionFilters = useMemo(() => {
@@ -45,7 +47,7 @@ export function ActionTable() {
         searchQuery: filtersState.searchQuery,
       },
       userId: user?.id,
-      forceResponsibleId: user?.role === 'executor' ? user.id : undefined,
+      forceResponsibleId: isExecutor && user ? user.id : undefined,
       selectedCompanyId: selectedCompany?.id,
       page: filtersState.page,
       limit: filtersState.pageSize,
@@ -75,7 +77,7 @@ export function ActionTable() {
     }
   };
 
-  const canCreate = user?.role === 'admin' || user?.role === 'manager';
+  const canCreate = isAdmin || isManager;
 
   const hasFilters =
     filtersState.statuses.length > 0 ||
@@ -138,10 +140,10 @@ export function ActionTable() {
         >
             {(action) => {
             const canEdit =
-              user?.role === 'admin' ||
+              isAdmin ||
               action.creatorId === user?.id ||
               action.responsibleId === user?.id;
-            const canDelete = user?.role === 'admin' || action.creatorId === user?.id;
+            const canDelete = isAdmin || action.creatorId === user?.id;
 
             return (
               <ActionTableRow

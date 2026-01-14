@@ -4,6 +4,7 @@ import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { Button } from '@/components/ui/button'
 import { useAuthGuard } from '@/lib/hooks/auth/use-auth-guard'
 import { useCompanyStore } from '@/lib/stores/company-store'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import { Building2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -16,26 +17,27 @@ export function RequireCompany({ children }: RequireCompanyProps) {
   const router = useRouter()
   const { isChecking, user } = useAuthGuard()
   const selectedCompany = useCompanyStore((state) => state.selectedCompany)
+  const { isAdmin } = usePermissions()
 
   useEffect(() => {
     console.log('[RequireCompany] Effect triggered:', {
       isChecking,
       userRole: user?.role,
       selectedCompany: selectedCompany?.id,
-      willRedirect: !isChecking && user?.role === 'admin' && !selectedCompany,
+      willRedirect: !isChecking && isAdmin && !selectedCompany,
     })
 
-    if (!isChecking && user?.role === 'admin' && !selectedCompany) {
+    if (!isChecking && isAdmin && !selectedCompany) {
       console.log('[RequireCompany] Redirecting admin to /companies - no selected company')
       router.push('/companies')
     }
-  }, [isChecking, user, selectedCompany, router])
+  }, [isChecking, user, selectedCompany, router, isAdmin])
 
   if (isChecking || !user) {
     return <LoadingScreen />
   }
 
-  if (user.role === 'admin' && !selectedCompany) {
+  if (isAdmin && !selectedCompany) {
     return <CompanySelectionPrompt onNavigate={() => router.push('/companies')} />
   }
 

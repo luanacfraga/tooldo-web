@@ -35,6 +35,12 @@ export function DashboardSidebar() {
           icon: BarChart3,
         },
         {
+          name: 'Ações',
+          href: '/actions',
+          icon: ClipboardList,
+          subItems: [{ name: 'Lista de Ações', href: '/actions' }],
+        },
+        {
           name: 'Funcionários',
           href: `${basePath}/members`,
           icon: UsersRound,

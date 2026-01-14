@@ -34,6 +34,7 @@ import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionStatus, type Action, type ActionFilters } from '@/lib/types/action'
 import { cn } from '@/lib/utils'
 import { buildActionsApiFilters } from '@/lib/utils/build-actions-api-filters'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 
 import { ActionLateStatusBadge } from '../shared/action-late-status-badge'
 import { actionStatusUI } from '../shared/action-status-ui'
@@ -136,15 +137,16 @@ export function ActionKanbanBoard() {
   const filtersState = useActionFiltersStore()
   const { openEdit } = useActionDialogStore()
   const [announcement, setAnnouncement] = useState('')
+  const { isAdmin, isManager, isExecutor } = usePermissions()
 
   // Gestores devem iniciar o Kanban com atribuição "todas"
   useEffect(() => {
-    if (user?.role !== 'manager') return
+    if (!isManager) return
     if (filtersState.viewMode !== 'kanban') return
     if (filtersState.assignment === 'all') return
 
     filtersState.setFilter('assignment', 'all')
-  }, [user?.role, filtersState])
+  }, [isManager, filtersState])
 
   const apiFilters: ActionFilters = useMemo(() => {
     return buildActionsApiFilters({
@@ -164,7 +166,7 @@ export function ActionKanbanBoard() {
         searchQuery: filtersState.searchQuery,
       },
       userId: user?.id,
-      forceResponsibleId: user?.role === 'executor' ? user.id : undefined,
+      forceResponsibleId: isExecutor && user ? user.id : undefined,
       selectedCompanyId: selectedCompany?.id,
       page: 1,
       limit: 1000,
@@ -201,7 +203,7 @@ export function ActionKanbanBoard() {
     setAnnouncement('')
   }
 
-  const canCreate = user?.role === 'admin' || user?.role === 'manager'
+  const canCreate = isAdmin || isManager
   const hasFilters =
     filtersState.statuses.length > 0 ||
     filtersState.priority !== 'all' ||
@@ -557,7 +559,8 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
   dragAttributes?: DraggableAttributes | undefined
 }) {
   const { user } = useAuth()
-  const canEdit = user?.role === 'admin' || user?.role === 'manager'
+  const { isAdmin, isManager } = usePermissions()
+  const canEdit = isAdmin || isManager
 
   const checklistProgress = useMemo(() => {
     if (!action.checklistItems) return '0/0'

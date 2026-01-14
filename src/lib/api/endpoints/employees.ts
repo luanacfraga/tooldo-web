@@ -16,6 +16,10 @@ interface ListExecutorsParams {
   excludeTeamId?: string
 }
 
+interface ChangeRoleRequest {
+  newRole: 'manager' | 'executor' | 'consultant'
+}
+
 export const employeesApi = {
   invite: (data: InviteEmployeeRequest) =>
     apiClient.post<Employee>('/api/v1/employees/invite', data),
@@ -40,6 +44,9 @@ export const employeesApi = {
   remove: (id: string) => apiClient.delete<Employee>(`/api/v1/employees/${id}`),
 
   resendInvite: (id: string) => apiClient.post<Employee>(`/api/v1/employees/${id}/resend-invite`),
+
+  changeRole: (id: string, data: ChangeRoleRequest) =>
+    apiClient.patch<Employee>(`/api/v1/employees/${id}/role`, data),
 }
 
 export type { Employee, InviteEmployeeRequest }

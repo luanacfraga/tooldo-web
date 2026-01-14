@@ -1,5 +1,6 @@
 'use client'
 
+import { ChangeRoleModal } from '@/components/features/company/company-members/change-role-modal'
 import { EmployeeFilters } from '@/components/features/company/company-members/employee-filters'
 import { Pagination } from '@/components/shared/data/pagination'
 import { StatusBadge } from '@/components/shared/data/status-badge'
@@ -12,9 +13,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { RoleBadge } from '@/components/ui/role-badge'
 import {
   Table,
   TableBody,
@@ -30,7 +31,6 @@ import { usePermissions } from '@/lib/hooks/use-permissions'
 import {
   useActivateEmployee,
   useEmployeesByCompany,
-  useRemoveEmployee,
   useResendInvite,
   useSuspendEmployee,
 } from '@/lib/services/queries/use-employees'
@@ -46,27 +46,26 @@ import {
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ArrowUpDown, Mail, MoreHorizontal, Trash2, UserCheck, UserPlus, UserX } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Mail,
+  MoreHorizontal,
+  RefreshCw,
+  UserCheck,
+  UserPlus,
+  UserX,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-
-const getRoleLabel = (role: string) => {
-  const labels: Record<string, string> = {
-    manager: 'Gestor',
-    executor: 'Executor',
-    consultant: 'Consultor',
-  }
-  return labels[role] || role
-}
 
 export default function CompanyMembersPage() {
   const params = useParams()
   const router = useRouter()
   const companyId = params.companyId as string
   const { user } = useUserContext()
-  const { canInviteEmployee } = usePermissions()
+  const { canInviteEmployee, isAdmin } = usePermissions()
   const [sorting, setSorting] = useState<SortingState>([])
   const [selectedStatuses, setSelectedStatuses] = useState<
     Array<'INVITED' | 'ACTIVE' | 'SUSPENDED' | 'REJECTED' | 'REMOVED'>
@@ -76,6 +75,7 @@ export default function CompanyMembersPage() {
   const [limit, setLimit] = useState<number>(config.table.defaultPageSize)
   const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [employeeToChangeRole, setEmployeeToChangeRole] = useState<Employee | null>(null)
 
   const apiStatusParam = selectedStatuses.length === 1 ? selectedStatuses[0] : undefined
 
@@ -119,7 +119,6 @@ export default function CompanyMembersPage() {
 
   const { mutateAsync: suspend, isPending: isSuspending } = useSuspendEmployee()
   const { mutateAsync: activate, isPending: isActivating } = useActivateEmployee()
-  const { mutateAsync: remove, isPending: isRemoving } = useRemoveEmployee()
   const { mutateAsync: resendInvite, isPending: isResendingInvite } = useResendInvite()
 
   const handlePageChange = (newPage: number) => {
@@ -182,23 +181,6 @@ export default function CompanyMembersPage() {
       }
     },
     [resendInvite]
-  )
-
-  const handleRemove = useCallback(
-    async (id: string) => {
-      if (confirm('Tem certeza que deseja remover este funcionário?')) {
-        try {
-          await remove(id)
-        } catch (error) {
-          const message = getApiErrorMessage(
-            error,
-            'Erro ao remover funcionário. Verifique se ele ainda pode ser removido.'
-          )
-          toast.error(message)
-        }
-      }
-    },
-    [remove]
   )
 
   const columns = useMemo<ColumnDef<Employee>[]>(
@@ -301,7 +283,7 @@ export default function CompanyMembersPage() {
         },
         cell: ({ row }) => {
           const role = row.getValue('role') as string
-          return <div>{getRoleLabel(role)}</div>
+          return <RoleBadge role={role} />
         },
       },
       {
@@ -349,7 +331,7 @@ export default function CompanyMembersPage() {
         header: () => <span className="sr-only">Ações</span>,
         cell: ({ row }) => {
           const employee = row.original
-          const isLoading = isSuspending || isActivating || isRemoving || isResendingInvite
+          const isLoading = isSuspending || isActivating || isResendingInvite
 
           return (
             <div className="flex justify-end">
@@ -389,6 +371,15 @@ export default function CompanyMembersPage() {
                       Ativar
                     </DropdownMenuItem>
                   )}
+                  {employee.status === 'ACTIVE' && isAdmin && (
+                    <DropdownMenuItem
+                      onClick={() => setEmployeeToChangeRole(employee)}
+                      disabled={isLoading}
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Mudar Cargo
+                    </DropdownMenuItem>
+                  )}
                   {employee.status === 'ACTIVE' && (
                     <DropdownMenuItem
                       onClick={() => handleSuspend(employee.id)}
@@ -398,15 +389,6 @@ export default function CompanyMembersPage() {
                       Suspender
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => handleRemove(employee.id)}
-                    disabled={isLoading}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>{employee.status === 'INVITED' ? 'Cancelar Convite' : 'Remover'}</span>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -417,12 +399,11 @@ export default function CompanyMembersPage() {
     [
       isSuspending,
       isActivating,
-      isRemoving,
       isResendingInvite,
       handleSuspend,
       handleActivate,
-      handleRemove,
       handleResendInvite,
+      isAdmin,
     ]
   )
 
@@ -563,6 +544,15 @@ export default function CompanyMembersPage() {
             </div>
           )}
         </>
+      )}
+
+      {employeeToChangeRole && (
+        <ChangeRoleModal
+          employee={employeeToChangeRole}
+          open={!!employeeToChangeRole}
+          onOpenChange={(open) => !open && setEmployeeToChangeRole(null)}
+          onSuccess={() => refetch()}
+        />
       )}
     </PageContainer>
   )
