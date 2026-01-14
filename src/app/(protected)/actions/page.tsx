@@ -9,13 +9,15 @@ import { PageHeader } from '@/components/shared/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useActionDialogStore } from '@/lib/stores/action-dialog-store'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import { Plus } from 'lucide-react'
 import { Suspense } from 'react'
 
 export default function ActionsPage() {
   const { user } = useAuth()
   const { openCreate } = useActionDialogStore()
-  const canCreate = user?.role === 'admin' || user?.role === 'manager'
+  const { isAdmin, isManager } = usePermissions()
+  const canCreate = isAdmin || isManager
 
   return (
     <PageContainer maxWidth="7xl">

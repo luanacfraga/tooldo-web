@@ -135,3 +135,21 @@ export function useExecutorsByCompany(companyId: string, excludeTeamId?: string)
     enabled: !!companyId,
   })
 }
+
+export function useChangeEmployeeRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, newRole }: { id: string; newRole: 'manager' | 'executor' | 'consultant' }) =>
+      employeesApi.changeRole(id, { newRole }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY })
+      queryClient.invalidateQueries({
+        queryKey: [...EMPLOYEES_KEY, 'company'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['teams'],
+      })
+    },
+  })
+}

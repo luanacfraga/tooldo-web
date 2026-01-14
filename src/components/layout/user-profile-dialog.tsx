@@ -1,7 +1,6 @@
 'use client'
 
 import { AvatarColorPicker } from '@/components/shared/avatar-color-picker'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,12 +21,13 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { usersApi } from '@/lib/api/endpoints/users'
-import { formatCNPJ, formatCPF, formatRole } from '@/lib/formatters'
+import { formatCNPJ, formatCPF } from '@/lib/formatters'
 import { usePermissions } from '@/lib/hooks/use-permissions'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Mail, Phone, Shield, User } from 'lucide-react'
+import { RoleBadge } from '@/components/ui/role-badge'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -185,6 +185,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
         setUser({
           ...authUser,
           name: `${updated.firstName} ${updated.lastName}`.trim(),
+          phone: data.phone || authUser.phone || null,
         })
       }
 
@@ -225,10 +226,10 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                   ID: <span className="font-mono">{user.id}</span>
                 </p>
                 {role && (
-                  <Badge variant="outline" className="mt-1 flex w-fit items-center gap-1 text-xs">
+                  <div className="mt-1 flex items-center gap-2">
                     <Shield className="h-3 w-3 text-primary" />
-                    {formatRole(role)}
-                  </Badge>
+                    <RoleBadge role={role} />
+                  </div>
                 )}
               </div>
             </div>
