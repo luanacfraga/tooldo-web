@@ -1,6 +1,5 @@
 import { ActionPriority } from '@/lib/types/action'
-import { cn } from '@/lib/utils'
-import { Flag } from 'lucide-react'
+import { cn, getPriorityExclamation } from '@/lib/utils'
 
 interface PriorityBadgeProps {
   priority: ActionPriority
@@ -8,27 +7,43 @@ interface PriorityBadgeProps {
   className?: string
 }
 
+const PRIORITY_CONFIG: Record<
+  ActionPriority,
+  {
+    color: string
+    label: string
+    level: 0 | 1 | 2 | 3
+  }
+> = {
+  [ActionPriority.LOW]: {
+    color: 'text-muted-foreground',
+    label: 'Baixa',
+    level: 0,
+  },
+  [ActionPriority.MEDIUM]: {
+    color: 'text-info',
+    label: 'Média',
+    level: 1,
+  },
+  [ActionPriority.HIGH]: {
+    color: 'text-warning',
+    label: 'Alta',
+    level: 2,
+  },
+  [ActionPriority.URGENT]: {
+    color: 'text-destructive',
+    label: 'Urgente',
+    level: 3,
+  },
+}
+
 export function PriorityBadge({ priority, showLabel = true, className }: PriorityBadgeProps) {
-  const config = {
-    [ActionPriority.LOW]: {
-      color: 'text-muted-foreground',
-      label: 'Baixa',
-    },
-    [ActionPriority.MEDIUM]: {
-      color: 'text-info',
-      label: 'Média',
-    },
-    [ActionPriority.HIGH]: {
-      color: 'text-warning',
-      label: 'Alta',
-    },
-    [ActionPriority.URGENT]: {
-      color: 'text-destructive',
-      label: 'Urgente',
-    },
-  }[priority]
+  const config = PRIORITY_CONFIG[priority]
 
   if (!config) return null
+
+  const exclamation = getPriorityExclamation(config.level)
+  const hasExclamation = !!exclamation
 
   return (
     <div
@@ -36,12 +51,17 @@ export function PriorityBadge({ priority, showLabel = true, className }: Priorit
       aria-label={`Prioridade ${config.label}`}
       title={`Prioridade ${config.label}`}
     >
-      <Flag className={cn('h-3 w-3', config.color)} aria-hidden="true" />
-      {showLabel ? (
-        <span className="text-xs font-medium">{config.label}</span>
-      ) : (
-        <span className="text-[10px] font-semibold uppercase">{config.label.charAt(0)}</span>
-      )}
+      <span
+        className={cn(
+          'inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[9px] font-black leading-none',
+          config.color,
+          !hasExclamation && 'opacity-70'
+        )}
+        aria-hidden="true"
+      >
+        {exclamation}
+      </span>
+      {showLabel && <span className="text-xs font-medium">{config.label}</span>}
     </div>
   )
 }

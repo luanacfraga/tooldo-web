@@ -36,10 +36,10 @@ import { useTeamResponsibles, useTeamsByCompany } from '@/lib/services/queries/u
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { ActionPriority, type Action, type UpsertChecklistItemInput } from '@/lib/types/action'
 import type { Employee } from '@/lib/types/api'
-import { cn } from '@/lib/utils'
+import { cn, getPriorityExclamation } from '@/lib/utils'
 import { actionFormSchema, actionPriorities, type ActionFormData } from '@/lib/validators/action'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2, Flag, Loader2, Lock, Users } from 'lucide-react'
+import { Building2, Loader2, Lock, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -61,6 +61,13 @@ const priorityLabels: Record<ActionPriority, string> = {
   [ActionPriority.MEDIUM]: getActionPriorityUI(ActionPriority.MEDIUM).label,
   [ActionPriority.HIGH]: getActionPriorityUI(ActionPriority.HIGH).label,
   [ActionPriority.URGENT]: getActionPriorityUI(ActionPriority.URGENT).label,
+}
+
+const priorityExclamations: Record<ActionPriority, string> = {
+  [ActionPriority.LOW]: getPriorityExclamation(0),
+  [ActionPriority.MEDIUM]: getPriorityExclamation(1),
+  [ActionPriority.HIGH]: getPriorityExclamation(2),
+  [ActionPriority.URGENT]: getPriorityExclamation(3),
 }
 
 const priorityStyles: Record<ActionPriority, { itemActiveClass: string; flagClass: string }> = {
@@ -558,9 +565,14 @@ export function ActionForm({
                           field.value === priority && priorityStyles[priority].itemActiveClass
                         )}
                       >
-                        <Flag
-                          className={cn('mr-2 h-3.5 w-3.5', priorityStyles[priority].flagClass)}
-                        />
+                        <span
+                          className={cn(
+                            'mr-2 inline-flex h-4 w-4 items-center justify-center rounded-full border border-current text-[9px] font-black leading-none',
+                            priorityStyles[priority].flagClass
+                          )}
+                        >
+                          {priorityExclamations[priority]}
+                        </span>
                         <span>{priorityLabels[priority]}</span>
                       </SelectItem>
                     ))}
