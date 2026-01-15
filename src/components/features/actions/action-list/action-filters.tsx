@@ -7,7 +7,9 @@ import { StatusBadge } from '@/components/ui/status-badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
+import { usePermissions } from '@/lib/hooks/use-permissions'
 import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
+import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import { ActionLateStatus, ActionPriority, ActionStatus } from '@/lib/types/action'
 import { cn, getPriorityExclamation } from '@/lib/utils'
@@ -21,9 +23,10 @@ import {
   Lock,
   Search,
   UserCircle2,
+  Users,
   X,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ActionLateStatusBadge } from '../shared/action-late-status-badge'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
 import { getActionStatusUI } from '../shared/action-status-ui'
@@ -31,9 +34,25 @@ import { getActionStatusUI } from '../shared/action-status-ui'
 export function ActionFilters() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
+  const { isManager } = usePermissions()
   const filters = useActionFiltersStore()
   const { data: companyResponsibles = [], isLoading: isLoadingResponsibles } =
     useCompanyResponsibles(selectedCompany?.id || '')
+  
+  const { data: teamsData } = useTeamsByCompany(selectedCompany?.id || '')
+  const allTeams = teamsData?.data || []
+  
+  // Filtrar equipes: manager vê apenas as equipes onde ele é gestor
+  const availableTeams = useMemo(() => {
+    if (!selectedCompany?.id) return []
+    if (isManager) {
+      return allTeams.filter((team) => team.managerId === user?.id)
+    }
+    return allTeams
+  }, [allTeams, isManager, user?.id, selectedCompany?.id])
+  
+  const hasSingleTeam = availableTeams.length === 1
+  const managerTeam = isManager && hasSingleTeam ? availableTeams[0] : null
 
   useEffect(() => {
     if (user?.role !== 'executor') return
@@ -42,11 +61,19 @@ export function ActionFilters() {
     }
   }, [user?.role, filters])
 
+  // Auto-aplicar filtro de equipe quando manager tem apenas uma equipe
+  useEffect(() => {
+    if (isManager && hasSingleTeam && managerTeam && filters.teamId !== managerTeam.id) {
+      filters.setFilter('teamId', managerTeam.id)
+    }
+  }, [isManager, hasSingleTeam, managerTeam, filters])
+
   const hasActiveFilters =
     filters.statuses.length > 0 ||
     filters.priority !== 'all' ||
     filters.assignment !== 'all' ||
     !!filters.responsibleId ||
+    !!filters.teamId ||
     !!filters.dateFrom ||
     !!filters.dateTo ||
     filters.showBlockedOnly ||
@@ -316,6 +343,82 @@ export function ActionFilters() {
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Team filter */}
+        {selectedCompany && availableTeams.length > 0 && (
+          <>
+            {isManager && hasSingleTeam && managerTeam ? (
+              // Se manager tem apenas uma equipe, mostrar como indicador bloqueado
+              <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                <span className="truncate">{managerTeam.name}</span>
+              </div>
+            ) : (
+              // Selector normal para admins ou managers com múltiplas equipes
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={getButtonState(!!filters.teamId)}
+                  >
+                    <Users className="mr-1.5 h-3.5 w-3.5" />
+                    <span>Equipe</span>
+                    {filters.teamId && (
+                      <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                        1
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0" align="start">
+                  <div className="p-2">
+                    <div className="space-y-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'w-full justify-start text-xs font-normal',
+                          !filters.teamId && 'bg-primary/10 text-primary'
+                        )}
+                        onClick={() => filters.setFilter('teamId', null)}
+                      >
+                        Todas as equipes
+                        {!filters.teamId && (
+                          <CheckCircle2 className="ml-auto h-3.5 w-3.5 opacity-50" />
+                        )}
+                      </Button>
+                      <div className="my-1 h-px bg-muted" />
+                      {availableTeams.map((team) => {
+                        const isActive = filters.teamId === team.id
+                        return (
+                          <Button
+                            key={team.id}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              'w-full justify-start text-xs font-normal',
+                              isActive && 'bg-primary/10 text-primary'
+                            )}
+                            onClick={() => {
+                              filters.setFilter('teamId', team.id)
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span className="truncate">{team.name}</span>
+                            </div>
+                            {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </>
+        )}
 
         {/* Responsible filter for managers/admins (executors sempre veem apenas "atribuídas a mim") */}
         {user?.role !== 'executor' ? (
