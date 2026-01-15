@@ -163,6 +163,7 @@ export default function CompanyMembersPage() {
     async (id: string) => {
       try {
         await activate(id)
+        toast.success('Funcionário ativado com sucesso')
       } catch (error) {
         const message = getApiErrorMessage(error, 'Erro ao ativar funcionário')
         toast.error(message)
