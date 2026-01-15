@@ -150,6 +150,7 @@ export default function CompanyMembersPage() {
     async (id: string) => {
       try {
         await suspend(id)
+        toast.success('Funcionário suspenso com sucesso')
       } catch (error) {
         const message = getApiErrorMessage(error, 'Erro ao suspender funcionário')
         toast.error(message)
