@@ -26,7 +26,7 @@ export function useAuth() {
         phone: response.user.phone ?? null,
       }
 
-      setAuth(userForStore, response.access_token)
+      setAuth(userForStore, response.access_token, response.refresh_token)
 
       await new Promise((resolve) => setTimeout(resolve, 100))
 

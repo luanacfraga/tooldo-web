@@ -19,6 +19,11 @@ interface RequestConfig extends RequestInit {
 
 class ApiClient {
   private baseURL: string
+  private isRefreshing = false
+  private failedQueue: Array<{
+    resolve: (value: unknown) => void
+    reject: (reason?: unknown) => void
+  }> = []
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
@@ -26,6 +31,66 @@ class ApiClient {
 
   private getAuthToken(): string | undefined {
     return Cookies.get(config.cookies.tokenName)
+  }
+
+  private getRefreshToken(): string | undefined {
+    return Cookies.get(config.cookies.refreshTokenName)
+  }
+
+  private processQueue(error: Error | null, token: string | null = null) {
+    this.failedQueue.forEach((prom) => {
+      if (error) {
+        prom.reject(error)
+      } else {
+        prom.resolve(token)
+      }
+    })
+
+    this.failedQueue = []
+  }
+
+  private async refreshAccessToken(): Promise<string> {
+    const refreshToken = this.getRefreshToken()
+
+    if (!refreshToken) {
+      throw new Error('No refresh token available')
+    }
+
+    try {
+      const response = await fetch(this.buildURL('/auth/refresh'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh token')
+      }
+
+      const data = await response.json()
+
+      // Atualiza os tokens nos cookies
+      Cookies.set(config.cookies.tokenName, data.access_token, {
+        expires: config.cookies.maxAge,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      })
+
+      Cookies.set(config.cookies.refreshTokenName, data.refresh_token, {
+        expires: config.cookies.refreshTokenMaxAge,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      })
+
+      return data.access_token
+    } catch (error) {
+      // Remove tokens inválidos
+      Cookies.remove(config.cookies.tokenName)
+      Cookies.remove(config.cookies.refreshTokenName)
+      throw error
+    }
   }
 
   private buildURL(
@@ -51,7 +116,11 @@ class ApiClient {
     return url.toString()
   }
 
-  private async request<T>(path: string, config: RequestConfig = {}): Promise<T> {
+  private async request<T>(
+    path: string,
+    config: RequestConfig = {},
+    retrying = false
+  ): Promise<T> {
     const { params, headers, ...fetchConfig } = config
 
     const token = this.getAuthToken()
@@ -76,6 +145,46 @@ class ApiClient {
 
     const contentType = response.headers.get('content-type')
     const hasJSON = contentType?.includes('application/json')
+
+    // Intercepta erro 401 (Unauthorized)
+    if (response.status === 401 && !retrying && !path.includes('/auth/')) {
+      // Evita tentar refresh em rotas de autenticação e evita loops
+
+      if (this.isRefreshing) {
+        // Se já está refreshando, coloca a requisição na fila
+        return new Promise((resolve, reject) => {
+          this.failedQueue.push({ resolve, reject })
+        })
+          .then(() => {
+            // Tenta novamente com o novo token
+            return this.request<T>(path, config, true)
+          })
+          .catch((err) => {
+            return Promise.reject(err)
+          })
+      }
+
+      this.isRefreshing = true
+
+      try {
+        const newToken = await this.refreshAccessToken()
+        this.isRefreshing = false
+        this.processQueue(null, newToken)
+
+        // Tenta novamente com o novo token
+        return this.request<T>(path, config, true)
+      } catch (refreshError) {
+        this.isRefreshing = false
+        this.processQueue(refreshError as Error, null)
+
+        // Redireciona para login após falha no refresh
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login'
+        }
+
+        throw refreshError
+      }
+    }
 
     if (!response.ok) {
       const errorData = hasJSON ? await response.json() : null
