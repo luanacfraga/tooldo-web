@@ -12,7 +12,9 @@ export const config = {
 
   cookies: {
     tokenName: 'tooldo_token',
+    refreshTokenName: 'tooldo_refresh_token',
     maxAge: 7,
+    refreshTokenMaxAge: 30,
   },
 
   api: {
