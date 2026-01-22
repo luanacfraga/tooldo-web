@@ -326,24 +326,27 @@ export function ActionForm({
   }, [form, responsibleOptions])
 
   useEffect(() => {
-    if (mode === 'create' && !initialData) {
+    if (mode === 'create' && !initialData && role !== 'admin' && role !== 'master') {
       form.setValue('teamId', undefined)
       form.setValue('responsibleId', '')
     }
-  }, [selectedCompanyId, form, mode, initialData])
+  }, [selectedCompanyId, form, mode, initialData, role])
 
   // Preencher automaticamente o teamId quando identificar a equipe do usuário
+  // Mas não para administradores (eles escolhem manualmente)
   useEffect(() => {
     if (
       mode === 'create' &&
       !initialData?.teamId &&
       !form.getValues('teamId') &&
       finalUserTeam &&
-      selectedCompanyId === finalUserTeam.companyId
+      selectedCompanyId === finalUserTeam.companyId &&
+      role !== 'admin' &&
+      role !== 'master'
     ) {
       form.setValue('teamId', finalUserTeam.id)
     }
-  }, [mode, initialData, finalUserTeam, selectedCompanyId, form])
+  }, [mode, initialData, finalUserTeam, selectedCompanyId, form, role])
 
   const onSubmit = async (data: ActionFormData) => {
     try {
@@ -555,18 +558,62 @@ export function ActionForm({
             </div>
           )}
 
-          {/* Responsável (filtrado pela equipe pré-definida) */}
+          {/* Equipe - Administradores podem selecionar, outros veem apenas */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {selectedTeamId && (
-              <div className="space-y-1">
-                <FormLabel className="text-sm">Equipe</FormLabel>
-                <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
-                  <Users className="h-3.5 w-3.5 text-secondary" />
-                  <span>
-                    {teams.find((t) => t.id === selectedTeamId)?.name || 'Equipe vinculada à ação'}
-                  </span>
+            {role === 'admin' || role === 'master' ? (
+              <FormField
+                control={form.control}
+                name="teamId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Equipe (Opcional)</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value === 'none' ? undefined : value)
+                        // Limpar responsável quando mudar de equipe
+                        form.setValue('responsibleId', '')
+                      }}
+                      value={field.value || 'none'}
+                      disabled={!selectedCompanyId || teams.length === 0}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Selecione uma equipe" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none" className="text-sm">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">Sem equipe (ação da empresa)</span>
+                          </div>
+                        </SelectItem>
+                        {teams.map((team) => (
+                          <SelectItem key={team.id} value={team.id} className="text-sm">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-3.5 w-3.5 text-secondary" />
+                              <span>{team.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              selectedTeamId && (
+                <div className="space-y-1">
+                  <FormLabel className="text-sm">Equipe</FormLabel>
+                  <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
+                    <Users className="h-3.5 w-3.5 text-secondary" />
+                    <span>
+                      {teams.find((t) => t.id === selectedTeamId)?.name || 'Equipe vinculada à ação'}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )
             )}
 
             <FormField
