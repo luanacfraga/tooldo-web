@@ -63,7 +63,6 @@ export function RegisterForm({ onStepChange }: RegisterFormProps) {
     onStepChange,
   })
 
-  // Gerenciamento de máscaras
   const phoneInput = useFormMask({
     fieldName: 'phone',
     mask: maskPhone,

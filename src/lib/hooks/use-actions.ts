@@ -19,7 +19,6 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query'
 
-// Query keys
 export const actionKeys = {
   all: ['actions'] as const,
   lists: () => [...actionKeys.all, 'list'] as const,
@@ -34,13 +33,11 @@ export const actionKeys = {
 export function useActions(
   filters: ActionFilters = {}
 ): UseQueryResult<PaginatedResponse<Action>, Error> {
-  // Backend returns an empty list when no scope is provided.
-  // Guard here to avoid flashing empty state during store hydration / view switches.
   const hasScope = !!(filters.companyId || filters.teamId || filters.responsibleId)
   return useQuery({
     queryKey: actionKeys.list(filters),
     queryFn: () => actionsApi.getAll(filters),
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
     enabled: hasScope,
   })
@@ -71,7 +68,6 @@ export function useCreateAction(): UseMutationResult<Action, Error, CreateAction
   return useMutation({
     mutationFn: actionsApi.create,
     onSuccess: () => {
-      // Refetch all action lists to ensure immediate UI update
       queryClient.refetchQueries({ queryKey: actionKeys.lists() })
     },
   })
@@ -90,11 +86,8 @@ export function useUpdateAction(): UseMutationResult<
   return useMutation({
     mutationFn: ({ id, data }) => actionsApi.update(id, data),
     onSuccess: (updatedAction) => {
-      // Update cache for specific action
       queryClient.setQueryData(actionKeys.detail(updatedAction.id), updatedAction)
-      // Invalidate detail to ensure fresh data (especially for nested relations like checklistItems)
       queryClient.invalidateQueries({ queryKey: actionKeys.detail(updatedAction.id) })
-      // Invalidate lists to refresh
       queryClient.invalidateQueries({ queryKey: actionKeys.lists() })
     },
   })
@@ -109,9 +102,7 @@ export function useDeleteAction(): UseMutationResult<Action, Error, string> {
   return useMutation({
     mutationFn: actionsApi.delete,
     onSuccess: (deletedAction) => {
-      // Remove from cache
       queryClient.removeQueries({ queryKey: actionKeys.detail(deletedAction.id) })
-      // Invalidate lists
       queryClient.invalidateQueries({ queryKey: actionKeys.lists() })
     },
   })
@@ -130,17 +121,14 @@ export function useMoveAction(): UseMutationResult<
   return useMutation({
     mutationFn: ({ id, data }) => actionsApi.move(id, data),
     onMutate: async ({ id, data }) => {
-      // Cancel outgoing refetches for both detail and lists
       await queryClient.cancelQueries({ queryKey: actionKeys.detail(id) })
       await queryClient.cancelQueries({ queryKey: actionKeys.lists() })
 
-      // Snapshot previous values
       const previousAction = queryClient.getQueryData<Action>(actionKeys.detail(id))
       const previousLists = queryClient.getQueriesData<PaginatedResponse<Action>>({
         queryKey: actionKeys.lists(),
       })
 
-      // Optimistically update detail
       if (previousAction) {
         queryClient.setQueryData<Action>(actionKeys.detail(id), {
           ...previousAction,
@@ -148,7 +136,6 @@ export function useMoveAction(): UseMutationResult<
         })
       }
 
-      // Optimistically update all lists that contain this action
       previousLists.forEach(([queryKey, listData]) => {
         if (!listData) return
 
@@ -165,12 +152,10 @@ export function useMoveAction(): UseMutationResult<
       return { previousAction, previousLists }
     },
     onError: (_err, { id }, context) => {
-      // Rollback detail on error
       if (context?.previousAction) {
         queryClient.setQueryData(actionKeys.detail(id), context.previousAction)
       }
 
-      // Rollback all lists on error
       if (context?.previousLists) {
         context.previousLists.forEach(([queryKey, data]) => {
           if (data) {
@@ -180,10 +165,8 @@ export function useMoveAction(): UseMutationResult<
       }
     },
     onSuccess: (updatedAction) => {
-      // Update detail cache with server response
       queryClient.setQueryData(actionKeys.detail(updatedAction.id), updatedAction)
 
-      // Update all lists with server response
       const allLists = queryClient.getQueriesData<PaginatedResponse<Action>>({
         queryKey: actionKeys.lists(),
       })

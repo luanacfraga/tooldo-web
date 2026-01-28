@@ -1,8 +1,8 @@
 export type DatePreset = 'esta-semana' | 'ultimas-2-semanas' | 'este-mes' | 'ultimos-30-dias'
 
 export interface DateRange {
-  dateFrom: string // ISO string
-  dateTo: string // ISO string
+  dateFrom: string
+  dateTo: string
 }
 
 export interface DatePresetOption {
@@ -17,7 +17,7 @@ export interface DatePresetOption {
 function getMonday(): Date {
   const today = new Date()
   const day = today.getDay()
-  const diff = day === 0 ? 6 : day - 1 // Sunday is 0, Monday is 1
+  const diff = day === 0 ? 6 : day - 1
   const monday = new Date(today)
   monday.setDate(today.getDate() - diff)
   monday.setHours(0, 0, 0, 0)

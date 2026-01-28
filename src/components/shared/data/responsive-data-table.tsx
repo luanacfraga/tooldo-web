@@ -10,8 +10,8 @@ interface ResponsiveDataTableProps<T> {
     align?: 'left' | 'center' | 'right';
     className?: string;
   }[];
-  children: (item: T) => ReactNode; // Function to render table row
-  CardComponent: (props: { data: T }) => ReactNode; // Component to render card on mobile
+  children: (item: T) => ReactNode;
+  CardComponent: (props: { data: T }) => ReactNode;
   emptyMessage?: string;
   isLoading?: boolean;
   className?: string;
@@ -35,7 +35,6 @@ export function ResponsiveDataTable<T>({
   const showEmpty = !isLoading && (!data || data.length === 0);
 
   if (isLoading && (!data || data.length === 0)) {
-    // Initial loading state (no data yet)
     return (
       <Card className={cn('w-full', className)}>
         <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
@@ -56,11 +55,10 @@ export function ResponsiveDataTable<T>({
     );
   }
 
-  // Mobile View: Cards Stack
   if (isMobile) {
     return (
       <div className={cn('space-y-4 relative', className)}>
-        {/* Background loading indicator when fetching new data */}
+        
         {isLoading && data.length > 0 && (
           <div className="sticky top-0 left-0 right-0 h-1 bg-primary/20 z-10 mb-4">
             <div className="h-full bg-primary animate-pulse" />
@@ -77,10 +75,9 @@ export function ResponsiveDataTable<T>({
     );
   }
 
-  // Desktop View: Table
   return (
     <Card className={cn('w-full overflow-hidden relative', className)}>
-      {/* Background loading indicator when fetching new data */}
+      
       {isLoading && data.length > 0 && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-primary/20 z-10">
           <div className="h-full bg-primary animate-pulse" />

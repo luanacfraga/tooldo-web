@@ -19,7 +19,6 @@ import type {
 function buildQueryString(filters: ActionFilters): string {
   const params = new URLSearchParams();
 
-  // Backend supports only these query params (see tooldo-api ActionController.list)
   const supportedKeys: (keyof ActionFilters)[] = [
     'companyId',
     'teamId',

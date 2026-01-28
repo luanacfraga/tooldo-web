@@ -16,7 +16,6 @@ export function getInitials(input?: {
   const name = (input?.name ?? '').trim()
   if (!name) return 'U'
 
-  // Pick first two "words" that start with letters/numbers.
   const parts = name
     .split(/\s+/g)
     .map((p) => p.replace(/[^\p{L}\p{N}]/gu, ''))
@@ -45,9 +44,9 @@ export function getAvatarColor(seed?: string | null): string {
   if (!s) return 'hsl(var(--primary))'
 
   const h = hashString(s)
-  const hue = 240 + (h % 41) // 240..280
-  const sat = 32 + (h % 18) // 32..49
-  const light = 38 + (h % 14) // 38..51
+  const hue = 240 + (h % 41)
+  const sat = 32 + (h % 18)
+  const light = 38 + (h % 14)
 
   return `hsl(${hue} ${sat}% ${light}%)`
 }

@@ -72,7 +72,6 @@ export function useCompanyPerformance({
       }
     }
 
-    // Deriva "membros" apenas para alimentar o totalMembers
     const membersMap = new Map<
       string,
       {

@@ -11,7 +11,7 @@ export function PlanCard({ item }: PlanCardProps) {
   return (
     <Card className="group/card relative overflow-hidden bg-card/95 backdrop-blur-sm border border-border/60 shadow-sm hover:shadow-md hover:border-border/80 hover:bg-card transition-all duration-200 ease-in-out hover:-translate-y-0.5 p-4">
       <div className="space-y-3">
-        {/* Header */}
+        
         <div className="flex items-start justify-between">
           <h3 className="font-semibold text-base">{item.name}</h3>
           <div className="flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
@@ -24,7 +24,7 @@ export function PlanCard({ item }: PlanCardProps) {
           </div>
         </div>
 
-        {/* Stats Grid */}
+        
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <p className="text-muted-foreground">Empresas</p>
@@ -44,7 +44,7 @@ export function PlanCard({ item }: PlanCardProps) {
           </div>
         </div>
 
-        {/* IA Calls */}
+        
         <div className="pt-2 border-t border-border/40">
           <p className="text-sm text-muted-foreground">
             Chamadas IA: <span className="font-medium text-foreground">{item.iaCallsLimit}</span>

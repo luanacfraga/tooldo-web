@@ -28,7 +28,6 @@ export function ActionTable() {
   const deleteActionMutation = useDeleteAction()
   const { isAdmin, isManager, isExecutor } = usePermissions()
 
-  // Build API filters from store
   const apiFilters: ActionFilters = useMemo(() => {
     return buildActionsApiFilters({
       state: {
@@ -89,8 +88,6 @@ export function ActionTable() {
 
   if (!hasScope) return <ActionListSkeleton />
 
-  // Show skeleton during initial load OR when fetching with no previous data
-  // This handles view transitions (kanban → table) properly with keepPreviousData
   if (isLoading || (isFetching && actions.length === 0)) {
     return <ActionListSkeleton />
   }

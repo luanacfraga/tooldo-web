@@ -606,7 +606,7 @@ const ActionKanbanCard = memo(function ActionKanbanCard({
           {action.isBlocked && (
             <BlockedBadge isBlocked={action.isBlocked} reason={action.blockedReason} />
           )}
-          {/* <LateIndicator isLate={action.isLate} /> */}
+          
           <ActionLateStatusBadge lateStatus={action.lateStatus} size="sm" />
         </div>
       </div>

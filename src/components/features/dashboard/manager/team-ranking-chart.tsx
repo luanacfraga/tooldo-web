@@ -11,19 +11,16 @@ interface TeamRankingChartProps {
 }
 
 export function TeamRankingChart({ members, maxDisplay = 5 }: TeamRankingChartProps) {
-  // Ordenar por total de entregas (maior para menor)
   const sortedMembers = [...members]
     .sort((a, b) => b.totalDeliveries - a.totalDeliveries)
     .slice(0, maxDisplay)
 
-  // Cores baseadas na posição
   const getBarColor = (index: number) => {
-    if (index === 0) return 'hsl(var(--primary))' // #1: primary (roxo)
-    if (index <= 2) return 'hsl(var(--info))' // #2-3: info (azul)
-    return 'hsl(var(--muted))' // Demais: muted (cinza)
+    if (index === 0) return 'hsl(var(--primary))'
+    if (index <= 2) return 'hsl(var(--info))'
+    return 'hsl(var(--muted))'
   }
 
-  // Se não tem membros ou entregas
   if (sortedMembers.length === 0 || sortedMembers.every(m => m.totalDeliveries === 0)) {
     return (
       <Card>
@@ -66,7 +63,7 @@ export function TeamRankingChart({ members, maxDisplay = 5 }: TeamRankingChartPr
           </BarChart>
         </ResponsiveContainer>
 
-        {/* Badge para #1 */}
+        
         {sortedMembers[0] && sortedMembers[0].totalDeliveries > 0 && (
           <div className="mt-4 flex items-center gap-2 text-sm">
             <Trophy className="h-4 w-4 text-yellow-500" />

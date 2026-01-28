@@ -1,4 +1,3 @@
-// Common API types
 
 export interface PaginationParams {
   page?: number

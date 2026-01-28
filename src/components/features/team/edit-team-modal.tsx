@@ -68,7 +68,6 @@ export function EditTeamModal({
     },
   })
 
-  // Reset form quando o team muda ou o modal abre
   useEffect(() => {
     if (open && team) {
       form.reset({

@@ -11,7 +11,7 @@ export function CompanyCard({ item }: CompanyCardProps) {
   return (
     <Card className="group/card relative overflow-hidden bg-card/95 backdrop-blur-sm border border-border/60 shadow-sm hover:shadow-md hover:border-border/80 hover:bg-card transition-all duration-200 ease-in-out hover:-translate-y-0.5 p-4">
       <div className="space-y-3">
-        {/* Header */}
+        
         <div className="flex items-start justify-between">
           <h3 className="font-semibold text-base">{item.name}</h3>
           <div className="flex gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
@@ -24,12 +24,12 @@ export function CompanyCard({ item }: CompanyCardProps) {
           </div>
         </div>
 
-        {/* Description */}
+        
         {item.description && (
           <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
         )}
 
-        {/* Company Info */}
+        
         <div className="pt-2 border-t border-border/40">
           <p className="text-xs text-muted-foreground">
             ID: <span className="font-medium text-foreground">{item.id.slice(0, 8)}...</span>

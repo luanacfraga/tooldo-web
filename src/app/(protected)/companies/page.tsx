@@ -25,11 +25,9 @@ export default function CompaniesPage() {
   const { query, setFilter, resetFilters } = useCompanyFiltersStore()
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null)
 
-  // Filter companies based on current filters
   const filteredCompanies = useMemo(() => {
     let filtered = companies
 
-    // Apply search query
     if (query) {
       filtered = filtered.filter(
         (company) =>

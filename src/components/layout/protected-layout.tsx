@@ -23,9 +23,6 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const [hasHydrated, setHasHydrated] = useState(false)
 
   useEffect(() => {
-    // Com Zustand v5, a reidratação do persist acontece de forma síncrona
-    // na primeira leitura do store no cliente, então podemos simplesmente
-    // marcar como hidratado após o primeiro render no client.
     setHasHydrated(true)
   }, [])
 
@@ -34,14 +31,11 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
 
     const token = Cookies.get(config.cookies.tokenName)
 
-    // Sem token: não existe sessão, redireciona.
     if (!token) {
       router.replace('/login')
       return
     }
 
-    // Token existe mas não temos usuário autenticado após hidratação:
-    // estado inconsistente -> limpa sessão local e redireciona.
     if (!user || !isAuthenticated) {
       logout()
       router.replace('/login')

@@ -93,7 +93,6 @@ export function EditEmployeeModal({
 
   const isActive = employee.status === 'ACTIVE'
 
-  // Prepara valores iniciais, removendo valores temporários
   const getInitialPhone = useCallback(() => {
     const phone = employee.user?.phone
     if (!phone || phone.startsWith('temp_')) return ''
@@ -120,7 +119,6 @@ export function EditEmployeeModal({
     },
   })
 
-  // Reset form quando o employee muda ou o modal abre
   useEffect(() => {
     if (open && employee) {
       form.reset({

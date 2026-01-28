@@ -61,12 +61,10 @@ export function TeamMembersDialog({ open, onOpenChange, team, companyId }: TeamM
   const { mutateAsync: addMember, isPending: isAdding } = useAddTeamMember()
   const { mutateAsync: removeMember, isPending: isRemoving } = useRemoveTeamMember()
 
-  // Se a API de available executors não retornar dados, use allExecutors filtrados
   const availableExecutors = useMemo(() => {
     if (availableExecutorsResponse.length > 0) {
       return availableExecutorsResponse
     }
-    // Fallback: usa todos executores da empresa, filtrando quem já é membro
     const memberUserIds = new Set(members.map((m) => m.userId))
     return allExecutors.filter((executor) => !memberUserIds.has(executor.userId))
   }, [availableExecutorsResponse, allExecutors, members])

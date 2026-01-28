@@ -59,7 +59,6 @@ export function useTeamMetrics({
     limit: 1000,
   })
 
-  // Calcular métricas quando ambas queries carregarem
   const memberMetrics = useMemo(() => {
     if (!currentQuery.data || !previousQuery.data) return []
 

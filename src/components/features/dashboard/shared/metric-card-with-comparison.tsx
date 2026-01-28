@@ -22,7 +22,6 @@ export function MetricCardWithComparison({
   iconColor = 'text-primary',
   bgColor = 'bg-primary/10',
 }: MetricCardWithComparisonProps) {
-  // Determinar cor do comparativo
   const getComparisonColor = () => {
     if (!comparison) return 'text-muted-foreground'
 
@@ -31,7 +30,6 @@ export function MetricCardWithComparison({
     return comparison.isImprovement ? 'text-success' : 'text-destructive'
   }
 
-  // Determinar ícone do comparativo
   const getComparisonIcon = () => {
     if (!comparison || comparison.absolute === 0) return Minus
 

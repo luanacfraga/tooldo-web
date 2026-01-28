@@ -46,16 +46,15 @@ const profileFormSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileFormSchema>
 
-// Cores padrão como fallback (fora do componente para não ser recriado)
 const DEFAULT_COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Green
-  '#F59E0B', // Amber
-  '#EF4444', // Red
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#14B8A6', // Teal
-  '#F97316', // Orange
+  '#3B82F6',
+  '#10B981',
+  '#F59E0B',
+  '#EF4444',
+  '#8B5CF6',
+  '#EC4899',
+  '#14B8A6',
+  '#F97316',
 ] as const
 
 export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps) {
@@ -64,45 +63,36 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
   const setUser = useAuthStore((s) => s.setUser)
   const queryClient = useQueryClient()
 
-  // Fetch available avatar colors - DEVE vir antes de qualquer early return
   const { data: avatarColorsData, isLoading: isLoadingColors } = useQuery({
     queryKey: ['avatar-colors'],
     queryFn: async () => {
       try {
         const response = await usersApi.getAvatarColors()
 
-        // Garantir que temos um array de cores válido
         let colors: string[] = []
 
         if (response) {
           if (Array.isArray(response)) {
-            // Se a resposta é diretamente um array
             colors = response
           } else if (typeof response === 'object' && 'colors' in response) {
-            // Se a resposta tem a propriedade colors
             colors = Array.isArray(response.colors) ? response.colors : []
           }
         }
 
-        // Se não temos cores válidas, usar fallback
         const finalColors = colors.length > 0 ? colors : [...DEFAULT_COLORS]
 
         return { colors: finalColors }
       } catch (error) {
-        // Em caso de erro, usar cores padrão
         return { colors: [...DEFAULT_COLORS] }
       }
     },
     enabled: open,
-    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-    retry: 1, // Tentar apenas uma vez, depois usar fallback
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   })
 
-  // Update avatar color mutation - DEVE vir antes de qualquer early return
   const updateAvatarColor = useMutation({
     mutationFn: (color: string) => usersApi.updateAvatarColor({ avatarColor: color }),
-    // Usamos a própria cor enviada (segundo argumento) para garantir que o estado
-    // do usuário seja atualizado corretamente, mesmo que a API não retorne avatarColor.
     onSuccess: (_updatedUser, color) => {
       if (authUser) {
         setUser({
@@ -120,9 +110,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     },
   })
 
-  // Garantir que sempre temos cores disponíveis - DEVE vir antes de qualquer early return
   const availableColors = React.useMemo(() => {
-    // Se temos dados da API e é um array válido com cores, usar
     if (
       avatarColorsData?.colors &&
       Array.isArray(avatarColorsData.colors) &&
@@ -130,7 +118,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     ) {
       return avatarColorsData.colors
     }
-    // Caso contrário, usar cores padrão
     return [...DEFAULT_COLORS]
   }, [avatarColorsData])
 
@@ -143,7 +130,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     },
   })
 
-  // Reset form when user changes
   React.useEffect(() => {
     if (user) {
       form.reset({
@@ -154,7 +140,6 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
     }
   }, [user, form])
 
-  // Early return DEPOIS de todos os hooks
   if (!user) return null
 
   const isCnpj = user.documentType === 'CNPJ'
@@ -207,7 +192,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-6">
-            {/* Avatar e Nome */}
+            
             <div className="flex items-start gap-4">
               <UserAvatar
                 id={user.id}
@@ -236,7 +221,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
             <Separator />
 
-            {/* Personalização do Avatar */}
+            
             <div className="space-y-3">
               <div>
                 <p className="mb-2 text-sm font-medium">Cor do Avatar</p>
@@ -260,7 +245,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
             <Separator />
 
-            {/* Informações do Perfil */}
+            
             <div className="space-y-4">
               <p className="text-sm font-medium">Informações Pessoais</p>
 
@@ -315,7 +300,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
                 )}
               />
 
-              {/* Documento (somente leitura) */}
+              
               {formattedDocument && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
@@ -330,7 +315,7 @@ export function UserProfileDialog({ open, onOpenChange }: UserProfileDialogProps
 
             <Separator />
 
-            {/* Botões de ação */}
+            
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Fechar

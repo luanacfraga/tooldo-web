@@ -54,7 +54,6 @@ export function EditCompanyModal({
     },
   })
 
-  // Reset form quando o company muda ou o modal abre
   useEffect(() => {
     if (open && company) {
       form.reset({
