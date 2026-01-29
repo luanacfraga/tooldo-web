@@ -26,9 +26,9 @@ export default function ActionsPage() {
         description="Gerencie e acompanhe o progresso das suas tarefas"
         action={
           canCreate ? (
-            <Button onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Ação
+            <Button onClick={openCreate} className="hidden gap-1.5 font-medium md:inline-flex md:gap-2">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Nova Ação</span>
             </Button>
           ) : null
         }
@@ -42,6 +42,17 @@ export default function ActionsPage() {
           </Suspense>
         </div>
       </div>
+
+      {canCreate && (
+        <Button
+          onClick={openCreate}
+          size="icon"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg md:hidden"
+          aria-label="Nova ação"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
 
       <ActionDialog />
     </PageContainer>
