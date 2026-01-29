@@ -71,7 +71,6 @@ class ApiClient {
 
       const data = await response.json()
 
-      // Atualiza os tokens nos cookies
       Cookies.set(config.cookies.tokenName, data.access_token, {
         expires: config.cookies.maxAge,
         sameSite: 'strict',
@@ -86,7 +85,6 @@ class ApiClient {
 
       return data.access_token
     } catch (error) {
-      // Remove tokens inválidos
       Cookies.remove(config.cookies.tokenName)
       Cookies.remove(config.cookies.refreshTokenName)
       throw error
@@ -146,17 +144,13 @@ class ApiClient {
     const contentType = response.headers.get('content-type')
     const hasJSON = contentType?.includes('application/json')
 
-    // Intercepta erro 401 (Unauthorized)
     if (response.status === 401 && !retrying && !path.includes('/auth/')) {
-      // Evita tentar refresh em rotas de autenticação e evita loops
 
       if (this.isRefreshing) {
-        // Se já está refreshando, coloca a requisição na fila
         return new Promise((resolve, reject) => {
           this.failedQueue.push({ resolve, reject })
         })
           .then(() => {
-            // Tenta novamente com o novo token
             return this.request<T>(path, config, true)
           })
           .catch((err) => {
@@ -171,13 +165,11 @@ class ApiClient {
         this.isRefreshing = false
         this.processQueue(null, newToken)
 
-        // Tenta novamente com o novo token
         return this.request<T>(path, config, true)
       } catch (refreshError) {
         this.isRefreshing = false
         this.processQueue(refreshError as Error, null)
 
-        // Redireciona para login após falha no refresh
         if (typeof window !== 'undefined') {
           window.location.href = '/login'
         }

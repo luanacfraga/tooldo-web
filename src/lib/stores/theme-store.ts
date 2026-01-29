@@ -6,7 +6,6 @@ type Theme = 'light' | 'dark' | 'system'
 interface ThemeState {
   theme: Theme
 
-  // Actions
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
 }
@@ -19,7 +18,6 @@ export const useThemeStore = create<ThemeState>()(
       setTheme: (theme) => {
         set({ theme })
 
-        // Apply theme to document
         const root = window.document.documentElement
         root.classList.remove('light', 'dark')
 

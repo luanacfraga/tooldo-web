@@ -63,7 +63,6 @@ export function AIActionForm({ onSuggestion, onCancel }: AIActionFormProps) {
       if (suggestions && suggestions.length > 0) {
         const suggestion = suggestions[0];
         
-        // Calculate dates based on estimated duration
         const startDate = new Date();
         const endDate = new Date();
         endDate.setDate(startDate.getDate() + (suggestion.estimatedDurationDays || 7));

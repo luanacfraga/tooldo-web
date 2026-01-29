@@ -15,12 +15,6 @@ interface UseStepNavigationResult {
   goToStep: (step: number) => void
 }
 
-/**
- * Hook para gerenciar navegação entre steps
- * Responsabilidade única: Controlar estado e navegação de steps
- *
- * Aplica SRP: Separa lógica de navegação de steps
- */
 export function useStepNavigation({
   totalSteps,
   initialStep = 0,

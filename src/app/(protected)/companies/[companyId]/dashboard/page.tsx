@@ -20,7 +20,7 @@ import { useCompanyPerformance } from '@/lib/hooks/use-company-performance'
 import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useActionDialogStore } from '@/lib/stores/action-dialog-store'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
-import { ActionStatus } from '@/lib/types/action'
+import { ActionStatus, DateFilterType, ViewMode } from '@/lib/types/action'
 import type { DatePreset } from '@/lib/utils/date-presets'
 import { createMetricComparison } from '@/lib/utils/metrics-calculator'
 import { getPresetRange } from '@/lib/utils/period-comparator'
@@ -120,7 +120,6 @@ export default function CompanyDashboardPage() {
   const { currentRole, setCurrentCompanyId } = useUserContext()
   const companyId = params.companyId as string
 
-  // Keep global company selection in sync with route
   useEffect(() => {
     if (!companyId) return
     setCurrentCompanyId(companyId)
@@ -206,7 +205,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
               onClick={() => {
                 filters.resetFilters()
                 filters.setFilter('companyId', companyId)
-                filters.setFilter('viewMode', 'kanban')
+                filters.setFilter('viewMode', ViewMode.KANBAN)
               }}
               asChild
             >
@@ -223,11 +222,10 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
             onChange={(newPreset) => {
               setPreset(newPreset)
 
-              // Mantém o período do dashboard em sincronia com os filtros globais de ações
               const range = getPresetRange(newPreset)
               filters.setFilter('dateFrom', range.dateFrom)
               filters.setFilter('dateTo', range.dateTo)
-              filters.setFilter('dateFilterType', 'createdAt')
+              filters.setFilter('dateFilterType', DateFilterType.CREATED_AT)
             }}
           />
           <PeriodIndicator preset={preset} />
@@ -247,7 +245,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Cards principais - visão descritiva com melhor design */}
+          
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCardWithComparison
               title="Entregas no período"
@@ -282,7 +280,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
             />
           </div>
 
-          {/* Cards secundários - informações adicionais */}
+          
           <div className="grid gap-4 sm:grid-cols-3">
             <Card className="border-border/60 bg-gradient-to-br from-primary/5 via-background to-background">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -338,7 +336,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
             </Card>
           </div>
 
-          {/* Gráficos */}
+          
           <div className="grid gap-6 lg:grid-cols-2">
             <Card className="border-border/60 shadow-sm">
               <CardHeader>
@@ -435,7 +433,7 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
             </Card>
           </div>
 
-          {/* Equipes da empresa - design melhorado */}
+          
           <Card className="border-border/60 shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -478,17 +476,6 @@ function AdminCompanyDashboard({ companyId }: { companyId: string }) {
                             </div>
                           </div>
                         </div>
-                        {/* <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>
-                            Criada em{' '}
-                            {new Date(team.createdAt).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
-                          </span>
-                        </div> */}
                       </div>
                     </Link>
                   ))}
@@ -597,7 +584,7 @@ function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
           }
         />
 
-        {/* Motivation hero */}
+        
         <Card className="mb-6 overflow-hidden border-border/40 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between gap-4">
@@ -644,7 +631,7 @@ function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
                 onClick={() => {
                   filters.resetFilters()
                   filters.setFilter('companyId', companyId)
-                  filters.setFilter('viewMode', 'kanban')
+                  filters.setFilter('viewMode', ViewMode.KANBAN)
                 }}
                 asChild
                 className="sm:w-auto"
@@ -691,7 +678,7 @@ function ManagerCompanyDashboard({ companyId }: { companyId: string }) {
           </CardContent>
         </Card>
 
-        {/* Stats */}
+        
         <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
           <StatCard
             title="Pendentes"

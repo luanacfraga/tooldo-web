@@ -82,9 +82,6 @@ export function ActionTableRow({
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-foreground">{action.title}</span>
           <div className="flex flex-wrap items-center gap-2">
-            {/* Mobile-only status/priority indicators could go here if needed, 
-                 but table is hidden on mobile anyway in favor of cards */}
-            {/* <LateIndicator isLate={action.isLate} /> */}
             <BlockedBadge isBlocked={action.isBlocked} reason={action.blockedReason} />
           </div>
         </div>

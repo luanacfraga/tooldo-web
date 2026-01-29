@@ -10,7 +10,6 @@ export function ActionListContainer() {
   const { viewMode } = useActionFiltersStore();
   const [mounted, setMounted] = useState(false);
 
-  // Prevent hydration mismatch since viewMode comes from local storage
   useEffect(() => {
     setMounted(true);
   }, []);

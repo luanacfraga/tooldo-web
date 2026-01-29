@@ -2,12 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface CompanyFiltersState {
-  // Filter values
   query: string;
   page: number;
   pageSize: number;
 
-  // Actions
   setFilter: <K extends keyof CompanyFiltersState>(key: K, value: CompanyFiltersState[K]) => void;
   resetFilters: () => void;
 }
@@ -27,7 +25,6 @@ export const useCompanyFiltersStore = create<CompanyFiltersState>()(
         set((state) => ({
           ...state,
           [key]: value,
-          // Reset page when filters change (except page and pageSize)
           page: key !== 'page' && key !== 'pageSize' ? 1 : state.page,
         }));
       },

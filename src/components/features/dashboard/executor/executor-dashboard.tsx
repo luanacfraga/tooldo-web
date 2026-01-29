@@ -61,7 +61,6 @@ function toIsoRangeFromDateInputs(input: { fromYmd: string; toYmd: string }): {
   dateFrom: string
   dateTo: string
 } {
-  // Inputs are "YYYY-MM-DD"
   const dateFrom = new Date(`${input.fromYmd}T00:00:00.000Z`).toISOString()
   const dateTo = new Date(`${input.toYmd}T23:59:59.999Z`).toISOString()
   return { dateFrom, dateTo }
@@ -176,8 +175,8 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
   const [preset, setPreset] = useState<DatePreset>('esta-semana')
   const presetRange = useMemo(() => getPresetRange(preset), [preset])
   const [customOpen, setCustomOpen] = useState(false)
-  const [customFrom, setCustomFrom] = useState<string>('') // YYYY-MM-DD
-  const [customTo, setCustomTo] = useState<string>('') // YYYY-MM-DD
+  const [customFrom, setCustomFrom] = useState<string>('')
+  const [customTo, setCustomTo] = useState<string>('')
   const moveAction = useMoveAction()
   const blockAction = useBlockAction()
   const unblockAction = useUnblockAction()
@@ -214,7 +213,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
         description="Acompanhe suas entregas e veja seu contexto dentro do time."
       />
 
-      {/* Compact filter toolbar (kept outside PageHeader to avoid large button styling) */}
+      
       <div className="flex flex-col gap-2 rounded-xl border border-border/40 bg-card/70 p-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center rounded-lg border border-border/50 bg-background/60 p-1">
@@ -308,7 +307,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
         </Card>
       ) : !data ? null : (
         <>
-          {/* Motivation hero */}
+          
           {(() => {
             const motivation = getMotivationCopy({
               total: data.totals.total,
@@ -362,7 +361,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             )
           })()}
 
-          {/* Hoje / Próximas 3 */}
+          
           <Card>
             <CardHeader>
               <CardTitle>Hoje / Próximas 3</CardTitle>
@@ -486,7 +485,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             </CardContent>
           </Card>
 
-          {/* Metrics */}
+          
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCardWithComparison
               title="Concluídas no período"
@@ -525,7 +524,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             />
           </div>
 
-          {/* Impacto + Qualidade */}
+          
           <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -679,7 +678,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             </CardContent>
           </Card>
 
-          {/* Estou travado */}
+          
           <Card>
             <CardHeader>
               <CardTitle>Estou travado</CardTitle>
@@ -742,7 +741,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             </CardContent>
           </Card>
 
-          {/* Dialog: Concluir com objetivo/impacto */}
+          
           <Dialog open={completeOpen} onOpenChange={setCompleteOpen}>
             <DialogContent>
               <DialogHeader>
@@ -807,7 +806,7 @@ export function ExecutorDashboard(props: { companyId: string; className?: string
             </DialogContent>
           </Dialog>
 
-          {/* Dialog: Bloquear */}
+          
           <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
             <DialogContent>
               <DialogHeader>

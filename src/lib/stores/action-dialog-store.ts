@@ -1,12 +1,10 @@
 import { create } from 'zustand'
 
 interface ActionDialogState {
-  // State
   open: boolean
-  actionId: string | null // null = create, string = edit
+  actionId: string | null
   mode: 'manual' | 'ai'
 
-  // Actions
   openCreate: () => void
   openEdit: (actionId: string) => void
   close: () => void

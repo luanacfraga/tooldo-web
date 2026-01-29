@@ -70,7 +70,7 @@ export default function GlobalSettingsPage() {
           </Card>
         ) : (
           <>
-            {/* Empresa selecionada */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -109,7 +109,7 @@ export default function GlobalSettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Administrador (grupo) */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export default function GlobalSettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Plano e assinatura (grupo) */}
+            
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -14,26 +14,20 @@ interface User {
   avatar?: string
 }
 
-/**
- * Calcula métricas individuais de cada membro da equipe
- */
 export function calculateTeamMemberMetrics(
   currentPeriodActions: Action[],
   previousPeriodActions: Action[],
   teamMembers: User[]
 ): TeamMemberMetrics[] {
   return teamMembers.map((member) => {
-    // Filtrar ações do membro no período atual
     const currentActions = currentPeriodActions.filter(
       (a) => a.responsibleId === member.id
     )
 
-    // Filtrar ações do membro no período anterior
     const previousActions = previousPeriodActions.filter(
       (a) => a.responsibleId === member.id
     )
 
-    // Métricas atuais
     const totalActions = currentActions.length
     const totalDeliveries = currentActions.filter(
       (a) => a.status === ActionStatus.DONE
@@ -44,7 +38,6 @@ export function calculateTeamMemberMetrics(
     ).length
     const late = currentActions.filter((a) => a.isLate).length
 
-    // Métricas anteriores
     const previousTotalActions = previousActions.length
     const previousDeliveries = previousActions.filter(
       (a) => a.status === ActionStatus.DONE
@@ -54,7 +47,6 @@ export function calculateTeamMemberMetrics(
         ? (previousDeliveries / previousTotalActions) * 100
         : 0
 
-    // Comparativos
     const deliveriesChange = totalDeliveries - previousDeliveries
     const deliveriesChangePercent =
       previousDeliveries > 0
@@ -81,15 +73,11 @@ export function calculateTeamMemberMetrics(
   })
 }
 
-/**
- * Calcula métricas agregadas da equipe inteira
- */
 export function calculateTeamMetrics(
   currentPeriodActions: Action[],
   previousPeriodActions: Action[],
   teamMembers: User[]
 ): TeamMetrics {
-  // Métricas atuais
   const totalActions = currentPeriodActions.length
   const totalDeliveries = currentPeriodActions.filter(
     (a) => a.status === ActionStatus.DONE
@@ -97,7 +85,6 @@ export function calculateTeamMetrics(
   const avgCompletionRate = totalActions > 0 ? (totalDeliveries / totalActions) * 100 : 0
   const totalLate = currentPeriodActions.filter((a) => a.isLate).length
 
-  // Métricas anteriores
   const previousTotalActions = previousPeriodActions.length
   const previousDeliveries = previousPeriodActions.filter(
     (a) => a.status === ActionStatus.DONE
@@ -108,7 +95,6 @@ export function calculateTeamMetrics(
       : 0
   const previousLate = previousPeriodActions.filter((a) => a.isLate).length
 
-  // Comparativos
   const deliveriesChange = totalDeliveries - previousDeliveries
   const deliveriesChangePercent =
     previousDeliveries > 0
@@ -120,7 +106,6 @@ export function calculateTeamMetrics(
   const completionRateChange = avgCompletionRate - previousAvgCompletionRate
   const lateChange = totalLate - previousLate
 
-  // Velocidade (ações concluídas por semana - assumindo períodos semanais)
   const velocity = totalDeliveries
   const previousVelocity = previousDeliveries
   const velocityChange = velocity - previousVelocity
@@ -140,15 +125,11 @@ export function calculateTeamMetrics(
   }
 }
 
-/**
- * Cria objeto de comparação para exibição em cards
- */
 export function createMetricComparison(
   currentValue: number,
   previousValue: number,
   isInverted = false
 ): MetricComparison | undefined {
-  // Se ambos são zero, não mostra comparativo
   if (currentValue === 0 && previousValue === 0) {
     return undefined
   }
@@ -161,8 +142,6 @@ export function createMetricComparison(
       ? 100
       : 0
 
-  // Por padrão: aumento é melhoria
-  // Se invertido (ex: atrasadas): diminuição é melhoria
   const isImprovement = isInverted ? absolute < 0 : absolute > 0
 
   return {
@@ -173,24 +152,19 @@ export function createMetricComparison(
   }
 }
 
-/**
- * Agrupa entregas por dia para gráfico de tendência
- */
 export function groupDeliveriesByDay(actions: Action[]): DeliveryTrendDataPoint[] {
   const deliveriesByDate = new Map<string, number>()
 
-  // Contar entregas por dia (apenas ações DONE)
   actions
     .filter((a) => a.status === ActionStatus.DONE && a.actualEndDate)
     .forEach((action) => {
       const date = new Date(action.actualEndDate!)
-      const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD
+      const dateKey = date.toISOString().split('T')[0]
 
       const current = deliveriesByDate.get(dateKey) || 0
       deliveriesByDate.set(dateKey, current + 1)
     })
 
-  // Converter para array e ordenar por data
   const dataPoints: DeliveryTrendDataPoint[] = Array.from(deliveriesByDate.entries())
     .map(([date, deliveries]) => ({
       date,
@@ -202,9 +176,6 @@ export function groupDeliveriesByDay(actions: Action[]): DeliveryTrendDataPoint[
   return dataPoints
 }
 
-/**
- * Formata data para label do gráfico
- */
 function formatDateLabel(dateString: string): string {
   const date = new Date(dateString)
   const day = date.getDate()

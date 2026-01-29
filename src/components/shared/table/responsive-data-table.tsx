@@ -27,7 +27,6 @@ export function ResponsiveDataTable<T>({
     ? Math.ceil(pagination.total / pagination.pageSize)
     : undefined;
 
-  // For client-side pagination, slice the data
   const paginatedData = React.useMemo(() => {
     if (!pagination || manualPagination) {
       return data;
@@ -39,10 +38,10 @@ export function ResponsiveDataTable<T>({
 
   return (
     <div className="space-y-4">
-      {/* Filters slot */}
+      
       {filters && <div>{filters}</div>}
 
-      {/* Table or Cards based on viewport */}
+      
       {viewMode === 'cards' ? (
         <CardView
           data={paginatedData}
@@ -87,7 +86,7 @@ export function ResponsiveDataTable<T>({
         />
       )}
 
-      {/* Pagination */}
+      
       {pagination && (
         <Pagination
           page={pagination.page}

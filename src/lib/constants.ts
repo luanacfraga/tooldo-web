@@ -1,7 +1,3 @@
-/**
- * Constantes da aplicação
- */
-
 export const USER_ROLES = {
   MASTER: 'master',
   ADMIN: 'admin',

@@ -20,7 +20,6 @@ export function useTableState<TFilters = Record<string, any>>(
   const [sorting, setSorting] = useState<SortingState>([]);
   const [filters, setFilters] = useState<TFilters>({} as TFilters);
 
-  // Restore from localStorage on mount
   useEffect(() => {
     if (config?.persistKey) {
       const stored = localStorage.getItem(`table-${config.persistKey}`);
@@ -40,7 +39,6 @@ export function useTableState<TFilters = Record<string, any>>(
     }
   }, [config?.persistKey]);
 
-  // Persist to localStorage on change
   useEffect(() => {
     if (config?.persistKey) {
       const toStore = {

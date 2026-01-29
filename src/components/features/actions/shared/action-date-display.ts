@@ -19,7 +19,6 @@ export function getActionDateDisplay(action: Action): ActionDateDisplay {
   const actualStart = formatSafe(action.actualStartDate)
   const actualEnd = formatSafe(action.actualEndDate)
 
-  // Fallback genérico
   const fallbackLabel = estStart && estEnd ? `${estStart} - ${estEnd}` : estEnd || estStart || '—'
 
   if (action.status === ActionStatus.TODO) {
@@ -36,7 +35,6 @@ export function getActionDateDisplay(action: Action): ActionDateDisplay {
   }
 
   if (action.status === ActionStatus.IN_PROGRESS) {
-    // Se já temos início real, mostramos ele + fim previsto
     if (actualStart && estEnd) {
       return {
         label: `${actualStart} (real) - ${estEnd} (previsão)`,
@@ -44,7 +42,6 @@ export function getActionDateDisplay(action: Action): ActionDateDisplay {
       }
     }
 
-    // Se ainda não temos início real, caímos para as previsões
     if (estStart && estEnd) {
       return {
         label: `${estStart} - ${estEnd} (previsão)`,
@@ -58,7 +55,6 @@ export function getActionDateDisplay(action: Action): ActionDateDisplay {
     }
   }
 
-  // DONE
   if (actualStart && actualEnd) {
     return {
       label: `${actualStart} - ${actualEnd}`,
@@ -73,7 +69,6 @@ export function getActionDateDisplay(action: Action): ActionDateDisplay {
     }
   }
 
-  // Sem datas reais, usa previsões como fallback
   return {
     label: fallbackLabel,
     tooltip: 'Período da ação',

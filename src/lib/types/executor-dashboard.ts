@@ -15,7 +15,7 @@ export type ImpactCategory =
   | 'nao-informado'
 
 export type ExecutorDashboardDoneTrendPoint = {
-  date: string // YYYY-MM-DD
+  date: string
   done: number
 }
 

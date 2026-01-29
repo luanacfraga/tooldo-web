@@ -180,7 +180,6 @@ export default function CompanyMembersPage() {
       try {
         await resendInvite(id)
         toast.success('Convite reenviado com sucesso')
-        // React Query vai atualizar automaticamente via invalidação
       } catch (error) {
         const message = getApiErrorMessage(
           error,

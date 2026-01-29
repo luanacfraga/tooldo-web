@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/shared/feedback/error-state'
 import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
-import { ResponsiveDataTable } from '@/components/shared/table'
+import { ResponsiveDataTable } from '@/components/shared/table/responsive-data-table'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ApiError } from '@/lib/api/api-client'
@@ -59,7 +59,6 @@ export default function TeamsPage() {
   const { mutateAsync: createTeam, isPending: isCreating } = useCreateTeam()
   const { mutateAsync: updateTeam, isPending: isUpdating } = useUpdateTeam()
 
-  // Hooks de membros para o time em edição
   const currentEditingTeamId = editingTeam?.id ?? ''
   const { data: editingMembers = [], isLoading: loadingEditingMembers } =
     useTeamMembers(currentEditingTeamId)
@@ -91,7 +90,6 @@ export default function TeamsPage() {
     [managersByUserId]
   )
 
-  // Filtrar equipes: gerente vê apenas sua equipe
   const teams = useMemo(() => {
     if (isManager) {
       return allTeams.filter((team) => team.managerId === user?.id)
@@ -227,8 +225,6 @@ export default function TeamsPage() {
         name: data.name,
         companyId: data.companyId,
         managerId: data.managerId,
-        // Usamos um único campo no formulário e reaproveitamos o valor
-        // tanto como descrição quanto como contexto de IA
         description: unifiedContext,
         iaContext: unifiedContext,
       })

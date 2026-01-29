@@ -1,6 +1,3 @@
-/**
- * Formata um número como moeda brasileira (BRL)
- */
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -8,17 +5,11 @@ export function formatCurrency(value: number): string {
   }).format(value)
 }
 
-/**
- * Formata uma data no padrão brasileiro (DD/MM/YYYY)
- */
 export function formatDate(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateTimeFormat('pt-BR').format(dateObj)
 }
 
-/**
- * Formata uma data e hora no padrão brasileiro
- */
 export function formatDateTime(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   return new Intl.DateTimeFormat('pt-BR', {
@@ -27,16 +18,10 @@ export function formatDateTime(date: string | Date): string {
   }).format(dateObj)
 }
 
-/**
- * Formata um número adicionando separadores de milhares
- */
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat('pt-BR').format(value)
 }
 
-/**
- * Formata uma data relativa (ex: "há 2 horas", "há 3 dias")
- */
 export function formatRelativeTime(date: string | Date): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date
   const now = new Date()
@@ -61,9 +46,6 @@ export function formatRelativeTime(date: string | Date): string {
   return 'agora mesmo'
 }
 
-/**
- * Traduz o papel do usuário para português
- */
 export function formatRole(
   role: 'master' | 'admin' | 'manager' | 'executor' | 'consultant'
 ): string {
@@ -78,31 +60,19 @@ export function formatRole(
   return roles[role]
 }
 
-/**
- * Trunca um texto adicionando reticências se exceder o tamanho máximo
- */
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'
 }
 
-/**
- * Formata um CPF (000.000.000-00)
- */
 export function formatCPF(cpf: string): string {
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
 }
 
-/**
- * Formata um CNPJ (00.000.000/0000-00)
- */
 export function formatCNPJ(cnpj: string): string {
   return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
-/**
- * Formata um telefone brasileiro ((00) 00000-0000)
- */
 export function formatPhone(phone: string): string {
   const cleaned = phone.replace(/\D/g, '')
   if (cleaned.length === 11) {

@@ -1,26 +1,22 @@
-import { ReactNode } from 'react';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/lib/hooks/use-media-query';
+import { Card } from '@/components/ui/card'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
+import { cn } from '@/lib/utils'
+import { ReactNode } from 'react'
 
 interface ResponsiveDataTableProps<T> {
-  data: T[];
+  data: T[]
   headers: {
-    label: string;
-    align?: 'left' | 'center' | 'right';
-    className?: string;
-  }[];
-  children: (item: T) => ReactNode; // Function to render table row
-  CardComponent: (props: { data: T }) => ReactNode; // Component to render card on mobile
-  emptyMessage?: string;
-  isLoading?: boolean;
-  className?: string;
+    label: string
+    align?: 'left' | 'center' | 'right'
+    className?: string
+  }[]
+  children: (item: T) => ReactNode
+  CardComponent: (props: { data: T }) => ReactNode
+  emptyMessage?: string
+  isLoading?: boolean
+  className?: string
 }
 
-/**
- * Componente de tabela responsiva que alterna automaticamente entre
- * Tabela (Desktop) e Cards (Mobile)
- */
 export function ResponsiveDataTable<T>({
   data,
   headers,
@@ -30,40 +26,37 @@ export function ResponsiveDataTable<T>({
   isLoading,
   className,
 }: ResponsiveDataTableProps<T>) {
-  const isMobile = useIsMobile();
-  const hasContent = !isLoading && data && data.length > 0;
-  const showEmpty = !isLoading && (!data || data.length === 0);
+  const isMobile = useIsMobile()
+  const hasContent = !isLoading && data && data.length > 0
+  const showEmpty = !isLoading && (!data || data.length === 0)
 
   if (isLoading && (!data || data.length === 0)) {
-    // Initial loading state (no data yet)
     return (
       <Card className={cn('w-full', className)}>
-        <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <span>Carregando...</span>
         </div>
       </Card>
-    );
+    )
   }
 
   if (showEmpty) {
     return (
       <Card className={cn('w-full', className)}>
-        <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
           <span>{emptyMessage || 'Nenhum dado encontrado'}</span>
         </div>
       </Card>
-    );
+    )
   }
 
-  // Mobile View: Cards Stack
   if (isMobile) {
     return (
-      <div className={cn('space-y-4 relative', className)}>
-        {/* Background loading indicator when fetching new data */}
+      <div className={cn('relative space-y-4', className)}>
         {isLoading && data.length > 0 && (
-          <div className="sticky top-0 left-0 right-0 h-1 bg-primary/20 z-10 mb-4">
-            <div className="h-full bg-primary animate-pulse" />
+          <div className="sticky left-0 right-0 top-0 z-10 mb-4 h-1 bg-primary/20">
+            <div className="h-full animate-pulse bg-primary" />
           </div>
         )}
         <div className={cn(isLoading && 'opacity-70 transition-opacity')}>
@@ -74,21 +67,19 @@ export function ResponsiveDataTable<T>({
           ))}
         </div>
       </div>
-    );
+    )
   }
 
-  // Desktop View: Table
   return (
-    <Card className={cn('w-full overflow-hidden relative', className)}>
-      {/* Background loading indicator when fetching new data */}
+    <Card className={cn('relative w-full overflow-hidden', className)}>
       {isLoading && data.length > 0 && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-primary/20 z-10">
-          <div className="h-full bg-primary animate-pulse" />
+        <div className="absolute left-0 right-0 top-0 z-10 h-1 bg-primary/20">
+          <div className="h-full animate-pulse bg-primary" />
         </div>
       )}
       <div className={cn('overflow-x-auto', isLoading && 'opacity-70 transition-opacity')}>
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b">
+          <thead className="border-b bg-muted/50">
             <tr>
               {headers.map((header, index) => (
                 <th
@@ -111,6 +102,5 @@ export function ResponsiveDataTable<T>({
         </table>
       </div>
     </Card>
-  );
+  )
 }
-

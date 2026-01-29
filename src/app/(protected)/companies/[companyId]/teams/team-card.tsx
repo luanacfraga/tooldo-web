@@ -15,7 +15,7 @@ export function TeamCard({ item, managerName, onEdit, onViewMembers, onEditTeam 
   return (
     <Card className="group/card relative overflow-hidden border border-border/60 bg-card/95 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:border-border/80 hover:bg-card hover:shadow-md">
       <div className="space-y-3">
-        {/* Header */}
+        
         <div className="flex items-start justify-between">
           <div className="flex flex-1 items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
@@ -52,19 +52,19 @@ export function TeamCard({ item, managerName, onEdit, onViewMembers, onEditTeam 
           </div>
         </div>
 
-        {/* Gestor */}
+        
         {managerName && (
           <p className="text-xs text-muted-foreground">
             Gestor: <span className="font-medium text-foreground">{managerName}</span>
           </p>
         )}
 
-        {/* Description */}
+        
         {item.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
         )}
 
-        {/* IA Context */}
+        
         {item.iaContext && (
           <div className="border-t border-border/40 pt-2">
             <p className="mb-1 text-xs text-muted-foreground">Contexto de IA:</p>

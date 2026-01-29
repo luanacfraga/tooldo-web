@@ -17,10 +17,8 @@ export function useResponsiveTable() {
       }
     };
 
-    // Set initial value
     updateBreakpoint();
 
-    // Listen for resize
     window.addEventListener('resize', updateBreakpoint);
     return () => window.removeEventListener('resize', updateBreakpoint);
   }, []);

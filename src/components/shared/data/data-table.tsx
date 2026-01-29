@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { ReactNode } from 'react'
 
 interface DataTableProps {
   headers: {
@@ -14,10 +14,6 @@ interface DataTableProps {
   className?: string
 }
 
-/**
- * Componente de tabela responsiva padronizada
- * Com scroll horizontal em mobile e layout otimizado
- */
 export function DataTable({
   headers,
   children,
@@ -52,7 +48,10 @@ export function DataTable({
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={headers.length} className="px-4 py-12 text-center text-sm text-muted-foreground sm:px-6">
+                <td
+                  colSpan={headers.length}
+                  className="px-4 py-12 text-center text-sm text-muted-foreground sm:px-6"
+                >
                   <div className="flex items-center justify-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     <span>Carregando...</span>
@@ -62,7 +61,10 @@ export function DataTable({
             )}
             {showEmpty && (
               <tr>
-                <td colSpan={headers.length} className="px-4 py-12 text-center text-sm text-muted-foreground sm:px-6">
+                <td
+                  colSpan={headers.length}
+                  className="px-4 py-12 text-center text-sm text-muted-foreground sm:px-6"
+                >
                   {emptyMessage}
                 </td>
               </tr>
@@ -82,9 +84,7 @@ interface DataTableRowProps {
 
 export function DataTableRow({ children, className }: DataTableRowProps) {
   return (
-    <tr className={cn('border-b hover:bg-muted/50 transition-colors', className)}>
-      {children}
-    </tr>
+    <tr className={cn('border-b transition-colors hover:bg-muted/50', className)}>{children}</tr>
   )
 }
 
@@ -108,4 +108,3 @@ export function DataTableCell({ children, align = 'left', className }: DataTable
     </td>
   )
 }
-

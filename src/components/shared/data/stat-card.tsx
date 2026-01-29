@@ -12,10 +12,6 @@ interface StatCardProps {
   className?: string
 }
 
-/**
- * Card de estatística padronizado
- * Responsivo e com suporte a ícones customizados
- */
 export function StatCard({
   title,
   value,

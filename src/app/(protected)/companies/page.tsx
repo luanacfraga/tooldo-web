@@ -8,7 +8,7 @@ import { LoadingScreen } from '@/components/shared/feedback/loading-screen'
 import { StandardFilters } from '@/components/shared/filters/standard-filters'
 import { PageContainer } from '@/components/shared/layout/page-container'
 import { PageHeader } from '@/components/shared/layout/page-header'
-import { ResponsiveDataTable } from '@/components/shared/table'
+import { ResponsiveDataTable } from '@/components/shared/table/responsive-data-table'
 import { Button } from '@/components/ui/button'
 import type { Company } from '@/lib/api/endpoints/companies'
 import { useCompanies } from '@/lib/services/queries/use-companies'
@@ -25,11 +25,9 @@ export default function CompaniesPage() {
   const { query, setFilter, resetFilters } = useCompanyFiltersStore()
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null)
 
-  // Filter companies based on current filters
   const filteredCompanies = useMemo(() => {
     let filtered = companies
 
-    // Apply search query
     if (query) {
       filtered = filtered.filter(
         (company) =>

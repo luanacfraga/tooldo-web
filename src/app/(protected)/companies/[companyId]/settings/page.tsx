@@ -46,7 +46,7 @@ export default function CompanySettingsPage() {
         </Card>
       ) : (
         <div className="mt-6 space-y-6">
-          {/* Dados da empresa */}
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default function CompanySettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Administrador */}
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export default function CompanySettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Plano e assinatura */}
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

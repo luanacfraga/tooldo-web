@@ -1,15 +1,9 @@
 import { cn } from '@/lib/utils'
 
 type ProgressBarProps = {
-  /**
-   * Valor entre 0 e 100
-   */
   value: number
   className?: string
   barClassName?: string
-  /**
-   * Texto acessível do progresso (screen readers)
-   */
   label?: string
 }
 

@@ -191,23 +191,17 @@ export function ActionForm({
   const { data: teamsData } = useTeamsByCompany(selectedCompanyId || '')
   const teams = teamsData?.data || []
 
-  // Buscar responsibles da primeira equipe para identificar se executor está nela
-  // (otimização: verificamos apenas a primeira equipe, se houver apenas uma)
   const firstTeam = teams.length === 1 ? teams[0] : null
   const { data: firstTeamResponsibles = [] } = useTeamResponsibles(firstTeam?.id || '')
 
-  // Identificar equipe do usuário para preenchimento automático
   const userTeam = useMemo(() => {
     if (!selectedCompanyId || !authUser || !teams.length || mode !== 'create') return null
 
-    // Manager: equipe onde ele é gestor
     if (role === 'manager') {
       const managerTeams = teams.filter((team) => team.managerId === authUser.id)
       return managerTeams.length === 1 ? managerTeams[0] : null
     }
 
-    // Executor: verificar se está na lista de responsibles de alguma equipe
-    // Se houver apenas uma equipe, verificar diretamente
     if (role === 'executor' && firstTeam) {
       const isMember = firstTeamResponsibles.some((emp) => emp.userId === authUser.id)
       if (isMember) {
@@ -215,18 +209,13 @@ export function ActionForm({
       }
     }
 
-    // Se houver múltiplas equipes e for executor, verificar todas
     if (role === 'executor' && teams.length > 1) {
-      // Para múltiplas equipes, vamos usar a primeira equipe onde o executor aparece
-      // como responsável (isso será otimizado depois com um endpoint específico)
-      // Por enquanto, retornamos null para não fazer muitas requisições
       return null
     }
 
     return null
   }, [selectedCompanyId, authUser, teams, role, mode, firstTeam, firstTeamResponsibles])
 
-  // Para executores com múltiplas equipes, buscar responsibles de todas as equipes
   const [executorTeamId, setExecutorTeamId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -238,7 +227,6 @@ export function ActionForm({
       mode === 'create' &&
       !executorTeamId
     ) {
-      // Buscar responsibles de cada equipe para encontrar onde o executor está
       const findExecutorTeam = async () => {
         for (const team of teams) {
           try {
@@ -248,7 +236,6 @@ export function ActionForm({
               return
             }
           } catch (error) {
-            // Ignora erros e continua procurando
             console.error(`Error fetching responsibles for team ${team.id}:`, error)
           }
         }
@@ -332,8 +319,6 @@ export function ActionForm({
     }
   }, [selectedCompanyId, form, mode, initialData, role])
 
-  // Preencher automaticamente o teamId quando identificar a equipe do usuário
-  // Mas não para administradores (eles escolhem manualmente)
   useEffect(() => {
     if (
       mode === 'create' &&
@@ -372,7 +357,7 @@ export function ActionForm({
       } else if (action) {
         const {
           isBlocked: _isBlocked,
-          companyId: _companyId, // não é permitido no UpdateActionDto da API
+          companyId: _companyId,
           ...payload
         } = data
 
@@ -471,7 +456,7 @@ export function ActionForm({
             </AlertDescription>
           </Alert>
         )}
-        {/* Block Toggle - allow unblock even when readOnly */}
+        
         {canBlock && isEditing && action && (
           <div className="flex items-center justify-between rounded-lg border border-border/40 bg-muted/30 p-4">
             <div className="flex items-center gap-3">
@@ -492,7 +477,7 @@ export function ActionForm({
         )}
 
         <fieldset disabled={isSubmitting || readOnly} className="space-y-4">
-          {/* Root Cause */}
+          
           <FormField
             control={form.control}
             name="rootCause"
@@ -511,7 +496,7 @@ export function ActionForm({
             )}
           />
 
-          {/* Title */}
+          
           <FormField
             control={form.control}
             name="title"
@@ -526,7 +511,7 @@ export function ActionForm({
             )}
           />
 
-          {/* Description */}
+          
           <FormField
             control={form.control}
             name="description"
@@ -545,7 +530,7 @@ export function ActionForm({
             )}
           />
 
-          {/* Empresa (definida pelo contexto, não selecionável) */}
+          
           {selectedCompanyId && (
             <div className="space-y-1">
               <FormLabel className="text-sm">Empresa</FormLabel>
@@ -558,7 +543,7 @@ export function ActionForm({
             </div>
           )}
 
-          {/* Equipe - Administradores podem selecionar, outros veem apenas */}
+          
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {role === 'admin' || role === 'master' ? (
               <FormField
@@ -570,7 +555,6 @@ export function ActionForm({
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value === 'none' ? undefined : value)
-                        // Limpar responsável quando mudar de equipe
                         form.setValue('responsibleId', '')
                       }}
                       value={field.value || 'none'}
@@ -697,7 +681,7 @@ export function ActionForm({
             />
           </div>
 
-          {/* Priority */}
+          
           <FormField
             control={form.control}
             name="priority"
@@ -738,10 +722,10 @@ export function ActionForm({
             )}
           />
 
-          {/* Dates */}
+          
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Estimated Start Date */}
+              
               <FormField
                 control={form.control}
                 name="estimatedStartDate"
@@ -761,7 +745,7 @@ export function ActionForm({
                 )}
               />
 
-              {/* Estimated End Date */}
+              
               <FormField
                 control={form.control}
                 name="estimatedEndDate"
@@ -784,7 +768,7 @@ export function ActionForm({
 
             {isEditing && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Actual Start Date */}
+                
                 <FormField
                   control={form.control}
                   name="actualStartDate"
@@ -804,7 +788,7 @@ export function ActionForm({
                   )}
                 />
 
-                {/* Actual End Date */}
+                
                 <FormField
                   control={form.control}
                   name="actualEndDate"
@@ -834,7 +818,7 @@ export function ActionForm({
           />
         </fieldset>
 
-        {/* Actions */}
+        
         <div className="flex justify-end gap-2 border-t pt-4">
           <Button
             type="button"

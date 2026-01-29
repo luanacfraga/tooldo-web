@@ -12,12 +12,6 @@ interface UseFormMaskOptions<T extends Record<string, any>> {
   setValue: UseFormSetValue<T>
 }
 
-/**
- * Hook para gerenciar máscaras de campos de formulário
- * Responsabilidade única: Aplicar e sincronizar máscaras
- *
- * Aplica SRP: Separa lógica de máscaras do componente
- */
 export function useFormMask<T extends Record<string, any>>({
   fieldName,
   mask,

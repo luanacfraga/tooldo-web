@@ -5,10 +5,8 @@ export function maskPhone(value: string): string {
     return numbers ? `(${numbers}` : numbers
   }
 
-  // Verifica se é celular (começa com 9 após o DDD)
   const isMobile = numbers.length > 2 && numbers[2] === '9'
 
-  // Formato celular: (xx) 9 xxxx-xxxx (com espaço após o 9)
   if (isMobile) {
     if (numbers.length <= 3) {
       return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
@@ -22,7 +20,6 @@ export function maskPhone(value: string): string {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 3)} ${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`
   }
 
-  // Formato fixo: (xx) xxxx-xxxx
   if (numbers.length <= 6) {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
   }
