@@ -1,4 +1,8 @@
-import { companiesApi, type CompanySettings } from '@/lib/api/endpoints/companies'
+import {
+  companiesApi,
+  type ActiveCompanyWithPlan,
+  type CompanySettings,
+} from '@/lib/api/endpoints/companies'
 import { USER_ROLES } from '@/lib/constants'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { useCompanyStore } from '@/lib/stores/company-store'
@@ -6,6 +10,7 @@ import type { CreateCompanyRequest, Employee, UpdateCompanyRequest } from '@/lib
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const COMPANIES_KEY = ['companies'] as const
+const ACTIVE_COMPANIES_KEY = [...COMPANIES_KEY, 'active'] as const
 
 export function useCompanies() {
   const { isAuthenticated, user } = useAuthStore()
@@ -23,6 +28,33 @@ export function useCompany(id: string) {
     queryKey: [...COMPANIES_KEY, id],
     queryFn: () => companiesApi.getById(id),
     enabled: !!id,
+  })
+}
+
+export function useActiveCompaniesWithPlans() {
+  const { isAuthenticated, user } = useAuthStore()
+  return useQuery({
+    queryKey: ACTIVE_COMPANIES_KEY,
+    queryFn: () => companiesApi.getActiveWithPlans(),
+    select: (data) => data || [],
+    enabled: isAuthenticated && user?.role === USER_ROLES.MASTER,
+  }) as {
+    data: ActiveCompanyWithPlan[]
+    isLoading: boolean
+    isFetching: boolean
+    error: Error | null
+    refetch: () => void
+  }
+}
+
+export function useUpdateCompanyPlan() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, planId }: { companyId: string; planId: string }) =>
+      companiesApi.updatePlan(companyId, planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACTIVE_COMPANIES_KEY })
+    },
   })
 }
 

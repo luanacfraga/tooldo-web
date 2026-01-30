@@ -40,11 +40,40 @@ export interface CompanySettings {
   }
 }
 
+export interface ActiveCompanyWithPlan {
+  company: {
+    id: string
+    name: string
+    description: string | null
+    adminId: string
+  }
+  subscription: {
+    id: string
+    adminId: string
+    planId: string
+    startedAt: string
+    isActive: boolean
+  }
+  plan: {
+    id: string
+    name: string
+    maxCompanies: number
+    maxManagers: number
+    maxExecutors: number
+    maxConsultants: number
+    iaCallsLimit: number
+  }
+  adminName: string
+}
+
 export const companiesApi = {
   getAll: (params?: PaginationParams) =>
     apiClient.get<PaginatedResponse<Company>>('/api/v1/companies', {
       params: params as Record<string, string | number | boolean | undefined>
     }),
+
+  getActiveWithPlans: () =>
+    apiClient.get<ActiveCompanyWithPlan[]>('/api/v1/companies/active'),
 
   getMyCompanies: () =>
     apiClient.get<Company[]>('/api/v1/companies/me'),
@@ -66,6 +95,12 @@ export const companiesApi = {
 
   update: (id: string, data: UpdateCompanyRequest) =>
     apiClient.put<Company>(`/api/v1/companies/${id}`, data),
+
+  updatePlan: (companyId: string, planId: string) =>
+    apiClient.patch<{ subscriptionId: string; planId: string }>(
+      `/api/v1/companies/${companyId}/plan`,
+      { planId }
+    ),
 
   delete: (id: string) =>
     apiClient.delete<void>(`/api/v1/companies/${id}`),

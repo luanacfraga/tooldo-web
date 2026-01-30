@@ -131,6 +131,11 @@ export function DashboardSidebar() {
           icon: Settings,
         },
         {
+          name: 'Empresas ativas',
+          href: '/masters/companies',
+          icon: Building2,
+        },
+        {
           name: 'Usuários Master',
           href: '/masters',
           icon: UsersRound,
