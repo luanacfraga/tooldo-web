@@ -27,13 +27,12 @@ interface ActionFiltersState {
   page: number
   pageSize: number
 
-  // New hierarchical filter fields
   scopeType: ActionScopeFilter | null
   selectedTeamId: string | null
 
   setFilter: <K extends keyof ActionFiltersState>(key: K, value: ActionFiltersState[K]) => void
   resetFilters: () => void
-  resetToRoleDefaults: (role: string) => void  // New method
+  resetToRoleDefaults: (role: string) => void
 }
 
 const initialState = {
@@ -56,7 +55,6 @@ const initialState = {
   page: 1,
   pageSize: 20,
 
-  // New fields
   scopeType: null,
   selectedTeamId: null,
 }
