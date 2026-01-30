@@ -124,11 +124,41 @@ export default function MasterCompaniesPage() {
                 {
                   accessorKey: 'plan.name',
                   header: 'Plano atual',
-                  cell: ({ row }) => (
-                    <Badge variant="secondary" className="font-normal">
-                      {row.original.plan.name}
-                    </Badge>
-                  ),
+                  cell: ({ row }) => {
+                    const item = row.original
+                    return (
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                      >
+                        <Select
+                          value={item.plan.id}
+                          onValueChange={(planId) =>
+                            planId !== item.plan.id &&
+                            handleChangePlan(item.company.id, planId)
+                          }
+                          disabled={updatePlan.isPending || plans.length === 0}
+                        >
+                          <SelectTrigger className="h-8 w-[160px] text-xs">
+                            <SelectValue placeholder="Plano" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {plans.map((plan) => (
+                              <SelectItem
+                                key={plan.id}
+                                value={plan.id}
+                                className="text-xs"
+                              >
+                                {plan.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )
+                  },
                 },
                 {
                   id: 'subscription',
@@ -211,38 +241,6 @@ export default function MasterCompaniesPage() {
                       "dd/MM/yyyy",
                       { locale: ptBR }
                     ),
-                },
-                {
-                  id: 'changePlan',
-                  header: () => <span className="sr-only">Trocar plano</span>,
-                  cell: ({ row }) => {
-                    const item = row.original
-                    return (
-                      <Select
-                        value={item.plan.id}
-                        onValueChange={(planId) =>
-                          planId !== item.plan.id &&
-                          handleChangePlan(item.company.id, planId)
-                        }
-                        disabled={updatePlan.isPending || plans.length === 0}
-                      >
-                        <SelectTrigger className="h-8 w-[160px] text-xs">
-                          <SelectValue placeholder="Trocar plano" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {plans.map((plan) => (
-                            <SelectItem
-                              key={plan.id}
-                              value={plan.id}
-                              className="text-xs"
-                            >
-                              {plan.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )
-                  },
                 },
               ]}
               CardComponent={({ item }) => {
