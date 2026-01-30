@@ -20,7 +20,7 @@ export default function ActionsPage() {
   const canCreate = isAdmin || isManager
 
   return (
-    <PageContainer maxWidth="7xl">
+    <PageContainer maxWidth="full">
       <PageHeader
         title="Ações"
         description="Gerencie e acompanhe o progresso das suas tarefas"
