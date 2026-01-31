@@ -39,6 +39,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ActionLateStatusBadge } from '../shared/action-late-status-badge'
 import { getActionPriorityUI } from '../shared/action-priority-ui'
 import { getActionStatusUI } from '../shared/action-status-ui'
+import { ScopeFilterPopover } from '../filters/scope-filter-popover'
 
 export function ActionFilters() {
   const { user } = useAuth()
@@ -390,104 +391,7 @@ export function ActionFilters() {
           </PopoverContent>
         </Popover>
 
-        {selectedCompany && availableTeams.length > 0 && (
-          <>
-            {isManager && hasSingleTeam && managerTeam ? (
-              <div className="flex h-9 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-3 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                <span className="truncate">{managerTeam.name}</span>
-              </div>
-            ) : (
-              <Popover open={teamPopoverOpen} onOpenChange={setTeamPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={getButtonState(!!filters.teamId)}>
-                    <Users className="mr-1.5 h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      {filters.teamId === TEAM_FILTER_NONE
-                        ? 'Sem equipe'
-                        : selectedTeam
-                          ? selectedTeam.name
-                          : 'Equipe'}
-                    </span>
-                    {filters.teamId && (
-                      <span className="ml-1.5 inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                        1
-                      </span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-0" align="start">
-                  <div className="p-2">
-                    <div className="space-y-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'w-full justify-start text-xs font-normal',
-                          !filters.teamId && 'bg-primary/10 text-primary'
-                        )}
-                        onClick={() => {
-                          filters.setFilter('teamId', null)
-                          filters.setFilter('responsibleId', null)
-                          setTeamPopoverOpen(false)
-                        }}
-                      >
-                        Todas as equipes
-                        {!filters.teamId && (
-                          <CheckCircle2 className="ml-auto h-3.5 w-3.5 opacity-50" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'w-full justify-start text-xs font-normal',
-                          filters.teamId === TEAM_FILTER_NONE && 'bg-primary/10 text-primary'
-                        )}
-                        onClick={() => {
-                          filters.setFilter('teamId', TEAM_FILTER_NONE)
-                          filters.setFilter('responsibleId', null)
-                          setTeamPopoverOpen(false)
-                        }}
-                      >
-                        Sem equipe
-                        {filters.teamId === TEAM_FILTER_NONE && (
-                          <CheckCircle2 className="ml-auto h-3.5 w-3.5 opacity-50" />
-                        )}
-                      </Button>
-                      <div className="my-1 h-px bg-muted" />
-                      {availableTeams.map((team) => {
-                        const isActive = filters.teamId === team.id
-                        return (
-                          <Button
-                            key={team.id}
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                              'w-full justify-start text-xs font-normal',
-                              isActive && 'bg-primary/10 text-primary'
-                            )}
-                            onClick={() => {
-                              filters.setFilter('teamId', team.id)
-                              filters.setFilter('responsibleId', null)
-                              setTeamPopoverOpen(false)
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{team.name}</span>
-                            </div>
-                            {isActive && <CheckCircle2 className="ml-auto h-3.5 w-3.5" />}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
-          </>
-        )}
+        <ScopeFilterPopover />
 
         {user?.role !== 'executor' ? (
           <>
