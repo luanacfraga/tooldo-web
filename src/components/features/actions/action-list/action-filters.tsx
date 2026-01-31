@@ -8,8 +8,8 @@ import { UserAvatar } from '@/components/ui/user-avatar'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { useCompany } from '@/lib/hooks/use-company'
 import { usePermissions } from '@/lib/hooks/use-permissions'
-import { useCompanyResponsibles } from '@/lib/services/queries/use-companies'
-import { useTeamResponsibles, useTeamsByCompany } from '@/lib/services/queries/use-teams'
+import { useScopeResponsibles } from '@/lib/hooks/use-scope-responsibles'
+import { useTeamsByCompany } from '@/lib/services/queries/use-teams'
 import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import {
   ActionLateStatus,
@@ -46,18 +46,6 @@ export function ActionFilters() {
   const { selectedCompany } = useCompany()
   const { isAdmin, isManager } = usePermissions()
   const filters = useActionFiltersStore()
-  const { data: companyResponsibles = [], isLoading: isLoadingCompanyResponsibles } =
-    useCompanyResponsibles(selectedCompany?.id || '')
-
-  const teamIdForResponsibles =
-    filters.teamId && filters.teamId !== TEAM_FILTER_NONE ? filters.teamId : ''
-  const { data: teamResponsibles = [], isLoading: isLoadingTeamResponsibles } =
-    useTeamResponsibles(teamIdForResponsibles)
-
-  const availableResponsibles = teamIdForResponsibles ? teamResponsibles : companyResponsibles
-  const isLoadingResponsibles = teamIdForResponsibles
-    ? isLoadingTeamResponsibles
-    : isLoadingCompanyResponsibles
 
   const { data: teamsData } = useTeamsByCompany(selectedCompany?.id || '')
   const allTeams = teamsData?.data || []
@@ -73,6 +61,13 @@ export function ActionFilters() {
   const hasSingleTeam = availableTeams.length === 1
   const managerTeam = isManager && hasSingleTeam ? availableTeams[0] : null
 
+  const { responsibles: scopeResponsibles, isLoading: isLoadingResponsibles } = useScopeResponsibles({
+    scopeType: filters.scopeType,
+    companyId: selectedCompany?.id || null,
+    teamId: filters.selectedTeamId,
+    managerTeamIds: availableTeams.map(t => t.id),
+  })
+
   const [teamPopoverOpen, setTeamPopoverOpen] = useState(false)
   const [responsiblePopoverOpen, setResponsiblePopoverOpen] = useState(false)
 
@@ -81,7 +76,7 @@ export function ActionFilters() {
       ? (availableTeams.find((t) => t.id === filters.teamId) ?? null)
       : null
   const selectedResponsible = filters.responsibleId
-    ? availableResponsibles.find((e) => e.userId === filters.responsibleId)
+    ? scopeResponsibles.find((e) => e.userId === filters.responsibleId)
     : null
 
   useEffect(() => {
@@ -407,7 +402,9 @@ export function ActionFilters() {
                   <span className="truncate">
                     {selectedResponsible?.user
                       ? `${selectedResponsible.user.firstName} ${selectedResponsible.user.lastName}`
-                      : 'Responsável'}
+                      : filters.scopeType === ActionScopeFilter.ENTIRE_COMPANY || filters.scopeType === ActionScopeFilter.NO_TEAM
+                        ? 'Todos os responsáveis'
+                        : 'Todos da equipe'}
                   </span>
                   {filters.responsibleId && (
                     <span className="ml-1.5 inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
@@ -441,8 +438,8 @@ export function ActionFilters() {
                       <div className="px-2 py-3 text-xs text-muted-foreground">
                         Carregando responsáveis...
                       </div>
-                    ) : availableResponsibles && availableResponsibles.length > 0 ? (
-                      availableResponsibles.map((employee) => {
+                    ) : scopeResponsibles && scopeResponsibles.length > 0 ? (
+                      scopeResponsibles.map((employee) => {
                         const isActive = filters.responsibleId === employee.userId
                         const execUser = employee.user
 
