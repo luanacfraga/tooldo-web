@@ -14,6 +14,7 @@ import { useActionFiltersStore } from '@/lib/stores/action-filters-store'
 import {
   ActionLateStatus,
   ActionPriority,
+  ActionScopeFilter,
   ActionStatus,
   AssignmentFilter,
   DateFilterType,
@@ -42,7 +43,7 @@ import { getActionStatusUI } from '../shared/action-status-ui'
 export function ActionFilters() {
   const { user } = useAuth()
   const { selectedCompany } = useCompany()
-  const { isManager } = usePermissions()
+  const { isAdmin, isManager } = usePermissions()
   const filters = useActionFiltersStore()
   const { data: companyResponsibles = [], isLoading: isLoadingCompanyResponsibles } =
     useCompanyResponsibles(selectedCompany?.id || '')
@@ -100,6 +101,23 @@ export function ActionFilters() {
       filters.setFilter('teamId', managerTeam.id)
     }
   }, [isManager, hasSingleTeam, managerTeam, filters])
+
+  useEffect(() => {
+    if (!selectedCompany?.id) return
+
+    if (filters.scopeType !== null) return
+
+    if (isAdmin) {
+      filters.setFilter('scopeType', ActionScopeFilter.ENTIRE_COMPANY)
+    } else if (isManager) {
+      if (hasSingleTeam && managerTeam) {
+        filters.setFilter('scopeType', ActionScopeFilter.SPECIFIC_TEAM)
+        filters.setFilter('selectedTeamId', managerTeam.id)
+      } else {
+        filters.setFilter('scopeType', ActionScopeFilter.ALL_MY_TEAMS)
+      }
+    }
+  }, [selectedCompany?.id, filters, isAdmin, isManager, hasSingleTeam, managerTeam])
 
   const hasActiveFilters =
     filters.statuses.length > 0 ||
