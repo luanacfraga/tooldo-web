@@ -65,15 +65,43 @@ export const useActionFiltersStore = create<ActionFiltersState>()(
       ...initialState,
 
       setFilter: (key, value) => {
-        set((state) => ({
-          ...state,
-          [key]: value,
-          page: key !== 'page' && key !== 'pageSize' ? 1 : state.page,
-        }))
+        set((state) => {
+          const updates: Partial<ActionFiltersState> = {
+            [key]: value,
+            page: key !== 'page' && key !== 'pageSize' ? 1 : state.page,
+          }
+
+          // Cascading logic: when scope changes, reset responsible
+          if (key === 'scopeType' || key === 'selectedTeamId') {
+            updates.responsibleId = null
+          }
+
+          return { ...state, ...updates }
+        })
       },
 
       resetFilters: () => {
         set(initialState)
+      },
+
+      resetToRoleDefaults: (role) => {
+        set((state) => {
+          let scopeType: ActionScopeFilter | null = null
+
+          if (role === 'admin') {
+            scopeType = ActionScopeFilter.ENTIRE_COMPANY
+          } else if (role === 'manager') {
+            scopeType = ActionScopeFilter.ALL_MY_TEAMS
+          }
+          // Executor gets null (handled by forcing responsibleId in component)
+
+          return {
+            ...initialState,
+            scopeType,
+            selectedTeamId: null,
+            responsibleId: null,
+          }
+        })
       },
     }),
     {
