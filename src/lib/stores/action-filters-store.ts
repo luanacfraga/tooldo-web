@@ -81,7 +81,11 @@ export const useActionFiltersStore = create<ActionFiltersState>()(
       },
 
       resetFilters: () => {
-        set(initialState)
+        set((state) => ({
+          ...initialState,
+          scopeType: null,
+          selectedTeamId: null,
+        }))
       },
 
       resetToRoleDefaults: (role) => {
